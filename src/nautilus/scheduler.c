@@ -2032,6 +2032,107 @@ struct nk_thread *nk_sched_need_resched()
     return _sched_need_resched(0);
 }
 
+//irq handler
+int nk_thread_group_admit() {
+    /*
+    nk_thread_start (nk_thread_fun_t fun, 
+                 void * input,
+                 void ** output,
+                 uint8_t is_detached,
+                 nk_stack_size_t stack_size,
+                 nk_thread_id_t * tid,
+                 int bound_cpu);
+    */
+}
+
+
+//irq handler
+int nk_sched_group_change_constraint() {
+    //nk_sched_thread_change_constraints(global_request)
+}
+
+
+
+int
+nk_put_global_thread (nk_thread_fun_t fun, 
+                 void * input,
+                 void ** output,
+                 uint8_t is_detached,
+                 nk_stack_size_t stack_size,
+                 nk_thread_id_t * tid,
+                 int * bound_cpu,
+                 int group_size,
+                 int leader)
+{
+
+}
+//helper function(no longer needed)
+int
+nk_put_global_constraint (nk_thread_fun_t fun, 
+                 void * input,
+                 void ** output,
+                 uint8_t is_detached,
+                 nk_stack_size_t stack_size,
+                 nk_thread_id_t * tid,
+                 int bound_cpu)
+{
+
+}
+
+/*
+int nk_sched_thread_admission_control(struct nk_sched_constraints *constraints) {
+    if (not a global request) {
+        if (in_global) { 
+            error out or wait for the global request to finish
+        } else { 
+            do normal admission control like it does now
+        } 
+    } else {
+        if (I am the leader thread of the group) {
+            old = atomic_test_and_set(in_global); //Put to nk_thread_group_start
+            if (old) { 
+                error or wait - some other global request is in progress
+            } else {
+                //global_req.thread = threadCopy(get_cur_thread());
+                barrier_over_threads_init();
+                // we are the global request
+                global_req = our_req;
+                // TELL EVERYONE ELSE
+                barrier_over_threads_in(global_req);//See if it is needed, add a fail flag
+                do normal local admission control using global_req
+                barrier_over_threads_in(global_req);
+                atomic_reset(in_global); 
+                if (everyone got admitted) {
+                     //good done
+                } else {
+                    // global admit failure
+                     unadmit ourselves
+                     fail out;
+                }
+             }
+        } else {  // I am not the leader
+            if (in_global) {
+                if (global_req includes me) { 
+                    barrier_over_threads_in(global_req);
+                    do normal local admission control using global_req
+                    barrier_over_threads_in(global_req); 
+                    if (everyone got admitted) {
+                        //good done
+                    } else {
+                        // global admit failure
+                        unadmit ourselves
+                        fail out;  
+                    } else {
+                        // normal admission control
+                    }
+                }
+            } else {
+                // normal admission control
+            }
+        }
+    }
+}
+*/
 int nk_sched_thread_change_constraints(struct nk_sched_constraints *constraints)
 {
     LOCAL_LOCK_CONF;
@@ -2046,29 +2147,28 @@ int nk_sched_thread_change_constraints(struct nk_sched_constraints *constraints)
 
     LOCAL_LOCK(scheduler);
 
-    if (r->constraints.type != APERIODIC && 
-	constraints->type != APERIODIC) {
+    if (r->constraints.type != APERIODIC && constraints->type != APERIODIC) {
 
-	DEBUG("Transitioning %llu \"%s\" temporarily to aperiodic\n" , t->tid,t->name);
+    	DEBUG("Transitioning %llu \"%s\" temporarily to aperiodic\n" , t->tid,t->name);
 
-	struct nk_sched_constraints temp = { .type=APERIODIC, 
-					     .aperiodic.priority=scheduler->cfg.aperiodic_default_priority };
+    	struct nk_sched_constraints temp = { .type=APERIODIC, 
+    					     .aperiodic.priority=scheduler->cfg.aperiodic_default_priority };
 
-	old = r->constraints;
-	r->constraints = temp;
+    	old = r->constraints;
+    	r->constraints = temp;
 
-	// although this is an admission, it's an admission for
-	// aperiodic, which is always yes, and fast
-	if (_sched_make_runnable(t,t->current_cpu,1,1)) {
-	    ERROR("Failed to re-admit %llu \"%s\" as aperiodic\n" , t->tid,t->name);
-	    panic("Unable to change thread's constraints to aperiodic!\n");
-	    goto out_bad;
-	}
-	// we are now on the aperiodic run queue
-	// so we need to get running again with our new constraints
-	handle_special_switch(CHANGING,1,_local_flags);
-	// we've now released the lock, so reacquire
-	LOCAL_LOCK(scheduler);
+    	// although this is an admission, it's an admission for
+    	// aperiodic, which is always yes, and fast
+    	if (_sched_make_runnable(t,t->current_cpu,1,1)) {
+    	    ERROR("Failed to re-admit %llu \"%s\" as aperiodic\n" , t->tid,t->name);
+    	    panic("Unable to change thread's constraints to aperiodic!\n");
+    	    goto out_bad;
+    	}
+    	// we are now on the aperiodic run queue
+    	// so we need to get running again with our new constraints
+    	handle_special_switch(CHANGING,1,_local_flags);
+    	// we've now released the lock, so reacquire
+    	LOCAL_LOCK(scheduler);
     }
 
 
@@ -2080,41 +2180,41 @@ int nk_sched_thread_change_constraints(struct nk_sched_constraints *constraints)
     // we assume from here that we are aperiodic changing to other
 
     if (_sched_make_runnable(t,t->current_cpu,1,1)) {
-	DEBUG("Failed to re-admit %llu \"%s\" with new constraints\n" , t->tid,t->name);
-	// failed to admit task, bring it back up as aperiodic
-	// again.   This should just work
-	r->constraints = old;
-	if (_sched_make_runnable(t,t->current_cpu,1,1)) {
-	    // very bad...
-	    panic("Failed to recover to aperiodic when changing constraints\n");
-	    goto out_bad;
-	}
-	DEBUG("Readmitted %llu \"%s\" with old constraints\n" , t->tid,t->name);
-	// we are now aperioidic
-	// since we are again on the run queue
-	// we need to kick ourselves off the cp
-	handle_special_switch(CHANGING,1,_local_flags);
-	// when we come back, we note that we have failed
-	// we also have no lock
-	goto out_bad_no_unlock;
+    	DEBUG("Failed to re-admit %llu \"%s\" with new constraints\n" , t->tid,t->name);
+    	// failed to admit task, bring it back up as aperiodic
+    	// again.   This should just work
+    	r->constraints = old;
+    	if (_sched_make_runnable(t,t->current_cpu,1,1)) {
+    	    // very bad...
+    	    panic("Failed to recover to aperiodic when changing constraints\n");
+    	    goto out_bad;
+    	}
+    	DEBUG("Readmitted %llu \"%s\" with old constraints\n" , t->tid,t->name);
+    	// we are now aperioidic
+    	// since we are again on the run queue
+    	// we need to kick ourselves off the cp
+    	handle_special_switch(CHANGING,1,_local_flags);
+    	// when we come back, we note that we have failed
+    	// we also have no lock
+    	goto out_bad_no_unlock;
     } else {
-	// we were admitted and are now on some queue
-	// we now need to kick ourselves off the CPU
-	DEBUG("Succeeded in admitting %llu \"%s\" with new constraints\n",t->tid,t->name);
-	DUMP_RT(scheduler,"runnable before handle special switch");
-	DUMP_RT_PENDING(scheduler,"pending before handle special switch");
-	DUMP_APERIODIC(scheduler,"aperiodic before handle special switch");
+    	// we were admitted and are now on some queue
+    	// we now need to kick ourselves off the CPU
+    	DEBUG("Succeeded in admitting %llu \"%s\" with new constraints\n",t->tid,t->name);
+    	DUMP_RT(scheduler,"runnable before handle special switch");
+    	DUMP_RT_PENDING(scheduler,"pending before handle special switch");
+    	DUMP_APERIODIC(scheduler,"aperiodic before handle special switch");
 
-	handle_special_switch(CHANGING,1,_local_flags);
+    	handle_special_switch(CHANGING,1,_local_flags);
 
-	// we now have released lock and interrupts are back to prior
+    	// we now have released lock and interrupts are back to prior
 
-	DEBUG("Thread is now state %d / %d\n",t->status, t->sched_state->status);
-	DUMP_RT(scheduler,"runnable after handle special switch");
-	DUMP_RT_PENDING(scheduler,"pending after handle special switch");
-	DUMP_APERIODIC(scheduler,"aperiodic after handle special switch");
-	// when we are back, we note success
-	goto out_good_no_unlock;
+    	DEBUG("Thread is now state %d / %d\n",t->status, t->sched_state->status);
+    	DUMP_RT(scheduler,"runnable after handle special switch");
+    	DUMP_RT_PENDING(scheduler,"pending after handle special switch");
+    	DUMP_APERIODIC(scheduler,"aperiodic after handle special switch");
+    	// when we are back, we note success
+    	goto out_good_no_unlock;
     }
 
  out_bad:
@@ -3053,6 +3153,8 @@ static int shared_init(struct cpu *my_cpu, struct nk_sched_config *cfg)
 
     irq_enable_restore(flags);
 
+    //Parallel thread project
+    //register_int_handler
     return 0;
 
  fail_free:
@@ -3235,5 +3337,16 @@ static void timing_test(uint64_t N, uint64_t M, int print)
     INFO("sum2 = %lu cycles\n",sum2);
   }
 
+}
+
+void nk_sched_rt_stats(struct rt_stats *stats){
+    struct nk_sched_thread_state* t = get_cur_thread()->sched_state;
+    stats->arrival_num = t->arrival_count;
+    stats->resched_num = t->resched_count;
+    stats->switchin_num = t->resched_count;
+    stats->miss_num = t->miss_count;
+    stats->miss_time = t->miss_time_sum;
+    stats->period = t->constraints.periodic.period;
+    stats->slice = t->constraints.periodic.period;
 }
 

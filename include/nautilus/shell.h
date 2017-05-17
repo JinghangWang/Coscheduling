@@ -27,6 +27,15 @@
 
 #include <nautilus/thread.h>
 
+#define MAX_CMD 80
+
 nk_thread_id_t nk_launch_shell(char *name, int cpu);
+
+struct burner_args {
+    struct nk_virtual_console *vc;
+    char     name[MAX_CMD];
+    uint64_t size_ns; 
+    struct nk_sched_constraints constraints;
+} ;
 
 #endif

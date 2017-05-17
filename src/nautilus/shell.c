@@ -34,6 +34,9 @@
 #include <nautilus/backtrace.h>
 #include <test/ipi.h>
 
+//need to remove
+//#include <nautilus/scheduler.h>
+
 #ifdef NAUT_CONFIG_PALACIOS
 #include <nautilus/vmm.h>
 #endif
@@ -42,18 +45,11 @@
 #include <nautilus/realmode.h>
 #endif
 
-#define MAX_CMD 80
-
-struct burner_args {
-    struct nk_virtual_console *vc;
-    char     name[MAX_CMD];
-    uint64_t size_ns; 
-    struct nk_sched_constraints constraints;
-} ;
 
 static void burner(void *in, void **out)
 {
-    uint64_t start, end, dur;
+    uint64_t start, end, dur, total;
+    total = 0;
     struct burner_args *a = (struct burner_args *)in;
 
     nk_thread_name(get_cur_thread(),a->name);
@@ -63,29 +59,40 @@ static void burner(void *in, void **out)
 	return;
     }
 
-    nk_vc_printf("%s (tid %llu) attempting to promote itself\n", a->name, get_cur_thread()->tid);
+    //nk_vc_printf("%s (tid %llu) attempting to promote itself\n", a->name, get_cur_thread()->tid);
 #if 1
     if (nk_sched_thread_change_constraints(&a->constraints)) { 
 	nk_vc_printf("%s (tid %llu) rejected - exiting\n", a->name, get_cur_thread()->tid);
+  free(in);
 	return;
     }
 #endif
 
-    nk_vc_printf("%s (tid %llu) promotion complete - spinning for %lu ns\n", a->name, get_cur_thread()->tid, a->size_ns);
-
+    //nk_vc_printf("%s (tid %llu) promotion complete - spinning for %lu ns\n", a->name, get_cur_thread()->tid, a->size_ns);
     while(1) {
-	start = nk_sched_get_realtime();
-	udelay(1000);
-	end = nk_sched_get_realtime();
-	dur = end - start;
-	//	nk_vc_printf("%s (tid %llu) start=%llu, end=%llu left=%llu\n",a->name,get_cur_thread()->tid, start, end,a->size_ns);
-	if (dur >= a->size_ns) { 
-	    nk_vc_printf("%s (tid %llu) done - exiting\n",a->name,get_cur_thread()->tid);
-	    free(in);
-	    return;
-	} else {
-	    a->size_ns -= dur;
-	}
+    	start = nk_sched_get_realtime();
+    	udelay(100);
+    	end = nk_sched_get_realtime();
+    	dur = end - start;
+      //total += dur;
+    	//nk_vc_printf("%s (tid %llu) start=%llu, end=%llu left=%llu\n",a->name,get_cur_thread()->tid, start, end,a->size_ns);
+    	if (dur >= a->size_ns) { 
+    	    //nk_vc_printf("%s (tid %llu) done - exiting, total runtime = %llu\n",a->name,get_cur_thread()->tid, total);
+
+          struct rt_stats* stats = malloc(sizeof(struct rt_stats));
+          nk_sched_rt_stats(stats);
+    	    nk_vc_printf("%s (tid %llu) exiting period %llu ns, slice %llu ns ", a->name, get_cur_thread()->tid, stats->period, stats->slice);
+          nk_vc_printf("arrival count %llu, resched count %llu, switchin count %llu, miss count %llu, total miss time %llu ns\n", 
+                      stats->arrival_num, stats->resched_num, stats->switchin_num, stats->miss_num, stats->miss_time);
+          free(stats);
+          free(in);
+          //nk_vc_printf("exiting...\n");
+    	    //nk_thread_exit(0);
+          return;
+    	} else {
+    	    a->size_ns -= dur;
+          //nk_vc_printf("%s size set into burner in ns %llu\n",a->name, a->size_ns);
+    	}
     }
 }
 
@@ -161,10 +168,15 @@ static int launch_periodic_burner(char *name, uint64_t size_ns, uint32_t tpr, ui
     a->constraints.periodic.period = period;
     a->constraints.periodic.slice = slice;
 
-    if (nk_thread_start(burner, (void*)a , NULL, 1, PAGE_SIZE_4KB, &tid, -1)) {
+    if (nk_thread_start(burner, (void*)a , NULL, 1, PAGE_SIZE_4KB, &tid, 1)) {
+    //bind cpu 1 for testing
 	free(a);
 	return -1;
     } else {
+  //nk_vc_printf("before join \n");
+  //wait until burner has finished
+  nk_join(tid, NULL);
+  //nk_vc_printf("join works\n");
 	return 0;
     }
 }
@@ -467,9 +479,9 @@ static int handle_attach(char * buf)
 
 static int handle_benchmarks(char * buf)
 {
-    extern void run_benchmarks();
+    //extern void run_benchmarks();
     
-    run_benchmarks();
+    //run_benchmarks();
 
     return 0;
 }
@@ -754,6 +766,39 @@ static int handle_cmd(char *buf, int n)
     return 0;
   }
 
+  if (!strncasecmp(buf, "udelay", 6)){
+    nk_vc_printf("testing udelay(1000) udelay(100) and udelay(10)\n");
+
+    uint32_t num_samples = 50;
+    uint32_t i = 0, j = 0;
+    uint64_t start, end, total;
+    
+    uint32_t duration[4] = {1, 10 ,100, 1000};
+
+      for (j = 0; j < 4; ++j){
+    nk_vc_printf("tesing udelay(%llu) with %llusamples\n", duration[j], num_samples);
+    total = 0;
+    for (i= 0; i < num_samples; ++i){
+        start = nk_sched_get_realtime();
+        udelay(duration[j]);
+        end = nk_sched_get_realtime();
+        total += (end - start);
+    }
+    nk_vc_printf("UDELAY(%llu): average time in ns = %llu out of %llu samples\n", duration[j], total/num_samples, num_samples);
+      
+    total = 0;
+    for (i = 0; i < num_samples; ++i){
+        start = nk_sched_get_realtime();
+        end = nk_sched_get_realtime();
+        nk_vc_printf("get_real_time overhead: %llu \n", end - start);
+        total += (end - start);
+    }
+    nk_vc_printf("get_real_time overhead: average time in ns = %llu in %llu samples\n", total/num_samples, num_samples);
+      }
+
+    return 0;
+  }
+
   if (sscanf(buf,"burn p %s %llu %u %llu %llu %llu", name, &size_ns, &tpr, &phase, &period, &slice)==6) { 
     nk_vc_printf("Starting periodic burner %s with size %llu ms tpr %u phase %llu from now period %llu ms slice %llu ms\n",name,size_ns,tpr,phase,period,slice);
     size_ns *= 1000000;
@@ -763,7 +808,60 @@ static int handle_cmd(char *buf, int n)
     launch_periodic_burner(name,size_ns,tpr,phase,period,slice);
     return 0;
   }
+    uint32_t num_burner;
+  if (sscanf(buf,"burn_test %llu", &num_burner) == 1) { 
+    //one thread, sweep period and slice
+    //two thread, etc
+    nk_vc_printf("Starting real time scheduler tests with periodic burners\n");
+#define NUM_TESTS  8
 
+    char name[20];
+    uint64_t num_samples = 1000;
+    uint64_t periods[NUM_TESTS] = {1, 2, 4, 10, 100, 1000, 10000, 100000};
+    //uint64_t periods[NUM_TESTS] = {100000, 10000, 1000, 100, 10, 4, 2, 1};
+
+
+    uint64_t us = 1000; // 1 microsecond
+    tpr = 0xe;
+    phase = 0; 
+
+    uint32_t maxratio = 80; //ratio of slice to period out of 100
+    for(int i = 0; i < NUM_TESTS; ++i){
+      period = periods[i] * us;
+      size_ns = period * num_samples;
+      for(int j = 1; j<= maxratio; ++j){
+        slice = period*j/100;
+        sprintf(name, "burner%d %d", i, j);
+        launch_periodic_burner(name, size_ns, tpr, phase, period, slice);
+      }
+    }
+  
+
+
+    /*
+    nk_vc_printf("Starting periodic tests with %llu burners\n", num_burner);
+    size_ns = 1000000; // 1ms
+    phase   = 1000000; 
+    period  = 1000000;
+    slice   = 1000000;
+    tpr     = 0xe;
+
+    uint64_t act_size_ns = 100000 * size_ns;// 100s
+    uint64_t act_phase   = 0; 
+    uint64_t act_period  = 100 * period;// 100 ms
+    uint64_t act_slice   = 0;
+
+    char name[15];
+
+    for (int i= 0; i < num_burner; i++){
+      act_phase   = i*phase; 
+      act_slice   = 20*(i+1)*slice;
+      sprintf(name, "burner%d", i);
+      launch_periodic_burner(name,act_size_ns,tpr,act_phase,act_period,act_slice);
+    }
+    return 0;
+    */
+  }
 #ifdef NAUT_CONFIG_PALACIOS_EMBED
   if (sscanf(buf,"vm %s", name)==1) { 
     extern int guest_start;

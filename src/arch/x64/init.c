@@ -263,7 +263,6 @@ init (unsigned long mbd,
     nk_net_dev_init();
 
     nk_vc_print(NAUT_WELCOME);
-
     
     detect_cpu();
 
@@ -277,8 +276,11 @@ init (unsigned long mbd,
 
     nk_acpi_init();
 
+
+
     /* enumerate CPUs and initialize them */
     smp_early_init(naut);
+
 
     /* this will populate NUMA-related structures and 
      * also initialize the relevant ACPI tables if they exist */
@@ -320,6 +322,29 @@ init (unsigned long mbd,
     pci_init(naut);
 
     nk_sched_init(&sched_cfg);
+
+    //print actual time of udelay()
+    uint32_t i = 0, num_samples = 50;
+    uint64_t    start, end, total;
+    total = 0;
+    for (i= 0; i < num_samples; ++i){
+        start = nk_sched_get_realtime();
+        udelay(1000);
+        end = nk_sched_get_realtime();
+        nk_vc_printf("UDELAY(1000): %llu \n", end - start);
+        total += (end - start);
+    }
+    nk_vc_printf("UDELAY(1000): average time in ns = %llu in %llu samples\n", total/num_samples, num_samples);
+
+    total = 0;
+    for (i = 0; i < num_samples; ++i){
+        start = nk_sched_get_realtime();
+        end = nk_sched_get_realtime();
+        nk_vc_printf("get_real_time overhead: %llu \n", end - start);
+        total += (end - start);
+    }
+    nk_vc_printf("get_real_time overhead: average time in ns = %llu in %llu samples\n", total/num_samples, num_samples);
+
 
     /* we now switch away from the boot-time stack in low memory */
     naut = smp_ap_stack_switch(get_cur_thread()->rsp, get_cur_thread()->rsp, naut);

@@ -383,6 +383,44 @@ out_err:
     return -EINVAL;
 }
 
+/* 
+ * Parallel thread project
+ * nk_thread_group_start
+ */
+int
+nk_thread_group_start (nk_thread_fun_t fun, 
+                 void * input,
+                 void ** output,
+                 uint8_t is_detached,
+                 nk_stack_size_t stack_size,
+                 nk_thread_id_t * tid,
+                 int * bound_cpu,
+                 int group_size,
+                 int leader)
+{
+    int * start = bound_cpu;
+    int my_cpu_id = my_cpu_id();
+    int i;
+    for (i = 0; i < group_size; i++) {
+        if(*start == my_cpu_id) {
+            break;
+        } else {
+            start += 1;
+        }
+    }
+
+    if (i == group_size) {
+        THREAD_ERROR("Could not bound current CPU\n");
+    }
+
+    if (nk_thread_start(fun, input, output, is_detached, stack_size, tid, my_cpu_id)) {
+        if (nk_put_global_thread(fun, input, output, is_detached, stack_size, tid, group_size, bound_cpu)) {
+            THREAD_ERROR("Could not put into global thread\n");
+        }
+    } else {
+        THREAD_ERROR("Could not start thread\n");
+    }
+}
 
 /* 
  * nk_thread_start
@@ -514,7 +552,7 @@ nk_thread_exit (void * retval)
 
     /* wait for my children to finish */
     nk_join_all_children(NULL);
-
+    cli();
     me->output      = retval;
     me->status      = NK_THR_EXITED;
 

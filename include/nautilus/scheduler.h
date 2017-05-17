@@ -171,4 +171,17 @@ struct nk_thread *nk_sched_need_resched(void);
 uint64_t nk_sched_get_runtime(struct nk_thread *t);
 
 struct nk_thread *nk_find_thread_by_tid(uint64_t tid);
+
+struct rt_stats {
+    uint64_t arrival_num;
+    uint64_t resched_num;
+    uint64_t switchin_num;
+    uint64_t miss_num;
+    uint64_t miss_time; //total missed time in ns
+    uint64_t period;
+    uint64_t slice;
+};
+
+void nk_sched_rt_stats(struct rt_stats* stats);
+
 #endif /* _SCHEDULER_H */
