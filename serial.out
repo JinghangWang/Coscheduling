@@ -62,108 +62,108 @@ PCI: [0000:01.32902] Multifunction Device detected
 PCI: 0000:00:02.0 1013:b8 (rev 0)
 PCI: 0000:00:03.0 8086:100e (rev 3)
 CPU 0: Scheduler: Initializing scheduler on BSP
-UDELAY(1000): 94244000 
-UDELAY(1000): 71644000 
-UDELAY(1000): 70546000 
-UDELAY(1000): 126327000 
-UDELAY(1000): 70398000 
-UDELAY(1000): 121694000 
-UDELAY(1000): 72554000 
-UDELAY(1000): 72791000 
-UDELAY(1000): 133923000 
-UDELAY(1000): 130137000 
-UDELAY(1000): 150214000 
-UDELAY(1000): 70893000 
-UDELAY(1000): 70249000 
-UDELAY(1000): 69784000 
-UDELAY(1000): 71654000 
-UDELAY(1000): 69705000 
-UDELAY(1000): 157025000 
-UDELAY(1000): 69871000 
-UDELAY(1000): 69807000 
-UDELAY(1000): 69693000 
-UDELAY(1000): 69695000 
-UDELAY(1000): 71308000 
-UDELAY(1000): 87948000 
-UDELAY(1000): 73431000 
-UDELAY(1000): 74810000 
-UDELAY(1000): 73308000 
-UDELAY(1000): 72040000 
-UDELAY(1000): 70600000 
-UDELAY(1000): 70430000 
-UDELAY(1000): 129180000 
-UDELAY(1000): 144951000 
-UDELAY(1000): 129400000 
-UDELAY(1000): 123200000 
-UDELAY(1000): 77396000 
-UDELAY(1000): 71388000 
-UDELAY(1000): 71110000 
-UDELAY(1000): 72044000 
-UDELAY(1000): 71773000 
-UDELAY(1000): 71343000 
-UDELAY(1000): 74420000 
-UDELAY(1000): 76013000 
-UDELAY(1000): 142215000 
-UDELAY(1000): 78933000 
-UDELAY(1000): 75960000 
-UDELAY(1000): 72258000 
-UDELAY(1000): 70372000 
-UDELAY(1000): 69659000 
-UDELAY(1000): 69816000 
-UDELAY(1000): 69740000 
-UDELAY(1000): 71413000 
-UDELAY(1000): average time in ns = 86586140 in 50 samples
-get_real_time overhead: 4552000 
-get_real_time overhead: 202000 
-get_real_time overhead: 190000 
-get_real_time overhead: 199000 
-get_real_time overhead: 844000 
-get_real_time overhead: 435000 
-get_real_time overhead: 275000 
-get_real_time overhead: 538000 
-get_real_time overhead: 652000 
-get_real_time overhead: 380000 
-get_real_time overhead: 442000 
-get_real_time overhead: 494000 
-get_real_time overhead: 758000 
-get_real_time overhead: 1180000 
-get_real_time overhead: 2180000 
-get_real_time overhead: 1452000 
-get_real_time overhead: 378000 
-get_real_time overhead: 354000 
-get_real_time overhead: 319000 
-get_real_time overhead: 268000 
-get_real_time overhead: 258000 
-get_real_time overhead: 184000 
-get_real_time overhead: 202000 
-get_real_time overhead: 174000 
-get_real_time overhead: 516000 
-get_real_time overhead: 320000 
-get_real_time overhead: 646000 
-get_real_time overhead: 585000 
-get_real_time overhead: 428000 
-get_real_time overhead: 338000 
-get_real_time overhead: 792000 
-get_real_time overhead: 416000 
-get_real_time overhead: 787000 
-get_real_time overhead: 1576000 
-get_real_time overhead: 307000 
-get_real_time overhead: 453000 
-get_real_time overhead: 485000 
-get_real_time overhead: 1992000 
-get_real_time overhead: 820000 
-get_real_time overhead: 950000 
-get_real_time overhead: 328000 
-get_real_time overhead: 278000 
-get_real_time overhead: 214000 
-get_real_time overhead: 242000 
-get_real_time overhead: 190000 
-get_real_time overhead: 179000 
-get_real_time overhead: 425000 
-get_real_time overhead: 1265000 
-get_real_time overhead: 1030000 
-get_real_time overhead: 323000 
-get_real_time overhead: average time in ns = 655900 in 50 samples
+UDELAY(1000): 988937000 
+UDELAY(1000): 601094000 
+UDELAY(1000): 420100000 
+UDELAY(1000): 293000000 
+UDELAY(1000): 384980000 
+UDELAY(1000): 316092000 
+UDELAY(1000): 458323000 
+UDELAY(1000): 447657000 
+UDELAY(1000): 295346000 
+UDELAY(1000): 301397000 
+UDELAY(1000): 141674000 
+UDELAY(1000): 139994000 
+UDELAY(1000): 140069000 
+UDELAY(1000): 139895000 
+UDELAY(1000): 282014000 
+UDELAY(1000): 281860000 
+UDELAY(1000): 331957000 
+UDELAY(1000): 294548000 
+UDELAY(1000): 143000000 
+UDELAY(1000): 219700000 
+UDELAY(1000): 143634000 
+UDELAY(1000): 148554000 
+UDELAY(1000): 380188000 
+UDELAY(1000): 328032000 
+UDELAY(1000): 170557000 
+UDELAY(1000): 328771000 
+UDELAY(1000): 141303000 
+UDELAY(1000): 234791000 
+UDELAY(1000): 266463000 
+UDELAY(1000): 312703000 
+UDELAY(1000): 262480000 
+UDELAY(1000): 206397000 
+UDELAY(1000): 227923000 
+UDELAY(1000): 198512000 
+UDELAY(1000): 141343000 
+UDELAY(1000): 221640000 
+UDELAY(1000): 202045000 
+UDELAY(1000): 219490000 
+UDELAY(1000): 182260000 
+UDELAY(1000): 205500000 
+UDELAY(1000): 141043000 
+UDELAY(1000): 140626000 
+UDELAY(1000): 140794000 
+UDELAY(1000): 140628000 
+UDELAY(1000): 140654000 
+UDELAY(1000): 140700000 
+UDELAY(1000): 141186000 
+UDELAY(1000): 292160000 
+UDELAY(1000): 147214000 
+UDELAY(1000): 188804000 
+UDELAY(1000): average time in ns = 255160640 in 50 samples
+get_real_time overhead: 11317000 
+get_real_time overhead: 1783000 
+get_real_time overhead: 2166000 
+get_real_time overhead: 1689000 
+get_real_time overhead: 3677000 
+get_real_time overhead: 2112000 
+get_real_time overhead: 2552000 
+get_real_time overhead: 1571000 
+get_real_time overhead: 1486000 
+get_real_time overhead: 1243000 
+get_real_time overhead: 1377000 
+get_real_time overhead: 1463000 
+get_real_time overhead: 1094000 
+get_real_time overhead: 1623000 
+get_real_time overhead: 2892000 
+get_real_time overhead: 976000 
+get_real_time overhead: 984000 
+get_real_time overhead: 1040000 
+get_real_time overhead: 1888000 
+get_real_time overhead: 1783000 
+get_real_time overhead: 760000 
+get_real_time overhead: 675000 
+get_real_time overhead: 1203000 
+get_real_time overhead: 903000 
+get_real_time overhead: 2388000 
+get_real_time overhead: 4071000 
+get_real_time overhead: 2028000 
+get_real_time overhead: 1840000 
+get_real_time overhead: 1374000 
+get_real_time overhead: 1086000 
+get_real_time overhead: 637000 
+get_real_time overhead: 520000 
+get_real_time overhead: 3143000 
+get_real_time overhead: 3897000 
+get_real_time overhead: 2500000 
+get_real_time overhead: 1006000 
+get_real_time overhead: 991000 
+get_real_time overhead: 1666000 
+get_real_time overhead: 3040000 
+get_real_time overhead: 2554000 
+get_real_time overhead: 3711000 
+get_real_time overhead: 4177000 
+get_real_time overhead: 6294000 
+get_real_time overhead: 6377000 
+get_real_time overhead: 2914000 
+get_real_time overhead: 2960000 
+get_real_time overhead: 560000 
+get_real_time overhead: 2880000 
+get_real_time overhead: 1474000 
+get_real_time overhead: 1648000 
+get_real_time overhead: average time in ns = 2279860 in 50 samples
 BOOTMEM: Reclaiming boot sections and data:
 BOOTMEM:     [Boot alloc. page map] (0.264 MB)
 BOOTMEM:     [Boot page tables and stack]     (0.4096 MB)
@@ -172,428 +172,40 @@ BOOTMEM:     [TOTAL] (2.109704 MB)
 SMP: Setting up cross-core IPI event queue
 MWAIT not supported
 CPU 0: vc: init
-CPU 0: vc: List launchedList of VCs (space to regenerate)
+CPU 0: vc: List launched
+CPU 0: ramdisk: init
+VIRTIO_PCI: init
+CPU 0: fs: inited
+List of VCs (space to regenerate)
 
 a : default
 b : system-log
 c : vc-list
-
-CPU 0: ramdisk: init
-VIRTIO_PCI: init
-CPU 0: fs: inited
-root-shell> CPU 0: Shell root-shell launched on cpu 0 as 0000000000105000
+d : root-shell
+CPU 0: Shell root-shell launched on cpu 0 as 0000000000105000
 Nautilus boot thread yielding (indefinitely)
-burn_tetst 
-Don't understand "burn_tetst "
-root-shell> burn-test 
-Don't understand "burn-test "
-root-shell> burn_test 1
-Starting real time scheduler tests with periodic burners
-burner0 1 (tid 5) exiting period 1000 ns, slice 1000 ns arrival count 1, resched count 2, switchin count 2, miss count 1, total miss time 2216779000 ns
-burner0 2 (tid 6) exiting period 1000 ns, slice 1000 ns arrival count 1, resched count 1, switchin count 1, miss count 0, total miss time 0 ns
-burner0 3 (tid 7) exiting period 1000 ns, slice 1000 ns arrival count 1, resched count 1, switchin count 1, miss count 0, total miss time 0 ns
-burner0 4 (tid 8) exiting period 1000 ns, slice 1000 ns arrival count 1, resched count 1, switchin count 1, miss count 0, total miss time 0 ns
-burner0 5 (tid 9) exiting period 1000 ns, slice 1000 ns arrival count 1, resched count 1, switchin count 1, miss count 0, total miss time 0 ns
-burner0 6 (tid 10) exiting period 1000 ns, slice 1000 ns arrival count 1, resched count 1, switchin count 1, miss count 0, total miss time 0 ns
-burner0 7 (tid 11) exiting period 1000 ns, slice 1000 ns arrival count 1, resched count 1, switchin count 1, miss count 0, total miss time 0 ns
-burner0 8 (tid 12) exiting period 1000 ns, slice 1000 ns arrival count 1, resched count 1, switchin count 1, miss count 0, total miss time 0 ns
-burner0 9 (tid 13) exiting period 1000 ns, slice 1000 ns arrival count 1, resched count 1, switchin count 1, miss count 0, total miss time 0 ns
-burner0 10 (tid 14) exiting period 1000 ns, slice 1000 ns arrival count 1, resched count 1, switchin count 1, miss count 0, total miss time 0 ns
-burner0 11 (tid 15) exiting period 1000 ns, slice 1000 ns arrival count 1, resched count 1, switchin count 1, miss count 0, total miss time 0 ns
-burner0 12 (tid 16) exiting period 1000 ns, slice 1000 ns arrival count 1, resched count 1, switchin count 1, miss count 0, total miss time 0 ns
-burner0 13 (tid 17) exiting period 1000 ns, slice 1000 ns arrival count 1, resched count 1, switchin count 1, miss count 0, total miss time 0 ns
-burner0 14 (tid 18) exiting period 1000 ns, slice 1000 ns arrival count 1, resched count 1, switchin count 1, miss count 0, total miss time 0 ns
-burner0 15 (tid 19) exiting period 1000 ns, slice 1000 ns arrival count 1, resched count 1, switchin count 1, miss count 0, total miss time 0 ns
-burner0 16 (tid 20) exiting period 1000 ns, slice 1000 ns arrival count 1, resched count 1, switchin count 1, miss count 0, total miss time 0 ns
-burner0 17 (tid 21) exiting period 1000 ns, slice 1000 ns arrival count 1, resched count 5, switchin count 5, miss count 4, total miss time 1735756000 ns
-burner0 18 (tid 22) exiting period 1000 ns, slice 1000 ns arrival count 1, resched count 1, switchin count 1, miss count 0, total miss time 0 ns
-burner0 19 (tid 23) exiting period 1000 ns, slice 1000 ns arrival count 1, resched count 1, switchin count 1, miss count 0, total miss time 0 ns
-burner0 20 (tid 24) exiting period 1000 ns, slice 1000 ns arrival count 1, resched count 1, switchin count 1, miss count 0, total miss time 0 ns
-burner0 21 (tid 25) exiting period 1000 ns, slice 1000 ns arrival count 1, resched count 1, switchin count 1, miss count 0, total miss time 0 ns
-burner0 22 (tid 26) exiting period 1000 ns, slice 1000 ns arrival count 1, resched count 1, switchin count 1, miss count 0, total miss time 0 ns
-burner0 23 (tid 27) exiting period 1000 ns, slice 1000 ns arrival count 1, resched count 1, switchin count 1, miss count 0, total miss time 0 ns
-burner0 24 (tid 28) exiting period 1000 ns, slice 1000 ns arrival count 1, resched count 1, switchin count 1, miss count 0, total miss time 0 ns
-burner0 25 (tid 29) exiting period 1000 ns, slice 1000 ns arrival count 1, resched count 1, switchin count 1, miss count 0, total miss time 0 ns
-burner0 26 (tid 30) exiting period 1000 ns, slice 1000 ns arrival count 1, resched count 1, switchin count 1, miss count 0, total miss time 0 ns
-burner0 27 (tid 31) exiting period 1000 ns, slice 1000 ns arrival count 1, resched count 1, switchin count 1, miss count 0, total miss time 0 ns
-burner0 28 (tid 32) exiting period 1000 ns, slice 1000 ns arrival count 1, resched count 1, switchin count 1, miss count 0, total miss time 0 ns
-burner0 29 (tid 33) exiting period 1000 ns, slice 1000 ns arrival count 1, resched count 1, switchin count 1, miss count 0, total miss time 0 ns
-burner0 30 (tid 34) exiting period 1000 ns, slice 1000 ns arrival count 1, resched count 1, switchin count 1, miss count 0, total miss time 0 ns
-burner0 31 (tid 35) exiting period 1000 ns, slice 1000 ns arrival count 1, resched count 1, switchin count 1, miss count 0, total miss time 0 ns
-burner0 32 (tid 36) exiting period 1000 ns, slice 1000 ns arrival count 1, resched count 3, switchin count 3, miss count 2, total miss time 718301000 ns
-burner0 33 (tid 37) exiting period 1000 ns, slice 1000 ns arrival count 1, resched count 1, switchin count 1, miss count 0, total miss time 0 ns
-burner0 34 (tid 38) exiting period 1000 ns, slice 1000 ns arrival count 1, resched count 1, switchin count 1, miss count 0, total miss time 0 ns
-burner0 35 (tid 39) exiting period 1000 ns, slice 1000 ns arrival count 1, resched count 1, switchin count 1, miss count 0, total miss time 0 ns
-burner0 36 (tid 40) exiting period 1000 ns, slice 1000 ns arrival count 1, resched count 1, switchin count 1, miss count 0, total miss time 0 ns
-burner0 37 (tid 41) exiting period 1000 ns, slice 1000 ns arrival count 1, resched count 1, switchin count 1, miss count 0, total miss time 0 ns
-burner0 38 (tid 42) exiting period 1000 ns, slice 1000 ns arrival count 1, resched count 1, switchin count 1, miss count 0, total miss time 0 ns
-burner0 39 (tid 43) exiting period 1000 ns, slice 1000 ns arrival count 1, resched count 2, switchin count 2, miss count 1, total miss time 634067000 ns
-burner0 40 (tid 44) exiting period 1000 ns, slice 1000 ns arrival count 1, resched count 4, switchin count 4, miss count 3, total miss time 3040130000 ns
-burner0 41 (tid 45) exiting period 1000 ns, slice 1000 ns arrival count 1, resched count 1, switchin count 1, miss count 0, total miss time 0 ns
-burner0 42 (tid 46) exiting period 1000 ns, slice 1000 ns arrival count 1, resched count 1, switchin count 1, miss count 0, total miss time 0 ns
-burner0 43 (tid 47) exiting period 1000 ns, slice 1000 ns arrival count 1, resched count 2, switchin count 2, miss count 1, total miss time 422357000 ns
-burner0 44 (tid 48) exiting period 1000 ns, slice 1000 ns arrival count 1, resched count 1, switchin count 1, miss count 0, total miss time 0 ns
-burner0 45 (tid 49) exiting period 1000 ns, slice 1000 ns arrival count 1, resched count 1, switchin count 1, miss count 0, total miss time 0 ns
-burner0 46 (tid 50) exiting period 1000 ns, slice 1000 ns arrival count 1, resched count 1, switchin count 1, miss count 0, total miss time 0 ns
-burner0 47 (tid 51) exiting period 1000 ns, slice 1000 ns arrival count 1, resched count 5, switchin count 5, miss count 4, total miss time 1961027000 ns
-burner0 48 (tid 52) exiting period 1000 ns, slice 1000 ns arrival count 1, resched count 1, switchin count 1, miss count 0, total miss time 0 ns
-burner0 49 (tid 53) exiting period 1000 ns, slice 1000 ns arrival count 1, resched count 1, switchin count 1, miss count 0, total miss time 0 ns
-burner0 50 (tid 54) exiting period 1000 ns, slice 1000 ns arrival count 1, resched count 1, switchin count 1, miss count 0, total miss time 0 ns
-burner0 51 (tid 55) exiting period 1000 ns, slice 1000 ns arrival count 1, resched count 1, switchin count 1, miss count 0, total miss time 0 ns
-burner0 52 (tid 56) exiting period 1000 ns, slice 1000 ns arrival count 1, resched count 1, switchin count 1, miss count 0, total miss time 0 ns
-burner0 53 (tid 57) exiting period 1000 ns, slice 1000 ns arrival count 1, resched count 1, switchin count 1, miss count 0, total miss time 0 ns
-burner0 54 (tid 58) exiting period 1000 ns, slice 1000 ns arrival count 1, resched count 5, switchin count 5, miss count 4, total miss time 1671546000 ns
-burner0 55 (tid 59) exiting period 1000 ns, slice 1000 ns arrival count 1, resched count 1, switchin count 1, miss count 0, total miss time 0 ns
-burner0 56 (tid 60) exiting period 1000 ns, slice 1000 ns arrival count 1, resched count 1, switchin count 1, miss count 0, total miss time 0 ns
-burner0 57 (tid 61) exiting period 1000 ns, slice 1000 ns arrival count 1, resched count 1, switchin count 1, miss count 0, total miss time 0 ns
-burner0 58 (tid 62) exiting period 1000 ns, slice 1000 ns arrival count 1, resched count 1, switchin count 1, miss count 0, total miss time 0 ns
-burner0 59 (tid 63) exiting period 1000 ns, slice 1000 ns arrival count 1, resched count 1, switchin count 1, miss count 0, total miss time 0 ns
-burner0 60 (tid 64) exiting period 1000 ns, slice 1000 ns arrival count 1, resched count 1, switchin count 1, miss count 0, total miss time 0 ns
-burner0 61 (tid 65) exiting period 1000 ns, slice 1000 ns arrival count 1, resched count 4, switchin count 4, miss count 3, total miss time 1284549000 ns
-burner0 62 (tid 66) exiting period 1000 ns, slice 1000 ns arrival count 1, resched count 1, switchin count 1, miss count 0, total miss time 0 ns
-burner0 63 (tid 67) exiting period 1000 ns, slice 1000 ns arrival count 1, resched count 1, switchin count 1, miss count 0, total miss time 0 ns
-burner0 64 (tid 68) exiting period 1000 ns, slice 1000 ns arrival count 1, resched count 1, switchin count 1, miss count 0, total miss time 0 ns
-burner0 65 (tid 69) exiting period 1000 ns, slice 1000 ns arrival count 1, resched count 1, switchin count 1, miss count 0, total miss time 0 ns
-burner0 66 (tid 70) exiting period 1000 ns, slice 1000 ns arrival count 1, resched count 1, switchin count 1, miss count 0, total miss time 0 ns
-burner0 67 (tid 71) exiting period 1000 ns, slice 1000 ns arrival count 1, resched count 1, switchin count 1, miss count 0, total miss time 0 ns
-burner0 68 (tid 72) exiting period 1000 ns, slice 1000 ns arrival count 1, resched count 1, switchin count 1, miss count 0, total miss time 0 ns
-burner0 69 (tid 73) exiting period 1000 ns, slice 1000 ns arrival count 1, resched count 1, switchin count 1, miss count 0, total miss time 0 ns
-burner0 70 (tid 74) exiting period 1000 ns, slice 1000 ns arrival count 1, resched count 1, switchin count 1, miss count 0, total miss time 0 ns
-burner0 71 (tid 75) exiting period 1000 ns, slice 1000 ns arrival count 1, resched count 1, switchin count 1, miss count 0, total miss time 0 ns
-burner0 72 (tid 76) exiting period 1000 ns, slice 1000 ns arrival count 1, resched count 1, switchin count 1, miss count 0, total miss time 0 ns
-burner0 73 (tid 77) exiting period 1000 ns, slice 1000 ns arrival count 1, resched count 1, switchin count 1, miss count 0, total miss time 0 ns
-burner0 74 (tid 78) exiting period 1000 ns, slice 1000 ns arrival count 1, resched count 1, switchin count 1, miss count 0, total miss time 0 ns
-burner0 75 (tid 79) exiting period 1000 ns, slice 1000 ns arrival count 1, resched count 1, switchin count 1, miss count 0, total miss time 0 ns
-burner0 76 (tid 80) exiting period 1000 ns, slice 1000 ns arrival count 1, resched count 1, switchin count 1, miss count 0, total miss time 0 ns
-burner0 77 (tid 81) exiting period 1000 ns, slice 1000 ns arrival count 1, resched count 1, switchin count 1, miss count 0, total miss time 0 ns
-burner0 78 (tid 82) exiting period 1000 ns, slice 1000 ns arrival count 1, resched count 1, switchin count 1, miss count 0, total miss time 0 ns
-burner0 79 (tid 83) rejected - exiting
-burner0 80 (tid 84) rejected - exiting
-burner1 1 (tid 85) exiting period 2000 ns, slice 2000 ns arrival count 1, resched count 2, switchin count 2, miss count 1, total miss time 737182000 ns
-burner1 2 (tid 86) exiting period 2000 ns, slice 2000 ns arrival count 1, resched count 1, switchin count 1, miss count 0, total miss time 0 ns
-burner1 3 (tid 87) exiting period 2000 ns, slice 2000 ns arrival count 1, resched count 1, switchin count 1, miss count 0, total miss time 0 ns
-burner1 4 (tid 88) exiting period 2000 ns, slice 2000 ns arrival count 1, resched count 2, switchin count 2, miss count 1, total miss time 289826000 ns
-burner1 5 (tid 89) exiting period 2000 ns, slice 2000 ns arrival count 1, resched count 1, switchin count 1, miss count 0, total miss time 0 ns
-burner1 6 (tid 90) exiting period 2000 ns, slice 2000 ns arrival count 1, resched count 1, switchin count 1, miss count 0, total miss time 0 ns
-burner1 7 (tid 91) exiting period 2000 ns, slice 2000 ns arrival count 1, resched count 3, switchin count 3, miss count 2, total miss time 1104692000 ns
-burner1 8 (tid 92) exiting period 2000 ns, slice 2000 ns arrival count 1, resched count 1, switchin count 1, miss count 0, total miss time 0 ns
-burner1 9 (tid 93) exiting period 2000 ns, slice 2000 ns arrival count 1, resched count 1, switchin count 1, miss count 0, total miss time 0 ns
-burner1 10 (tid 94) exiting period 2000 ns, slice 2000 ns arrival count 1, resched count 1, switchin count 1, miss count 0, total miss time 0 ns
-burner1 11 (tid 95) exiting period 2000 ns, slice 2000 ns arrival count 1, resched count 1, switchin count 1, miss count 0, total miss time 0 ns
-burner1 12 (tid 96) exiting period 2000 ns, slice 2000 ns arrival count 1, resched count 7, switchin count 7, miss count 6, total miss time 124685008000 ns
-burner1 13 (tid 97) exiting period 2000 ns, slice 2000 ns arrival count 1, resched count 1, switchin count 1, miss count 0, total miss time 0 ns
-burner1 14 (tid 98) exiting period 2000 ns, slice 2000 ns arrival count 1, resched count 1, switchin count 1, miss count 0, total miss time 0 ns
-burner1 15 (tid 99) exiting period 2000 ns, slice 2000 ns arrival count 1, resched count 1, switchin count 1, miss count 0, total miss time 0 ns
-burner1 16 (tid 100) exiting period 2000 ns, slice 2000 ns arrival count 1, resched count 1, switchin count 1, miss count 0, total miss time 0 ns
-burner1 17 (tid 101) exiting period 2000 ns, slice 2000 ns arrival count 1, resched count 1, switchin count 1, miss count 0, total miss time 0 ns
-burner1 18 (tid 102) exiting period 2000 ns, slice 2000 ns arrival count 1, resched count 1, switchin count 1, miss count 0, total miss time 0 ns
-burner1 19 (tid 103) exiting period 2000 ns, slice 2000 ns arrival count 1, resched count 1, switchin count 1, miss count 0, total miss time 0 ns
-burner1 20 (tid 104) exiting period 2000 ns, slice 2000 ns arrival count 1, resched count 1, switchin count 1, miss count 0, total miss time 0 ns
-burner1 21 (tid 105) exiting period 2000 ns, slice 2000 ns arrival count 1, resched count 1, switchin count 1, miss count 0, total miss time 0 ns
-burner1 22 (tid 106) exiting period 2000 ns, slice 2000 ns arrival count 1, resched count 1, switchin count 1, miss count 0, total miss time 0 ns
-burner1 23 (tid 107) exiting period 2000 ns, slice 2000 ns arrival count 1, resched count 1, switchin count 1, miss count 0, total miss time 0 ns
-burner1 24 (tid 108) exiting period 2000 ns, slice 2000 ns arrival count 1, resched count 1, switchin count 1, miss count 0, total miss time 0 ns
-burner1 25 (tid 109) exiting period 2000 ns, slice 2000 ns arrival count 1, resched count 1, switchin count 1, miss count 0, total miss time 0 ns
-burner1 26 (tid 110) exiting period 2000 ns, slice 2000 ns arrival count 1, resched count 1, switchin count 1, miss count 0, total miss time 0 ns
-burner1 27 (tid 111) exiting period 2000 ns, slice 2000 ns arrival count 1, resched count 1, switchin count 1, miss count 0, total miss time 0 ns
-burner1 28 (tid 112) exiting period 2000 ns, slice 2000 ns arrival count 1, resched count 1, switchin count 1, miss count 0, total miss time 0 ns
-burner1 29 (tid 113) exiting period 2000 ns, slice 2000 ns arrival count 1, resched count 1, switchin count 1, miss count 0, total miss time 0 ns
-burner1 30 (tid 114) exiting period 2000 ns, slice 2000 ns arrival count 1, resched count 1, switchin count 1, miss count 0, total miss time 0 ns
-burner1 31 (tid 115) exiting period 2000 ns, slice 2000 ns arrival count 1, resched count 1, switchin count 1, miss count 0, total miss time 0 ns
-burner1 32 (tid 116) exiting period 2000 ns, slice 2000 ns arrival count 1, resched count 1, switchin count 1, miss count 0, total miss time 0 ns
-burner1 33 (tid 117) exiting period 2000 ns, slice 2000 ns arrival count 1, resched count 1, switchin count 1, miss count 0, total miss time 0 ns
-burner1 34 (tid 118) exiting period 2000 ns, slice 2000 ns arrival count 1, resched count 3, switchin count 3, miss count 2, total miss time 357156000 ns
-burner1 35 (tid 119) exiting period 2000 ns, slice 2000 ns arrival count 1, resched count 1, switchin count 1, miss count 0, total miss time 0 ns
-burner1 36 (tid 120) exiting period 2000 ns, slice 2000 ns arrival count 1, resched count 1, switchin count 1, miss count 0, total miss time 0 ns
-burner1 37 (tid 121) exiting period 2000 ns, slice 2000 ns arrival count 1, resched count 1, switchin count 1, miss count 0, total miss time 0 ns
-burner1 38 (tid 122) exiting period 2000 ns, slice 2000 ns arrival count 1, resched count 1, switchin count 1, miss count 0, total miss time 0 ns
-burner1 39 (tid 123) exiting period 2000 ns, slice 2000 ns arrival count 1, resched count 1, switchin count 1, miss count 0, total miss time 0 ns
-burner1 40 (tid 124) exiting period 2000 ns, slice 2000 ns arrival count 1, resched count 1, switchin count 1, miss count 0, total miss time 0 ns
-burner1 41 (tid 125) exiting period 2000 ns, slice 2000 ns arrival count 1, resched count 1, switchin count 1, miss count 0, total miss time 0 ns
-burner1 42 (tid 126) exiting period 2000 ns, slice 2000 ns arrival count 1, resched count 3, switchin count 3, miss count 2, total miss time 635289000 ns
-burner1 43 (tid 127) exiting period 2000 ns, slice 2000 ns arrival count 1, resched count 1, switchin count 1, miss count 0, total miss time 0 ns
-burner1 44 (tid 128) exiting period 2000 ns, slice 2000 ns arrival count 1, resched count 1, switchin count 1, miss count 0, total miss time 0 ns
-burner1 45 (tid 129) exiting period 2000 ns, slice 2000 ns arrival count 1, resched count 1, switchin count 1, miss count 0, total miss time 0 ns
-burner1 46 (tid 130) exiting period 2000 ns, slice 2000 ns arrival count 1, resched count 3, switchin count 3, miss count 2, total miss time 1224766000 ns
-burner1 47 (tid 131) exiting period 2000 ns, slice 2000 ns arrival count 1, resched count 1, switchin count 1, miss count 0, total miss time 0 ns
-burner1 48 (tid 132) exiting period 2000 ns, slice 2000 ns arrival count 1, resched count 1, switchin count 1, miss count 0, total miss time 0 ns
-burner1 49 (tid 133) exiting period 2000 ns, slice 2000 ns arrival count 1, resched count 1, switchin count 1, miss count 0, total miss time 0 ns
-burner1 50 (tid 134) exiting period 2000 ns, slice 2000 ns arrival count 1, resched count 1, switchin count 1, miss count 0, total miss time 0 ns
-burner1 51 (tid 135) exiting period 2000 ns, slice 2000 ns arrival count 1, resched count 1, switchin count 1, miss count 0, total miss time 0 ns
-burner1 52 (tid 136) exiting period 2000 ns, slice 2000 ns arrival count 1, resched count 2, switchin count 2, miss count 1, total miss time 991968000 ns
-burner1 53 (tid 137) exiting period 2000 ns, slice 2000 ns arrival count 1, resched count 1, switchin count 1, miss count 0, total miss time 0 ns
-burner1 54 (tid 138) exiting period 2000 ns, slice 2000 ns arrival count 1, resched count 1, switchin count 1, miss count 0, total miss time 0 ns
-burner1 55 (tid 139) exiting period 2000 ns, slice 2000 ns arrival count 1, resched count 2, switchin count 2, miss count 1, total miss time 247798000 ns
-burner1 56 (tid 140) exiting period 2000 ns, slice 2000 ns arrival count 1, resched count 1, switchin count 1, miss count 0, total miss time 0 ns
-burner1 57 (tid 141) exiting period 2000 ns, slice 2000 ns arrival count 1, resched count 1, switchin count 1, miss count 0, total miss time 0 ns
-burner1 58 (tid 142) exiting period 2000 ns, slice 2000 ns arrival count 1, resched count 1, switchin count 1, miss count 0, total miss time 0 ns
-burner1 59 (tid 143) exiting period 2000 ns, slice 2000 ns arrival count 1, resched count 2, switchin count 2, miss count 1, total miss time 167287000 ns
-burner1 60 (tid 144) exiting period 2000 ns, slice 2000 ns arrival count 1, resched count 1, switchin count 1, miss count 0, total miss time 0 ns
-burner1 61 (tid 145) exiting period 2000 ns, slice 2000 ns arrival count 1, resched count 1, switchin count 1, miss count 0, total miss time 0 ns
-burner1 62 (tid 146) exiting period 2000 ns, slice 2000 ns arrival count 1, resched count 1, switchin count 1, miss count 0, total miss time 0 ns
-burner1 63 (tid 147) exiting period 2000 ns, slice 2000 ns arrival count 1, resched count 1, switchin count 1, miss count 0, total miss time 0 ns
-burner1 64 (tid 148) exiting period 2000 ns, slice 2000 ns arrival count 1, resched count 1, switchin count 1, miss count 0, total miss time 0 ns
-burner1 65 (tid 149) exiting period 2000 ns, slice 2000 ns arrival count 1, resched count 1, switchin count 1, miss count 0, total miss time 0 ns
-burner1 66 (tid 150) exiting period 2000 ns, slice 2000 ns arrival count 1, resched count 1, switchin count 1, miss count 0, total miss time 0 ns
-burner1 67 (tid 151) exiting period 2000 ns, slice 2000 ns arrival count 1, resched count 3, switchin count 3, miss count 2, total miss time 534781000 ns
-burner1 68 (tid 152) exiting period 2000 ns, slice 2000 ns arrival count 1, resched count 3, switchin count 3, miss count 2, total miss time 755971000 ns
-burner1 69 (tid 153) exiting period 2000 ns, slice 2000 ns arrival count 1, resched count 1, switchin count 1, miss count 0, total miss time 0 ns
-burner1 70 (tid 154) exiting period 2000 ns, slice 2000 ns arrival count 1, resched count 1, switchin count 1, miss count 0, total miss time 0 ns
-burner1 71 (tid 155) exiting period 2000 ns, slice 2000 ns arrival count 1, resched count 1, switchin count 1, miss count 0, total miss time 0 ns
-burner1 72 (tid 156) exiting period 2000 ns, slice 2000 ns arrival count 1, resched count 1, switchin count 1, miss count 0, total miss time 0 ns
-burner1 73 (tid 157) exiting period 2000 ns, slice 2000 ns arrival count 1, resched count 1, switchin count 1, miss count 0, total miss time 0 ns
-burner1 74 (tid 158) exiting period 2000 ns, slice 2000 ns arrival count 1, resched count 1, switchin count 1, miss count 0, total miss time 0 ns
-burner1 75 (tid 159) exiting period 2000 ns, slice 2000 ns arrival count 1, resched count 2, switchin count 2, miss count 1, total miss time 264836000 ns
-burner1 76 (tid 160) exiting period 2000 ns, slice 2000 ns arrival count 1, resched count 1, switchin count 1, miss count 0, total miss time 0 ns
-burner1 77 (tid 161) exiting period 2000 ns, slice 2000 ns arrival count 1, resched count 1, switchin count 1, miss count 0, total miss time 0 ns
-burner1 78 (tid 162) exiting period 2000 ns, slice 2000 ns arrival count 1, resched count 1, switchin count 1, miss count 0, total miss time 0 ns
-burner1 79 (tid 163) rejected - exiting
-burner1 80 (tid 164) rejected - exiting
-burner2 1 (tid 165) exiting period 4000 ns, slice 4000 ns arrival count 1, resched count 2, switchin count 2, miss count 1, total miss time 192746000 ns
-burner2 2 (tid 166) exiting period 4000 ns, slice 4000 ns arrival count 1, resched count 1, switchin count 1, miss count 0, total miss time 0 ns
-burner2 3 (tid 167) exiting period 4000 ns, slice 4000 ns arrival count 1, resched count 1, switchin count 1, miss count 0, total miss time 0 ns
-burner2 4 (tid 168) exiting period 4000 ns, slice 4000 ns arrival count 1, resched count 1, switchin count 1, miss count 0, total miss time 0 ns
-burner2 5 (tid 169) exiting period 4000 ns, slice 4000 ns arrival count 1, resched count 1, switchin count 1, miss count 0, total miss time 0 ns
-burner2 6 (tid 170) exiting period 4000 ns, slice 4000 ns arrival count 1, resched count 1, switchin count 1, miss count 0, total miss time 0 ns
-burner2 7 (tid 171) exiting period 4000 ns, slice 4000 ns arrival count 1, resched count 1, switchin count 1, miss count 0, total miss time 0 ns
-burner2 8 (tid 172) exiting period 4000 ns, slice 4000 ns arrival count 1, resched count 3, switchin count 3, miss count 2, total miss time 599444000 ns
-burner2 9 (tid 173) exiting period 4000 ns, slice 4000 ns arrival count 1, resched count 1, switchin count 1, miss count 0, total miss time 0 ns
-burner2 10 (tid 174) exiting period 4000 ns, slice 4000 ns arrival count 1, resched count 1, switchin count 1, miss count 0, total miss time 0 ns
-burner2 11 (tid 175) exiting period 4000 ns, slice 4000 ns arrival count 1, resched count 1, switchin count 1, miss count 0, total miss time 0 ns
-burner2 12 (tid 176) exiting period 4000 ns, slice 4000 ns arrival count 1, resched count 1, switchin count 1, miss count 0, total miss time 0 ns
-burner2 13 (tid 177) exiting period 4000 ns, slice 4000 ns arrival count 1, resched count 1, switchin count 1, miss count 0, total miss time 0 ns
-burner2 14 (tid 178) exiting period 4000 ns, slice 4000 ns arrival count 1, resched count 1, switchin count 1, miss count 0, total miss time 0 ns
-burner2 15 (tid 179) exiting period 4000 ns, slice 4000 ns arrival count 1, resched count 1, switchin count 1, miss count 0, total miss time 0 ns
-burner2 16 (tid 180) exiting period 4000 ns, slice 4000 ns arrival count 1, resched count 1, switchin count 1, miss count 0, total miss time 0 ns
-burner2 17 (tid 181) exiting period 4000 ns, slice 4000 ns arrival count 1, resched count 1, switchin count 1, miss count 0, total miss time 0 ns
-burner2 18 (tid 182) exiting period 4000 ns, slice 4000 ns arrival count 1, resched count 1, switchin count 1, miss count 0, total miss time 0 ns
-burner2 19 (tid 183) exiting period 4000 ns, slice 4000 ns arrival count 1, resched count 1, switchin count 1, miss count 0, total miss time 0 ns
-burner2 20 (tid 184) exiting period 4000 ns, slice 4000 ns arrival count 1, resched count 1, switchin count 1, miss count 0, total miss time 0 ns
-burner2 21 (tid 185) exiting period 4000 ns, slice 4000 ns arrival count 1, resched count 1, switchin count 1, miss count 0, total miss time 0 ns
-burner2 22 (tid 186) exiting period 4000 ns, slice 4000 ns arrival count 1, resched count 1, switchin count 1, miss count 0, total miss time 0 ns
-burner2 23 (tid 187) exiting period 4000 ns, slice 4000 ns arrival count 1, resched count 2, switchin count 2, miss count 1, total miss time 303955000 ns
-burner2 24 (tid 188) exiting period 4000 ns, slice 4000 ns arrival count 1, resched count 1, switchin count 1, miss count 0, total miss time 0 ns
-burner2 25 (tid 189) exiting period 4000 ns, slice 4000 ns arrival count 1, resched count 2, switchin count 2, miss count 1, total miss time 176126000 ns
-burner2 26 (tid 190) exiting period 4000 ns, slice 4000 ns arrival count 1, resched count 1, switchin count 1, miss count 0, total miss time 0 ns
-burner2 27 (tid 191) exiting period 4000 ns, slice 4000 ns arrival count 1, resched count 1, switchin count 1, miss count 0, total miss time 0 ns
-burner2 28 (tid 192) exiting period 4000 ns, slice 4000 ns arrival count 1, resched count 1, switchin count 1, miss count 0, total miss time 0 ns
-burner2 29 (tid 193) exiting period 4000 ns, slice 4000 ns arrival count 1, resched count 1, switchin count 1, miss count 0, total miss time 0 ns
-burner2 30 (tid 194) exiting period 4000 ns, slice 4000 ns arrival count 1, resched count 2, switchin count 2, miss count 1, total miss time 136204000 ns
-burner2 31 (tid 195) exiting period 4000 ns, slice 4000 ns arrival count 1, resched count 1, switchin count 1, miss count 0, total miss time 0 ns
-burner2 32 (tid 196) exiting period 4000 ns, slice 4000 ns arrival count 1, resched count 3, switchin count 3, miss count 2, total miss time 1092165000 ns
-burner2 33 (tid 197) exiting period 4000 ns, slice 4000 ns arrival count 1, resched count 1, switchin count 1, miss count 0, total miss time 0 ns
-burner2 34 (tid 198) exiting period 4000 ns, slice 4000 ns arrival count 1, resched count 1, switchin count 1, miss count 0, total miss time 0 ns
-burner2 35 (tid 199) exiting period 4000 ns, slice 4000 ns arrival count 1, resched count 1, switchin count 1, miss count 0, total miss time 0 ns
-burner2 36 (tid 200) exiting period 4000 ns, slice 4000 ns arrival count 1, resched count 5, switchin count 5, miss count 4, total miss time 3074201000 ns
-burner2 37 (tid 201) exiting period 4000 ns, slice 4000 ns arrival count 1, resched count 1, switchin count 1, miss count 0, total miss time 0 ns
-burner2 38 (tid 202) exiting period 4000 ns, slice 4000 ns arrival count 1, resched count 2, switchin count 2, miss count 1, total miss time 255346000 ns
-burner2 39 (tid 203) exiting period 4000 ns, slice 4000 ns arrival count 1, resched count 1, switchin count 1, miss count 0, total miss time 0 ns
-burner2 40 (tid 204) exiting period 4000 ns, slice 4000 ns arrival count 1, resched count 1, switchin count 1, miss count 0, total miss time 0 ns
-burner2 41 (tid 205) exiting period 4000 ns, slice 4000 ns arrival count 1, resched count 5, switchin count 5, miss count 4, total miss time 2689559000 ns
-burner2 42 (tid 206) exiting period 4000 ns, slice 4000 ns arrival count 1, resched count 2, switchin count 2, miss count 1, total miss time 134858000 ns
-burner2 43 (tid 207) exiting period 4000 ns, slice 4000 ns arrival count 1, resched count 1, switchin count 1, miss count 0, total miss time 0 ns
-burner2 44 (tid 208) exiting period 4000 ns, slice 4000 ns arrival count 1, resched count 1, switchin count 1, miss count 0, total miss time 0 ns
-burner2 45 (tid 209) exiting period 4000 ns, slice 4000 ns arrival count 1, resched count 4, switchin count 4, miss count 3, total miss time 1241447000 ns
-burner2 46 (tid 210) exiting period 4000 ns, slice 4000 ns arrival count 1, resched count 2, switchin count 2, miss count 1, total miss time 214249000 ns
-burner2 47 (tid 211) exiting period 4000 ns, slice 4000 ns arrival count 1, resched count 1, switchin count 1, miss count 0, total miss time 0 ns
-burner2 48 (tid 212) exiting period 4000 ns, slice 4000 ns arrival count 1, resched count 1, switchin count 1, miss count 0, total miss time 0 ns
-burner2 49 (tid 213) exiting period 4000 ns, slice 4000 ns arrival count 1, resched count 1, switchin count 1, miss count 0, total miss time 0 ns
-burner2 50 (tid 214) exiting period 4000 ns, slice 4000 ns arrival count 1, resched count 1, switchin count 1, miss count 0, total miss time 0 ns
-burner2 51 (tid 215) exiting period 4000 ns, slice 4000 ns arrival count 1, resched count 1, switchin count 1, miss count 0, total miss time 0 ns
-burner2 52 (tid 216) exiting period 4000 ns, slice 4000 ns arrival count 1, resched count 1, switchin count 1, miss count 0, total miss time 0 ns
-burner2 53 (tid 217) exiting period 4000 ns, slice 4000 ns arrival count 1, resched count 1, switchin count 1, miss count 0, total miss time 0 ns
-burner2 54 (tid 218) exiting period 4000 ns, slice 4000 ns arrival count 1, resched count 1, switchin count 1, miss count 0, total miss time 0 ns
-burner2 55 (tid 219) exiting period 4000 ns, slice 4000 ns arrival count 1, resched count 1, switchin count 1, miss count 0, total miss time 0 ns
-burner2 56 (tid 220) exiting period 4000 ns, slice 4000 ns arrival count 1, resched count 2, switchin count 2, miss count 1, total miss time 219471000 ns
-burner2 57 (tid 221) exiting period 4000 ns, slice 4000 ns arrival count 1, resched count 1, switchin count 1, miss count 0, total miss time 0 ns
-burner2 58 (tid 222) exiting period 4000 ns, slice 4000 ns arrival count 1, resched count 1, switchin count 1, miss count 0, total miss time 0 ns
-burner2 59 (tid 223) exiting period 4000 ns, slice 4000 ns arrival count 1, resched count 1, switchin count 1, miss count 0, total miss time 0 ns
-burner2 60 (tid 224) exiting period 4000 ns, slice 4000 ns arrival count 1, resched count 1, switchin count 1, miss count 0, total miss time 0 ns
-burner2 61 (tid 225) exiting period 4000 ns, slice 4000 ns arrival count 1, resched count 1, switchin count 1, miss count 0, total miss time 0 ns
-burner2 62 (tid 226) exiting period 4000 ns, slice 4000 ns arrival count 1, resched count 1, switchin count 1, miss count 0, total miss time 0 ns
-burner2 63 (tid 227) exiting period 4000 ns, slice 4000 ns arrival count 1, resched count 1, switchin count 1, miss count 0, total miss time 0 ns
-burner2 64 (tid 228) exiting period 4000 ns, slice 4000 ns arrival count 1, resched count 1, switchin count 1, miss count 0, total miss time 0 ns
-burner2 65 (tid 229) exiting period 4000 ns, slice 4000 ns arrival count 1, resched count 1, switchin count 1, miss count 0, total miss time 0 ns
-burner2 66 (tid 230) exiting period 4000 ns, slice 4000 ns arrival count 1, resched count 1, switchin count 1, miss count 0, total miss time 0 ns
-burner2 67 (tid 231) exiting period 4000 ns, slice 4000 ns arrival count 1, resched count 1, switchin count 1, miss count 0, total miss time 0 ns
-burner2 68 (tid 232) exiting period 4000 ns, slice 4000 ns arrival count 1, resched count 1, switchin count 1, miss count 0, total miss time 0 ns
-burner2 69 (tid 233) exiting period 4000 ns, slice 4000 ns arrival count 1, resched count 4, switchin count 4, miss count 3, total miss time 743485000 ns
-burner2 70 (tid 234) exiting period 4000 ns, slice 4000 ns arrival count 1, resched count 1, switchin count 1, miss count 0, total miss time 0 ns
-burner2 71 (tid 235) exiting period 4000 ns, slice 4000 ns arrival count 1, resched count 1, switchin count 1, miss count 0, total miss time 0 ns
-burner2 72 (tid 236) exiting period 4000 ns, slice 4000 ns arrival count 1, resched count 3, switchin count 3, miss count 2, total miss time 1034395000 ns
-burner2 73 (tid 237) exiting period 4000 ns, slice 4000 ns arrival count 1, resched count 1, switchin count 1, miss count 0, total miss time 0 ns
-burner2 74 (tid 238) exiting period 4000 ns, slice 4000 ns arrival count 1, resched count 1, switchin count 1, miss count 0, total miss time 0 ns
-burner2 75 (tid 239) exiting period 4000 ns, slice 4000 ns arrival count 1, resched count 1, switchin count 1, miss count 0, total miss time 0 ns
-burner2 76 (tid 240) exiting period 4000 ns, slice 4000 ns arrival count 1, resched count 3, switchin count 3, miss count 2, total miss time 907490000 ns
-burner2 77 (tid 241) exiting period 4000 ns, slice 4000 ns arrival count 1, resched count 1, switchin count 1, miss count 0, total miss time 0 ns
-burner2 78 (tid 242) exiting period 4000 ns, slice 4000 ns arrival count 1, resched count 2, switchin count 2, miss count 1, total miss time 293153000 ns
-burner2 79 (tid 243) rejected - exiting
-burner2 80 (tid 244) rejected - exiting
-burner3 1 (tid 245) exiting period 10000 ns, slice 10000 ns arrival count 1, resched count 1, switchin count 1, miss count 0, total miss time 0 ns
-burner3 2 (tid 246) exiting period 10000 ns, slice 10000 ns arrival count 1, resched count 1, switchin count 1, miss count 0, total miss time 0 ns
-burner3 3 (tid 247) exiting period 10000 ns, slice 10000 ns arrival count 1, resched count 1, switchin count 1, miss count 0, total miss time 0 ns
-burner3 4 (tid 248) exiting period 10000 ns, slice 10000 ns arrival count 1, resched count 1, switchin count 1, miss count 0, total miss time 0 ns
-burner3 5 (tid 249) exiting period 10000 ns, slice 10000 ns arrival count 1, resched count 1, switchin count 1, miss count 0, total miss time 0 ns
-burner3 6 (tid 250) exiting period 10000 ns, slice 10000 ns arrival count 1, resched count 1, switchin count 1, miss count 0, total miss time 0 ns
-burner3 7 (tid 251) exiting period 10000 ns, slice 10000 ns arrival count 1, resched count 1, switchin count 1, miss count 0, total miss time 0 ns
-burner3 8 (tid 252) exiting period 10000 ns, slice 10000 ns arrival count 1, resched count 1, switchin count 1, miss count 0, total miss time 0 ns
-burner3 9 (tid 253) exiting period 10000 ns, slice 10000 ns arrival count 1, resched count 2, switchin count 2, miss count 1, total miss time 196286000 ns
-burner3 10 (tid 254) exiting period 10000 ns, slice 10000 ns arrival count 1, resched count 1, switchin count 1, miss count 0, total miss time 0 ns
-burner3 11 (tid 255) exiting period 10000 ns, slice 10000 ns arrival count 1, resched count 1, switchin count 1, miss count 0, total miss time 0 ns
-burner3 12 (tid 256) exiting period 10000 ns, slice 10000 ns arrival count 1, resched count 1, switchin count 1, miss count 0, total miss time 0 ns
-burner3 13 (tid 257) exiting period 10000 ns, slice 10000 ns arrival count 1, resched count 1, switchin count 1, miss count 0, total miss time 0 ns
-burner3 14 (tid 258) exiting period 10000 ns, slice 10000 ns arrival count 1, resched count 1, switchin count 1, miss count 0, total miss time 0 ns
-burner3 15 (tid 259) exiting period 10000 ns, slice 10000 ns arrival count 1, resched count 1, switchin count 1, miss count 0, total miss time 0 ns
-burner3 16 (tid 260) exiting period 10000 ns, slice 10000 ns arrival count 1, resched count 1, switchin count 1, miss count 0, total miss time 0 ns
-burner3 17 (tid 261) exiting period 10000 ns, slice 10000 ns arrival count 1, resched count 1, switchin count 1, miss count 0, total miss time 0 ns
-burner3 18 (tid 262) exiting period 10000 ns, slice 10000 ns arrival count 1, resched count 1, switchin count 1, miss count 0, total miss time 0 ns
-burner3 19 (tid 263) exiting period 10000 ns, slice 10000 ns arrival count 1, resched count 3, switchin count 3, miss count 2, total miss time 502920000 ns
-burner3 20 (tid 264) exiting period 10000 ns, slice 10000 ns arrival count 1, resched count 1, switchin count 1, miss count 0, total miss time 0 ns
-burner3 21 (tid 265) exiting period 10000 ns, slice 10000 ns arrival count 1, resched count 1, switchin count 1, miss count 0, total miss time 0 ns
-burner3 22 (tid 266) exiting period 10000 ns, slice 10000 ns arrival count 1, resched count 1, switchin count 1, miss count 0, total miss time 0 ns
-burner3 23 (tid 267) exiting period 10000 ns, slice 10000 ns arrival count 1, resched count 1, switchin count 1, miss count 0, total miss time 0 ns
-burner3 24 (tid 268) exiting period 10000 ns, slice 10000 ns arrival count 1, resched count 1, switchin count 1, miss count 0, total miss time 0 ns
-burner3 25 (tid 269) exiting period 10000 ns, slice 10000 ns arrival count 1, resched count 1, switchin count 1, miss count 0, total miss time 0 ns
-burner3 26 (tid 270) exiting period 10000 ns, slice 10000 ns arrival count 1, resched count 1, switchin count 1, miss count 0, total miss time 0 ns
-burner3 27 (tid 271) exiting period 10000 ns, slice 10000 ns arrival count 1, resched count 1, switchin count 1, miss count 0, total miss time 0 ns
-burner3 28 (tid 272) exiting period 10000 ns, slice 10000 ns arrival count 1, resched count 1, switchin count 1, miss count 0, total miss time 0 ns
-burner3 29 (tid 273) exiting period 10000 ns, slice 10000 ns arrival count 1, resched count 1, switchin count 1, miss count 0, total miss time 0 ns
-burner3 30 (tid 274) exiting period 10000 ns, slice 10000 ns arrival count 1, resched count 3, switchin count 3, miss count 2, total miss time 468048000 ns
-burner3 31 (tid 275) exiting period 10000 ns, slice 10000 ns arrival count 1, resched count 1, switchin count 1, miss count 0, total miss time 0 ns
-burner3 32 (tid 276) exiting period 10000 ns, slice 10000 ns arrival count 1, resched count 2, switchin count 2, miss count 1, total miss time 202737000 ns
-burner3 33 (tid 277) exiting period 10000 ns, slice 10000 ns arrival count 1, resched count 1, switchin count 1, miss count 0, total miss time 0 ns
-burner3 34 (tid 278) exiting period 10000 ns, slice 10000 ns arrival count 1, resched count 1, switchin count 1, miss count 0, total miss time 0 ns
-burner3 35 (tid 279) exiting period 10000 ns, slice 10000 ns arrival count 1, resched count 1, switchin count 1, miss count 0, total miss time 0 ns
-burner3 36 (tid 280) exiting period 10000 ns, slice 10000 ns arrival count 1, resched count 2, switchin count 2, miss count 1, total miss time 66615000 ns
-burner3 37 (tid 281) exiting period 10000 ns, slice 10000 ns arrival count 1, resched count 1, switchin count 1, miss count 0, total miss time 0 ns
-burner3 38 (tid 282) exiting period 10000 ns, slice 10000 ns arrival count 1, resched count 1, switchin count 1, miss count 0, total miss time 0 ns
-burner3 39 (tid 283) exiting period 10000 ns, slice 10000 ns arrival count 1, resched count 2, switchin count 2, miss count 1, total miss time 597804000 ns
-burner3 40 (tid 284) exiting period 10000 ns, slice 10000 ns arrival count 1, resched count 1, switchin count 1, miss count 0, total miss time 0 ns
-burner3 41 (tid 285) exiting period 10000 ns, slice 10000 ns arrival count 1, resched count 1, switchin count 1, miss count 0, total miss time 0 ns
-burner3 42 (tid 286) exiting period 10000 ns, slice 10000 ns arrival count 1, resched count 1, switchin count 1, miss count 0, total miss time 0 ns
-burner3 43 (tid 287) exiting period 10000 ns, slice 10000 ns arrival count 1, resched count 1, switchin count 1, miss count 0, total miss time 0 ns
-burner3 44 (tid 288) exiting period 10000 ns, slice 10000 ns arrival count 1, resched count 1, switchin count 1, miss count 0, total miss time 0 ns
-burner3 45 (tid 289) exiting period 10000 ns, slice 10000 ns arrival count 1, resched count 1, switchin count 1, miss count 0, total miss time 0 ns
-burner3 46 (tid 290) exiting period 10000 ns, slice 10000 ns arrival count 1, resched count 1, switchin count 1, miss count 0, total miss time 0 ns
-burner3 47 (tid 291) exiting period 10000 ns, slice 10000 ns arrival count 1, resched count 2, switchin count 2, miss count 1, total miss time 758503000 ns
-burner3 48 (tid 292) exiting period 10000 ns, slice 10000 ns arrival count 1, resched count 1, switchin count 1, miss count 0, total miss time 0 ns
-burner3 49 (tid 293) exiting period 10000 ns, slice 10000 ns arrival count 1, resched count 1, switchin count 1, miss count 0, total miss time 0 ns
-burner3 50 (tid 294) exiting period 10000 ns, slice 10000 ns arrival count 1, resched count 1, switchin count 1, miss count 0, total miss time 0 ns
-burner3 51 (tid 295) exiting period 10000 ns, slice 10000 ns arrival count 1, resched count 1, switchin count 1, miss count 0, total miss time 0 ns
-burner3 52 (tid 296) exiting period 10000 ns, slice 10000 ns arrival count 1, resched count 1, switchin count 1, miss count 0, total miss time 0 ns
-burner3 53 (tid 297) exiting period 10000 ns, slice 10000 ns arrival count 1, resched count 1, switchin count 1, miss count 0, total miss time 0 ns
-burner3 54 (tid 298) exiting period 10000 ns, slice 10000 ns arrival count 1, resched count 1, switchin count 1, miss count 0, total miss time 0 ns
-burner3 55 (tid 299) exiting period 10000 ns, slice 10000 ns arrival count 1, resched count 1, switchin count 1, miss count 0, total miss time 0 ns
-burner3 56 (tid 300) exiting period 10000 ns, slice 10000 ns arrival count 1, resched count 1, switchin count 1, miss count 0, total miss time 0 ns
-burner3 57 (tid 301) exiting period 10000 ns, slice 10000 ns arrival count 1, resched count 1, switchin count 1, miss count 0, total miss time 0 ns
-burner3 58 (tid 302) exiting period 10000 ns, slice 10000 ns arrival count 1, resched count 1, switchin count 1, miss count 0, total miss time 0 ns
-burner3 59 (tid 303) exiting period 10000 ns, slice 10000 ns arrival count 1, resched count 1, switchin count 1, miss count 0, total miss time 0 ns
-burner3 60 (tid 304) exiting period 10000 ns, slice 10000 ns arrival count 1, resched count 1, switchin count 1, miss count 0, total miss time 0 ns
-burner3 61 (tid 305) exiting period 10000 ns, slice 10000 ns arrival count 1, resched count 1, switchin count 1, miss count 0, total miss time 0 ns
-burner3 62 (tid 306) exiting period 10000 ns, slice 10000 ns arrival count 1, resched count 1, switchin count 1, miss count 0, total miss time 0 ns
-burner3 63 (tid 307) exiting period 10000 ns, slice 10000 ns arrival count 1, resched count 1, switchin count 1, miss count 0, total miss time 0 ns
-burner3 64 (tid 308) exiting period 10000 ns, slice 10000 ns arrival count 1, resched count 1, switchin count 1, miss count 0, total miss time 0 ns
-burner3 65 (tid 309) exiting period 10000 ns, slice 10000 ns arrival count 1, resched count 1, switchin count 1, miss count 0, total miss time 0 ns
-burner3 66 (tid 310) exiting period 10000 ns, slice 10000 ns arrival count 1, resched count 1, switchin count 1, miss count 0, total miss time 0 ns
-burner3 67 (tid 311) exiting period 10000 ns, slice 10000 ns arrival count 1, resched count 1, switchin count 1, miss count 0, total miss time 0 ns
-burner3 68 (tid 312) exiting period 10000 ns, slice 10000 ns arrival count 1, resched count 1, switchin count 1, miss count 0, total miss time 0 ns
-burner3 69 (tid 313) exiting period 10000 ns, slice 10000 ns arrival count 1, resched count 1, switchin count 1, miss count 0, total miss time 0 ns
-burner3 70 (tid 314) exiting period 10000 ns, slice 10000 ns arrival count 1, resched count 1, switchin count 1, miss count 0, total miss time 0 ns
-burner3 71 (tid 315) exiting period 10000 ns, slice 10000 ns arrival count 1, resched count 25, switchin count 25, miss count 24, total miss time 28256081000 ns
-burner3 72 (tid 316) exiting period 10000 ns, slice 10000 ns arrival count 1, resched count 2, switchin count 2, miss count 1, total miss time 1096940000 ns
-burner3 73 (tid 317) exiting period 10000 ns, slice 10000 ns arrival count 1, resched count 1, switchin count 1, miss count 0, total miss time 0 ns
-burner3 74 (tid 318) exiting period 10000 ns, slice 10000 ns arrival count 1, resched count 1, switchin count 1, miss count 0, total miss time 0 ns
-burner3 75 (tid 319) exiting period 10000 ns, slice 10000 ns arrival count 1, resched count 1, switchin count 1, miss count 0, total miss time 0 ns
-burner3 76 (tid 320) exiting period 10000 ns, slice 10000 ns arrival count 1, resched count 1, switchin count 1, miss count 0, total miss time 0 ns
-burner3 77 (tid 321) exiting period 10000 ns, slice 10000 ns arrival count 1, resched count 3, switchin count 3, miss count 2, total miss time 524575000 ns
-burner3 78 (tid 322) exiting period 10000 ns, slice 10000 ns arrival count 1, resched count 1, switchin count 1, miss count 0, total miss time 0 ns
-burner3 79 (tid 323) rejected - exiting
-burner3 80 (tid 324) rejected - exiting
-burner4 1 (tid 325) exiting period 100000 ns, slice 100000 ns arrival count 1, resched count 1, switchin count 1, miss count 0, total miss time 0 ns
-burner4 2 (tid 326) exiting period 100000 ns, slice 100000 ns arrival count 1, resched count 1, switchin count 1, miss count 0, total miss time 0 ns
-burner4 3 (tid 327) exiting period 100000 ns, slice 100000 ns arrival count 1, resched count 1, switchin count 1, miss count 0, total miss time 0 ns
-burner4 4 (tid 328) exiting period 100000 ns, slice 100000 ns arrival count 1, resched count 4, switchin count 4, miss count 3, total miss time 3484596000 ns
-burner4 5 (tid 329) exiting period 100000 ns, slice 100000 ns arrival count 1, resched count 1, switchin count 1, miss count 0, total miss time 0 ns
-burner4 6 (tid 330) exiting period 100000 ns, slice 100000 ns arrival count 1, resched count 1, switchin count 1, miss count 0, total miss time 0 ns
-burner4 7 (tid 331) exiting period 100000 ns, slice 100000 ns arrival count 1, resched count 1, switchin count 1, miss count 0, total miss time 0 ns
-burner4 8 (tid 332) exiting period 100000 ns, slice 100000 ns arrival count 1, resched count 1, switchin count 1, miss count 0, total miss time 0 ns
-burner4 9 (tid 333) exiting period 100000 ns, slice 100000 ns arrival count 1, resched count 1, switchin count 1, miss count 0, total miss time 0 ns
-burner4 10 (tid 334) exiting period 100000 ns, slice 100000 ns arrival count 1, resched count 1, switchin count 1, miss count 0, total miss time 0 ns
-burner4 11 (tid 335) exiting period 100000 ns, slice 100000 ns arrival count 1, resched count 1, switchin count 1, miss count 0, total miss time 0 ns
-burner4 12 (tid 336) exiting period 100000 ns, slice 100000 ns arrival count 1, resched count 1, switchin count 1, miss count 0, total miss time 0 ns
-burner4 13 (tid 337) exiting period 100000 ns, slice 100000 ns arrival count 1, resched count 1, switchin count 1, miss count 0, total miss time 0 ns
-burner4 14 (tid 338) exiting period 100000 ns, slice 100000 ns arrival count 1, resched count 1, switchin count 1, miss count 0, total miss time 0 ns
-burner4 15 (tid 339) exiting period 100000 ns, slice 100000 ns arrival count 1, resched count 1, switchin count 1, miss count 0, total miss time 0 ns
-burner4 16 (tid 340) exiting period 100000 ns, slice 100000 ns arrival count 1, resched count 1, switchin count 1, miss count 0, total miss time 0 ns
-burner4 17 (tid 341) exiting period 100000 ns, slice 100000 ns arrival count 1, resched count 1, switchin count 1, miss count 0, total miss time 0 ns
-burner4 18 (tid 342) exiting period 100000 ns, slice 100000 ns arrival count 1, resched count 1, switchin count 1, miss count 0, total miss time 0 ns
-burner4 19 (tid 343) exiting period 100000 ns, slice 100000 ns arrival count 1, resched count 1, switchin count 1, miss count 0, total miss time 0 ns
-burner4 20 (tid 344) exiting period 100000 ns, slice 100000 ns arrival count 1, resched count 1, switchin count 1, miss count 0, total miss time 0 ns
-burner4 21 (tid 345) exiting period 100000 ns, slice 100000 ns arrival count 1, resched count 1, switchin count 1, miss count 0, total miss time 0 ns
-burner4 22 (tid 346) exiting period 100000 ns, slice 100000 ns arrival count 1, resched count 6, switchin count 6, miss count 5, total miss time 134992055000 ns
-burner4 23 (tid 347) exiting period 100000 ns, slice 100000 ns arrival count 1, resched count 1, switchin count 1, miss count 0, total miss time 0 ns
-burner4 24 (tid 348) exiting period 100000 ns, slice 100000 ns arrival count 1, resched count 1, switchin count 1, miss count 0, total miss time 0 ns
-burner4 25 (tid 349) exiting period 100000 ns, slice 100000 ns arrival count 1, resched count 1, switchin count 1, miss count 0, total miss time 0 ns
-burner4 26 (tid 350) exiting period 100000 ns, slice 100000 ns arrival count 1, resched count 1, switchin count 1, miss count 0, total miss time 0 ns
-burner4 27 (tid 351) exiting period 100000 ns, slice 100000 ns arrival count 1, resched count 1, switchin count 1, miss count 0, total miss time 0 ns
-burner4 28 (tid 352) exiting period 100000 ns, slice 100000 ns arrival count 1, resched count 2, switchin count 2, miss count 1, total miss time 308150000 ns
-burner4 29 (tid 353) exiting period 100000 ns, slice 100000 ns arrival count 1, resched count 2, switchin count 2, miss count 1, total miss time 460537000 ns
-burner4 30 (tid 354) exiting period 100000 ns, slice 100000 ns arrival count 1, resched count 1, switchin count 1, miss count 0, total miss time 0 ns
-burner4 31 (tid 355) exiting period 100000 ns, slice 100000 ns arrival count 1, resched count 2, switchin count 2, miss count 1, total miss time 295635000 ns
-burner4 32 (tid 356) exiting period 100000 ns, slice 100000 ns arrival count 1, resched count 1, switchin count 1, miss count 0, total miss time 0 ns
-burner4 33 (tid 357) exiting period 100000 ns, slice 100000 ns arrival count 1, resched count 1, switchin count 1, miss count 0, total miss time 0 ns
-burner4 34 (tid 358) exiting period 100000 ns, slice 100000 ns arrival count 1, resched count 1, switchin count 1, miss count 0, total miss time 0 ns
-burner4 35 (tid 359) exiting period 100000 ns, slice 100000 ns arrival count 1, resched count 1, switchin count 1, miss count 0, total miss time 0 ns
-burner4 36 (tid 360) exiting period 100000 ns, slice 100000 ns arrival count 1, resched count 1, switchin count 1, miss count 0, total miss time 0 ns
-burner4 37 (tid 361) exiting period 100000 ns, slice 100000 ns arrival count 1, resched count 1, switchin count 1, miss count 0, total miss time 0 ns
-burner4 38 (tid 362) exiting period 100000 ns, slice 100000 ns arrival count 1, resched count 2, switchin count 2, miss count 1, total miss time 207287000 ns
-burner4 39 (tid 363) exiting period 100000 ns, slice 100000 ns arrival count 1, resched count 1, switchin count 1, miss count 0, total miss time 0 ns
-burner4 40 (tid 364) exiting period 100000 ns, slice 100000 ns arrival count 1, resched count 3, switchin count 3, miss count 2, total miss time 830628000 ns
-burner4 41 (tid 365) exiting period 100000 ns, slice 100000 ns arrival count 1, resched count 4, switchin count 4, miss count 3, total miss time 1368071000 ns
-burner4 42 (tid 366) exiting period 100000 ns, slice 100000 ns arrival count 1, resched count 3, switchin count 3, miss count 2, total miss time 537133000 ns
-burner4 43 (tid 367) exiting period 100000 ns, slice 100000 ns arrival count 1, resched count 2, switchin count 2, miss count 1, total miss time 643513000 ns
-burner4 44 (tid 368) exiting period 100000 ns, slice 100000 ns arrival count 1, resched count 1, switchin count 1, miss count 0, total miss time 0 ns
-burner4 45 (tid 369) exiting period 100000 ns, slice 100000 ns arrival count 1, resched count 1, switchin count 1, miss count 0, total miss time 0 ns
-burner4 46 (tid 370) exiting period 100000 ns, slice 100000 ns arrival count 1, resched count 1, switchin count 1, miss count 0, total miss time 0 ns
-burner4 47 (tid 371) exiting period 100000 ns, slice 100000 ns arrival count 1, resched count 1, switchin count 1, miss count 0, total miss time 0 ns
-burner4 48 (tid 372) exiting period 100000 ns, slice 100000 ns arrival count 1, resched count 1, switchin count 1, miss count 0, total miss time 0 ns
-burner4 49 (tid 373) exiting period 100000 ns, slice 100000 ns arrival count 1, resched count 1, switchin count 1, miss count 0, total miss time 0 ns
-burner4 50 (tid 374) exiting period 100000 ns, slice 100000 ns arrival count 1, resched count 1, switchin count 1, miss count 0, total miss time 0 ns
-burner4 51 (tid 375) exiting period 100000 ns, slice 100000 ns arrival count 1, resched count 1, switchin count 1, miss count 0, total miss time 0 ns
-burner4 52 (tid 376) exiting period 100000 ns, slice 100000 ns arrival count 1, resched count 1, switchin count 1, miss count 0, total miss time 0 ns
-burner4 53 (tid 377) exiting period 100000 ns, slice 100000 ns arrival count 1, resched count 2, switchin count 2, miss count 1, total miss time 873297000 ns
-burner4 54 (tid 378) exiting period 100000 ns, slice 100000 ns arrival count 1, resched count 1, switchin count 1, miss count 0, total miss time 0 ns
-burner4 55 (tid 379) exiting period 100000 ns, slice 100000 ns arrival count 1, resched count 1, switchin count 1, miss count 0, total miss time 0 ns
-burner4 56 (tid 380) exiting period 100000 ns, slice 100000 ns arrival count 1, resched count 1, switchin count 1, miss count 0, total miss time 0 ns
-burner4 57 (tid 381) exiting period 100000 ns, slice 100000 ns arrival count 1, resched count 1, switchin count 1, miss count 0, total miss time 0 ns
-burner4 58 (tid 382) exiting period 100000 ns, slice 100000 ns arrival count 1, resched count 1, switchin count 1, miss count 0, total miss time 0 ns
-burner4 59 (tid 383) exiting period 100000 ns, slice 100000 ns arrival count 1, resched count 1, switchin count 1, miss count 0, total miss time 0 ns
-burner4 60 (tid 384) exiting period 100000 ns, slice 100000 ns arrival count 1, resched count 3, switchin count 3, miss count 2, total miss time 62950544000 ns
-burner4 61 (tid 385) exiting period 100000 ns, slice 100000 ns arrival count 1, resched count 1, switchin count 1, miss count 0, total miss time 0 ns
-burner4 62 (tid 386) exiting period 100000 ns, slice 100000 ns arrival count 1, resched count 1, switchin count 1, miss count 0, total miss time 0 ns
-burner4 63 (tid 387) exiting period 100000 ns, slice 100000 ns arrival count 1, resched count 1, switchin count 1, miss count 0, total miss time 0 ns
-burner4 64 (tid 388) exiting period 100000 ns, slice 100000 ns arrival count 1, resched count 2, switchin count 2, miss count 1, total miss time 10521046000 ns
-burner4 65 (tid 389) exiting period 100000 ns, slice 100000 ns arrival count 1, resched count 1, switchin count 1, miss count 0, total miss time 0 ns
-burner4 66 (tid 390) exiting period 100000 ns, slice 100000 ns arrival count 1, resched count 2, switchin count 2, miss count 1, total miss time 117031000 ns
-burner4 67 (tid 391) exiting period 100000 ns, slice 100000 ns arrival count 1, resched count 1, switchin count 1, miss count 0, total miss time 0 ns
-burner4 68 (tid 392) exiting period 100000 ns, slice 100000 ns arrival count 1, resched count 1, switchin count 1, miss count 0, total miss time 0 ns
-burner4 69 (tid 393) exiting period 100000 ns, slice 100000 ns arrival count 1, resched count 1, switchin count 1, miss count 0, total miss time 0 ns
-burner4 70 (tid 394) exiting period 100000 ns, slice 100000 ns arrival count 1, resched count 1, switchin count 1, miss count 0, total miss time 0 ns
-burner4 71 (tid 395) exiting period 100000 ns, slice 100000 ns arrival count 1, resched count 1, switchin count 1, miss count 0, total miss time 0 ns
-burner4 72 (tid 396) exiting period 100000 ns, slice 100000 ns arrival count 1, resched count 1, switchin count 1, miss count 0, total miss time 0 ns
-burner4 73 (tid 397) exiting period 100000 ns, slice 100000 ns arrival count 1, resched count 4, switchin count 4, miss count 3, total miss time 1515384000 ns
-burner4 74 (tid 398) exiting period 100000 ns, slice 100000 ns arrival count 1, resched count 2, switchin count 2, miss count 1, total miss time 150102000 ns
-burner4 75 (tid 399) exiting period 100000 ns, slice 100000 ns arrival count 1, resched count 4, switchin count 4, miss count 3, total miss time 1694371000 ns
-burner4 76 (tid 400) exiting period 100000 ns, slice 100000 ns arrival count 1, resched count 1, switchin count 1, miss count 0, total miss time 0 ns
-burner4 77 (tid 401) exiting period 100000 ns, slice 100000 ns arrival count 1, resched count 1, switchin count 1, miss count 0, total miss time 0 ns
-burner4 78 (tid 402) exiting period 100000 ns, slice 100000 ns arrival count 1, resched count 1, switchin count 1, miss count 0, total miss time 0 ns
-burner4 79 (tid 403) rejected - exiting
-burner4 80 (tid 404) rejected - exiting
-burner5 1 (tid 405) exiting period 1000000 ns, slice 1000000 ns arrival count 1, resched count 5, switchin count 5, miss count 4, total miss time 1534638000 ns
-burner5 2 (tid 406) exiting period 1000000 ns, slice 1000000 ns arrival count 1, resched count 1, switchin count 1, miss count 0, total miss time 0 ns
-burner5 3 (tid 407) exiting period 1000000 ns, slice 1000000 ns arrival count 1, resched count 1, switchin count 1, miss count 0, total miss time 0 ns
-burner5 4 (tid 408) exiting period 1000000 ns, slice 1000000 ns arrival count 1, resched count 7, switchin count 7, miss count 6, total miss time 5008747000 ns
-burner5 5 (tid 409) exiting period 1000000 ns, slice 1000000 ns arrival count 1, resched count 1, switchin count 1, miss count 0, total miss time 0 ns
-burner5 6 (tid 410) exiting period 1000000 ns, slice 1000000 ns arrival count 1, resched count 1, switchin count 1, miss count 0, total miss time 0 ns
-burner5 7 (tid 411) exiting period 1000000 ns, slice 1000000 ns arrival count 1, resched count 1, switchin count 1, miss count 0, total miss time 0 ns
-burner5 8 (tid 412) exiting period 1000000 ns, slice 1000000 ns 
+root-shell> cores
+0c ip 4t root-shell 0tp 0p 0r 1a 0m (RR) (990000ul 100000sp 100000ap 100000000aq 100000000adp) (17381apic)
++ rf:(n=0,a=0,v=0,m=0,M=0) rs:(n=38,a=73996,v=30048473199,m=7880,M=994054) rs-ns:(n=33804,a=28978,v=255014891166,m=1602,M=84810403)
+1c ip 2t (idle) 0tp 0p 0r 0a 0m (RR) (990000ul 100000sp 100000ap 100000000aq 100000000adp) (15765apic)
++ rf:(n=0,a=0,v=0,m=0,M=0) rs:(n=0,a=0,v=0,m=0,M=0) rs-ns:(n=30275,a=48087,v=59476865171,m=4296,M=19849237)
+root-shell> cores
+0c ip 4t root-shell 0tp 0p 0r 1a 0m (RR) (990000ul 100000sp 100000ap 100000000aq 100000000adp) (1868712apic)
++ rf:(n=0,a=0,v=0,m=0,M=0) rs:(n=50,a=60121,v=23569100260,m=6043,M=994054) rs-ns:(n=3681961,a=18577,v=20127603843,m=1528,M=103784243)
+1c ip 2t (idle) 0tp 0p 0r 0a 0m (RR) (990000ul 100000sp 100000ap 100000000aq 100000000adp) (1739171apic)
++ rf:(n=0,a=0,v=0,m=0,M=0) rs:(n=0,a=0,v=0,m=0,M=0) rs-ns:(n=3322854,a=43225,v=39714352092,m=4092,M=83418278)
+root-shell> burnp
+Don't understand "burnp"
+root-shell> burn p 
+Don't understand "burn p "
+root-shell> shell new
+CPU 0: Shell new launched on cpu -1 as 0000000000107000
+roont-shew>e ll> burn p burner 100000
+Don't understand "burn p burner 100000"
+new> burn p burner 100 1 0 100 10
+Starting periodic burner burner with size 100 ms tpr 1 phase 0 from now period 100 ms slice 10 ms
+burner (tid 6) exiting period 100000000 ns, slice 100000000 ns arrival count 1, resched count 4, switchin count 4, miss count 3, total miss time 4937621000 ns
+new> burn p burner 1000 1 0 100 10
+Starting periodic burner burner with size 1000 ms tpr 1 phase 0 from now period 100 ms slice 10 ms
+burner (tid 7) exiting period 100000000 ns, slice 100000000 ns arrival count 1, resched count 6, switchin count 6, miss count 5, total miss time 6509461000 ns
+new> 

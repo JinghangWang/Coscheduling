@@ -1,0 +1,9 @@
+threads
+	create/join_groups
+
+	leader calls to global_change_constraint
+	call interrupt to each scheduler to handler this
+	local_change_constraint(admissoin control) --add a wrapper around child threads
+
+
+groups: join, leave, create, find_leader

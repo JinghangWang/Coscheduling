@@ -149,7 +149,7 @@ static int launch_sporadic_burner(char *name, uint64_t size_ns, uint32_t tpr, ui
     }
 }
 
-static int launch_periodic_burner(char *name, uint64_t size_ns, uint32_t tpr, uint64_t phase, uint64_t period, uint64_t slice)
+static int launch_periodic_burner(char *name, uint64_t size_ns, uint32_t tpr, uint64_t phase, uint64_t period, uint64_t slice, uint64_t cpu)
 {
     nk_thread_id_t tid;
     struct burner_args *a;
@@ -168,7 +168,7 @@ static int launch_periodic_burner(char *name, uint64_t size_ns, uint32_t tpr, ui
     a->constraints.periodic.period = period;
     a->constraints.periodic.slice = slice;
 
-    if (nk_thread_start(burner, (void*)a , NULL, 1, PAGE_SIZE_4KB, &tid, 1)) {
+    if (nk_thread_start(burner, (void*)a , NULL, 1, PAGE_SIZE_4KB, &tid, cpu)) {
     //bind cpu 1 for testing
 	free(a);
 	return -1;
@@ -805,11 +805,11 @@ static int handle_cmd(char *buf, int n)
     phase   *= 1000000; 
     period  *= 1000000;
     slice   *= 1000000;
-    launch_periodic_burner(name,size_ns,tpr,phase,period,slice);
+    launch_periodic_burner(name,size_ns,tpr,phase,period,slice, -1);
     return 0;
   }
-    uint32_t num_burner;
-  if (sscanf(buf,"burn_test %llu", &num_burner) == 1) { 
+    uint64_t bound_cpu;
+  if (sscanf(buf,"burn_test %llu", &bound_cpu) == 1) { 
     //one thread, sweep period and slice
     //two thread, etc
     nk_vc_printf("Starting real time scheduler tests with periodic burners\n");
@@ -832,7 +832,7 @@ static int handle_cmd(char *buf, int n)
       for(int j = 1; j<= maxratio; ++j){
         slice = period*j/100;
         sprintf(name, "burner%d %d", i, j);
-        launch_periodic_burner(name, size_ns, tpr, phase, period, slice);
+        launch_periodic_burner(name, size_ns, tpr, phase, period, slice, bound_cpu);
       }
     }
   

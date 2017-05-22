@@ -50,7 +50,7 @@
 #include <nautilus/random.h>
 #include <dev/apic.h>
 
-#define INSTRUMENT    0
+#define INSTRUMENT    1
 
 #define SANITY_CHECKS 0
 
@@ -3347,6 +3347,6 @@ void nk_sched_rt_stats(struct rt_stats *stats){
     stats->miss_num = t->miss_count;
     stats->miss_time = t->miss_time_sum;
     stats->period = t->constraints.periodic.period;
-    stats->slice = t->constraints.periodic.period;
+    stats->slice = t->constraints.periodic.slice;
 }
 
