@@ -45,6 +45,98 @@
 #include <nautilus/realmode.h>
 #endif
 
+//Parallel thread concept------------------------------------------------
+int parallel_thread_initialize(void *in)
+{
+  struct burner_args *a = (struct burner_args *)in;
+
+  nk_thread_name(get_cur_thread(),a->name);
+
+  int my_cpu_id = my_cpu_id();
+
+  nk_vc_printf("On CPU %d: Calling periodic burner %s with size %llu ms tpr %u phase %llu from now period %llu ms slice %llu ms\n",
+                my_cpu_id,
+                a->name,
+                a->size_ns,
+                a->constraints.interrupt_priority_class,
+                a->constraints.periodic.phase,
+                a->constraints.periodic.period,
+                a->constraints.periodic.slice);
+
+  if (nk_bind_vc(get_cur_thread(), a->vc)) { 
+    ERROR_PRINT("On CPU %d: Cannot bind virtual console for burner %s\n",a->name);
+    return;
+  }
+
+  nk_vc_printf("On CPU %d: %s (tid %llu) attempting to promote itself\n",
+               my_cpu_id, a->name, get_cur_thread()->tid);
+
+  nk_group_initialize_synchronize();
+
+  if (nk_sched_thread_change_constraints(&a->constraints)) { 
+    nk_change_constraints_fail();
+    nk_group_constraint_synchronize();
+    nk_vc_printf("On CPU %d: %s (tid %llu) rejected - exiting\n", 
+                 my_cpu_id, a->name, get_cur_thread()->tid);
+    free(in);
+    return 1;
+  } else {
+    nk_group_constraint_synchronize();
+    if(nk_change_constraints_check() != 0) {
+      return 1;
+    }
+  }
+
+  nk_vc_printf("On CPU %d: %s (tid %llu) promotion complete - spinning for %lu ns\n", 
+               my_cpu_id, a->name, get_cur_thread()->tid, my_cpu_id(), a->size_ns);
+  return 0;
+}
+
+void parallel_thread_finalize()
+{
+  nk_group_finalize_synchronize();
+
+  struct rt_stats* stats = malloc(sizeof(struct rt_stats));
+  nk_sched_rt_stats(stats);
+
+  nk_vc_printf("On CPU %d: thread (tid %llu) exiting period %llu ns, slice %llu ns\n",
+               my_cpu_id(), get_cur_thread()->tid, stats->period, stats->slice);
+
+  nk_group_finalize_barrier();
+
+  free(stats);
+}
+
+void parallel_burner(void *in, void **out)
+{
+  uint64_t start, end, dur, total;
+  total = 0;
+
+  struct burner_args *a = (struct burner_args *)in;
+
+  int size_ns = a->size_ns;
+  if(parallel_thread_initialize(in)) {
+    nk_vc_printf("parallel_thread_initialize failed\n");
+    //parallel_thread_finalize(); Seems no need
+    return 1;
+  }
+    
+    while(1) {
+        start = nk_sched_get_realtime();
+        udelay(100);
+        end = nk_sched_get_realtime();
+        dur = end - start;
+
+        if (dur >= size_ns) { 
+          parallel_thread_finalize();
+          free(in);
+          return 0;
+        } else {
+          size_ns -= dur;
+        }
+    }
+}
+//Parallel thread concept------------------------------------------------
 
 static void burner(void *in, void **out)
 {
@@ -748,6 +840,45 @@ static int handle_cmd(char *buf, int n)
       }
       return 0;
   }
+//Parallel thread concept------------------------------------------------
+  if (!strncasecmp(buf,"pt test",7)) { 
+    nk_thread_id_t tid;
+    struct burner_args *a;
+
+    a = malloc(sizeof(struct burner_args));
+    if (!a) { 
+      return -1;
+    }
+
+    size_ns = 1000000; // 1ms
+    phase   = 1000000; 
+    period  = 1000000;
+    slice   = 1000000;
+    tpr     = 0xe;
+
+    uint64_t act_size_ns = 100000 * size_ns;// 100s
+    uint64_t act_phase   = 0; 
+    uint64_t act_period  = 100 * period;// 100 ms
+    uint64_t act_slice   = 10000;
+    
+    strncpy(a->name,"ParallelBurner",MAX_CMD); a->name[MAX_CMD-1]=0;
+    a->vc = get_cur_thread()->vc;
+    a->size_ns = act_size_ns;
+    a->constraints.type=PERIODIC;
+    a->constraints.interrupt_priority_class = (uint8_t) tpr;
+    a->constraints.periodic.phase = act_phase;
+    a->constraints.periodic.period = act_period;
+    a->constraints.periodic.slice = act_slice;
+
+    int group_size = 4;
+    int bound_cpu[4] = {0, 1, 2, 3};
+
+    nk_thread_group_create(parallel_burner, (void*)a , NULL, 1, PAGE_SIZE_4KB, &tid, bound_cpu, group_size);
+    nk_thread_group_join();
+
+    return 0;
+  }
+//Parallel thread concept------------------------------------------------
 
   if (sscanf(buf,"burn a %s %llu %u %llu", name, &size_ns, &tpr, &priority)==4) { 
     nk_vc_printf("Starting aperiodic burner %s with tpr %u, size %llu ms.and priority %llu\n",name,size_ns,priority);

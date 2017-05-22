@@ -37,7 +37,10 @@ extern "C" {
 #define APIC_CMCR_INT_VEC      0xf4
 #define APIC_EXT_LVT_DUMMY_VEC 0xf5
 #define APIC_NULL_KICK_VEC     0xfc
-    
+//Parallel thread concept------------------------------------------------
+#define APIC_GROUP_JOIN_VEC    0xf6
+//Parallel thread concept------------------------------------------------
+
 #define APIC_TIMER_DIV 16
 
 #define APIC_TIMER_DIV_1   0xb

@@ -1,0 +1,27 @@
+1. How to use parallel thread:
+  (1) Setup constraints and group info, then call nk_thread_group_create(func, ...) and nk_thread_group_join() to start parallel thread.
+  (2) Call function parallel_thread_initialize(in) at the beginning of your own program(the func) and if it returns 1, exit your program.
+  (3) Call function parallel_thread_finalize() when you are about to exit your own program.
+  (4) This concept is implemented in the SIMD model, use nk_get_my_tid() and branch to make a MIMD program.
+
+2. The lifetime of a parallel thread group:
+  (1) In function nk_thread_group_create(func, ...), the global_manager(holds the global_request) is set properly and related barriers are initialized.
+      After this function, all the global info will be ready.
+  (2) In function nk_thread_group_join(), it first initializes a barrier and then interrupts everyone else to execute nk_thread_group_join_handler(),
+      which is almost the same as nk_thread_group_join(). The purpose of this handler being written is to avoid broadcasting the interrupt again.
+      Then nk_thread_group_start() is called to add a new thread to a local CPU.
+      The barrier and admit flag are used to see if the request is admitted by everyone.
+      The nk_thread_group_start() is the same as nk_thread_start() except registering the new thread to the global_manager's thread_tracker.
+      After this step, all the CPUs in the group should hold a copy of the parallel thread in its local queue.
+  (3) When the thread is switched in, parallel_thread_initialize() is executed. It tries to change constraint, a barrier and a global flag is used
+      for admission control. If it fails, it returns 1 and your program will return with 1 too.
+  (4) Before exiting your program, parallel_thread_finalize() destroys all the barriers.
+
+3. Current problems:
+  (1) The virtual console runs very slow after I start parallel thread test and still runs very slow after the test is done.
+  (2) The barrier may have bugs, the wait and destroy should return 1 at last but it doesn't.
+      In the serial.out, the "I'm the last one" means it's the last one hit the barrier, the "wait..." means it's waiting for others the hit
+      the barrier so the barrier can be destroyed. See thread.c for details.
+  (3) If one of the nk_thread_start() fails, all the admitted threads should be removed from it's local queue. Currently we have a pointer to
+      that thread, more idea is needed.
+  (4) If not all of the CPUs are in the group, it doesn't work. Illegal interrupt or block on barrier. More work on debugging is needed.

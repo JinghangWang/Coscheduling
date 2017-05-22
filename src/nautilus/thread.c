@@ -296,7 +296,106 @@ thread_setup_init_stack (nk_thread_t * t, nk_thread_fun_t fun, void * arg)
 
 /****** EXTERNAL THREAD INTERFACE ******/
 
+//Parallel thread concept------------------------------------------------
+static nk_barrier_t * parallel_thread_initialize_barrier;
+static nk_barrier_t * parallel_thread_finalize_barrier;
+static nk_barrier_t * parallel_thread_constraint_barrier;
 
+void
+nk_group_initialize_synchronize() {
+    int temp = nk_barrier_wait(parallel_thread_initialize_barrier);
+    if (temp == 0) {
+        return;
+    } else if (temp == NK_BARRIER_LAST) {
+        nk_vc_printf("I'm the last one in initialize\n");
+        return;
+    } else {
+        nk_vc_printf("nk_group_initialize_synchronize error\n");
+        return;
+    }
+}
+
+void
+nk_group_finalize_synchronize() {
+    int temp = nk_barrier_wait (parallel_thread_finalize_barrier);
+    if (temp == 0) {
+        return;
+    } else if (temp == NK_BARRIER_LAST) {
+        nk_vc_printf("I'm the last one in finalize\n");
+        return;
+    } else {
+        nk_vc_printf("nk_group_finalize_synchronize error\n");
+        return;
+    }
+}
+
+void
+nk_group_constraint_synchronize() {
+    int temp = nk_barrier_wait (parallel_thread_constraint_barrier);
+    if (temp == 0) {
+        return;
+    } else if (temp == NK_BARRIER_LAST) {
+        nk_vc_printf("I'm the last one in finalize\n");
+        return;
+    } else {
+        nk_vc_printf("nk_group_finalize_synchronize error\n");
+        return;
+    }
+}
+
+void
+nk_group_finalize_barrier() {
+    if (nk_barrier_destroy(parallel_thread_initialize_barrier) == 0) {
+        nk_vc_printf("parallel_thread_initialize_barrier destroyed\n");
+    } else {
+        nk_vc_printf("wait on parallel_thread_initialize_barrier\n");
+    }
+
+    if (nk_barrier_destroy(parallel_thread_finalize_barrier) == 0) {
+        nk_vc_printf("parallel_thread_finalize_barrier destroyed\n");
+    } else {
+        nk_vc_printf("wait on parallel_thread_finalize_barrier\n");
+    }
+
+    if (nk_barrier_destroy(parallel_thread_constraint_barrier) == 0) {
+        nk_vc_printf("parallel_thread_constraint_barrier destroyed\n");
+    } else {
+        nk_vc_printf("wait on parallel_thread_constraint_barrier\n");
+    }
+
+    nk_group_admit_finalize();
+}
+
+int
+nk_thread_group_create (nk_thread_fun_t fun, 
+                 void * input,
+                 void ** output,
+                 uint8_t is_detached,
+                 nk_stack_size_t stack_size,
+                 nk_thread_id_t * tid,
+                 int * bound_cpu,
+                 uint32_t group_size)
+{
+    if (nk_create_global_request(fun, input, output, is_detached, stack_size, tid, bound_cpu, group_size)) {
+        nk_vc_printf("Could not put into global thread\n");
+        return 1;
+    }
+    
+    if (nk_barrier_init(parallel_thread_initialize_barrier, group_size)) {
+        nk_vc_printf("Could not initialize parallel_thread_initialize_barrier\n");
+        return 1;
+    }
+    if (nk_barrier_init(parallel_thread_finalize_barrier, group_size)) {
+        nk_vc_printf("Could not initialize parallel_thread_finalize_barrier\n");
+        return 1;
+    }
+    if (nk_barrier_init(parallel_thread_constraint_barrier, group_size)) {
+        nk_vc_printf("Could not initialize parallel_thread_finalize_barrier\n");
+        return 1;
+    }
+    return 0;
+}
+//Parallel thread concept------------------------------------------------
 
 /* 
  * nk_thread_create
@@ -381,45 +480,6 @@ out_err:
     free(t->stack);
     free(t);
     return -EINVAL;
-}
-
-/* 
- * Parallel thread project
- * nk_thread_group_start
- */
-int
-nk_thread_group_start (nk_thread_fun_t fun, 
-                 void * input,
-                 void ** output,
-                 uint8_t is_detached,
-                 nk_stack_size_t stack_size,
-                 nk_thread_id_t * tid,
-                 int * bound_cpu,
-                 int group_size,
-                 int leader)
-{
-    int * start = bound_cpu;
-    int my_cpu_id = my_cpu_id();
-    int i;
-    for (i = 0; i < group_size; i++) {
-        if(*start == my_cpu_id) {
-            break;
-        } else {
-            start += 1;
-        }
-    }
-
-    if (i == group_size) {
-        THREAD_ERROR("Could not bound current CPU\n");
-    }
-
-    if (nk_thread_start(fun, input, output, is_detached, stack_size, tid, my_cpu_id)) {
-        if (nk_put_global_thread(fun, input, output, is_detached, stack_size, tid, group_size, bound_cpu)) {
-            THREAD_ERROR("Could not put into global thread\n");
-        }
-    } else {
-        THREAD_ERROR("Could not start thread\n");
-    }
 }
 
 /* 
