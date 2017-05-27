@@ -46,6 +46,7 @@
 #endif
 
 //Parallel thread concept------------------------------------------------
+/*
 int parallel_thread_initialize(void *in)
 {
   struct burner_args *a = (struct burner_args *)in;
@@ -136,6 +137,7 @@ void parallel_burner(void *in, void **out)
         }
     }
 }
+*/
 //Parallel thread concept------------------------------------------------
 
 static void burner(void *in, void **out)
@@ -841,6 +843,7 @@ static int handle_cmd(char *buf, int n)
       return 0;
   }
 //Parallel thread concept------------------------------------------------
+  /*
   if (!strncasecmp(buf,"pt test",7)) { 
     nk_thread_id_t tid;
     struct burner_args *a;
@@ -878,6 +881,7 @@ static int handle_cmd(char *buf, int n)
 
     return 0;
   }
+  */
 //Parallel thread concept------------------------------------------------
 
   if (sscanf(buf,"burn a %s %llu %u %llu", name, &size_ns, &tpr, &priority)==4) { 
