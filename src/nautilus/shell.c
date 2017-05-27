@@ -102,7 +102,7 @@ void parallel_thread_finalize()
   nk_vc_printf("On CPU %d: thread (tid %llu) exiting period %llu ns, slice %llu ns\n",
                my_cpu_id(), get_cur_thread()->tid, stats->period, stats->slice);
 
-  nk_group_finalize_barrier();
+  nk_group_finalize_barrier();//everyone ?
 
   free(stats);
 }
@@ -944,11 +944,11 @@ static int handle_cmd(char *buf, int n)
     //one thread, sweep period and slice
     //two thread, etc
     nk_vc_printf("Starting real time scheduler tests with periodic burners\n");
-#define NUM_TESTS  8
+#define NUM_TESTS  7
 
     char name[20];
     uint64_t num_samples = 1000;
-    uint64_t periods[NUM_TESTS] = {1, 2, 4, 10, 100, 1000, 10000, 100000};
+    uint64_t periods[NUM_TESTS] = {1, 2, 4, 10, 100, 1000, 10000, 10000};
     //uint64_t periods[NUM_TESTS] = {100000, 10000, 1000, 100, 10, 4, 2, 1};
 
 

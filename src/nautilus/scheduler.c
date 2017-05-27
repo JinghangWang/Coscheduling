@@ -2967,8 +2967,7 @@ static int start_interrupt_thread_for_this_cpu()
 // Avoids changing thread structures
 //
 typedef struct tracker_unit {
-    int cpu_id; //May not need
-    int thread_id;
+    int tid;
     nk_thread_t *tracker;
 } tracker_unit;
 
@@ -2976,7 +2975,9 @@ typedef struct nk_thread_group
 {
     uint group_id;
     char *group_name;
+    spinlock_t group_lock;
     uint group_size;
+    uint next_id;
     tracker_unit *thread_tracker_list; //May not need
     int init_fail;
 } nk_thread_group;
@@ -2989,35 +2990,71 @@ typedef struct group_node {
 
 typedef struct parallel_thread_group_list
 {
+    spinlock_t group_list_lock;
     uint num_groups;
     group_node *head;
     group_node *tail;
 } parallel_thread_group_list;
 
-static parallel_thread_group_list parallel_thread_group_list; //Malloc at init
 
-static rt_list*   rt_list_init();
-static void       rt_list_deinit(rt_list *l);
-static int        rt_list_enqueue(rt_list *l, rt_thread *t);
-static rt_thread* rt_list_dequeue(rt_list *l);
-static rt_thread* rt_list_remove(rt_list *l, rt_thread *t);
-static void       rt_list_map(rt_list *l, void (*func)(rt_thread *t, void *priv), void *priv);
-static int        rt_list_empty(rt_list *l);
+static parallel_thread_group_list parallel_thread_group_list; //Malloc at init
+// creating a thread group is done as easily as making a name
+struct nk_thread_group *nk_thread_group_create(char *name);
+
+// search for a thread group by name
+struct nk_thread_group *nk_thread_group_find(char *name);
+
+// current thread joins a group
+int                     nk_thread_group_join(struct nk_thread_group *group);
+
+// current thread leaves a group
+int                     nk_thread_group_leave(struct nk_thread_group *group);
+
+// all threads in the group call to synchronize
+int                     nk_thread_group_barrier(struct nk_thread_group *group);
+
+// all threads in the group call to select one thread as leader
+struct nk_thread       *nk_thread_group_election(struct nk_thread_group *group);
+
+// maybe... 
+// broadcast a message to all members of the thread group
+int                     nk_thread_group_broadcast(struct nk_thread_group *group, void *message);
+
+// delete a group (should be empty)
+int                     nk_thread_group_delete(struct nk_thread_group *group);
+
+// init/deinit of module
+int nk_thread_group_init(void);
+int nk_thread_group_deinit(void);
+
+static int        group_list_enqueue(nk_thread_group* *g);
+static nk_thread_group* rt_list_remove(nk_thread_group* g);
+// static void       rt_list_map(rt_list *l, void (*func)(rt_thread *t, void *priv), void *priv);
+static int        group_list_empty(void);
+static group_node* group_node_init(nk_thread_group *g);
+static void group_node_deinit(group_node *n);
+static uint get_next_groupid(void);
+
 
 int nk_thread_group_init(void) {
     parallel_thread_group_list.num_groups = 0;
     parallel_thread_group_list.head = NULL;
     parallel_thread_group_list.tail = NULL;
+    spinlock_init(&parallel_thread_group_list.group_list_lock);
     return 0;
 }
 
 int nk_thread_group_deinit(void) {
-    if (parallel_thread_group_list.num_groups != 0) {
+    spinlock_t * lock = &parallel_thread_group_list.group_list_lock;
+    spin_lock(lock);
+    if (!group_list_empty()) {
         nk_vc_printf("Can't deinit group list\n");
+        spin_unlock(lock);
         return -1;
     } else {
-        parallel_thread_group_list.head = NULL;
-        parallel_thread_group_list.tail = NULL;
+        //parallel_thread_group_list.head = NULL;
+        //parallel_thread_group_list.tail = NULL;
+        spin_unlock(lock);
         return 0;
     }
 }
@@ -3047,56 +3084,44 @@ static int group_list_empty(void)
 static int group_list_enqueue(nk_thread_group *g) 
 {
     parallel_thread_group_list * l = parallel_thread_group_list;
+    spin_lock(&l->group_list_lock);
+    g->group_id = get_next_groupid();
+
     if (l == NULL) {
-        ERROR("RT_LIST IS UNINITIALIZED.\n");
-        return -1;
+        ERROR("GROUP_LIST IS UNINITIALIZED.\n");
+        goto bad;
     }
 
     if (l->head == NULL) {
-        l->head = rt_node_init(t);
+        l->head = group_node_init(g);
     if (!l->head) { 
-        return -1;
+        goto bad;
     } else {
         l->tail = l->head;
-        return 0;
+        goto ok;
     }
     }
 
-    rt_node *n = l->tail;
-    l->tail = rt_node_init(t);
+    group_node *n = l->tail;
+    l->tail = group_node_init(g);
     if (!l->tail) { 
-    return -1;
+        goto bad;
     }
 
     l->tail->prev = n;
     n->next = l->tail;
 
+ok:
+    spin_unlock(&l->group_list_lock);
     return 0;
+
+bad: 
+    spin_unlock(&l->group_list_lock);
+    return -1;
 }
 
 
-static nk_thread_group* group_list_dequeue(void) 
-{
-    parallel_thread_group_list * l = parallel_thread_group_list;
-    if (l == NULL) {
-        ERROR("RT_LIST IS UNINITIALIZED.\n");
-        return NULL;
-    }
-
-    if (l->head == NULL) {
-        return NULL;
-    }
-
-    rt_node *n = l->head;
-    rt_thread *t= n->thread;
-
-    l->head = n->next;
-    l->head->prev = NULL;
-    n->next = NULL;
-    n->prev = NULL;
-    rt_node_deinit(n);
-    return t;
-}/*
+/*
 static void rt_list_map(rt_list *l, void (func)(rt_thread *t, void *priv), void *priv)  
 {
     parallel_thread_group_list * l = parallel_thread_group_list;
@@ -3111,59 +3136,136 @@ static void rt_list_map(rt_list *l, void (func)(rt_thread *t, void *priv), void 
 static nk_thread_group* group_list_remove(nk_thread_group *g) 
 {
     parallel_thread_group_list * l = parallel_thread_group_list;
-    rt_node *n = l->head;
+    spin_lock(&l->group_list_lock);
+
+    group_node *n = l->head;
     while (n != NULL) {
-        if (n->thread == t) {
-            rt_node *tmp = n->next;
-        rt_thread *f;
+        if (n->group == g) {
+            group_node *tmp = n->next;
+            rt_thread *f;
             if (n->next != NULL) {
                 n->next->prev = n->prev;
             } else {
-        l->tail = n->prev;
-        }
+                l->tail = n->prev;
+            }
+        
             if (n->prev != NULL) {
                 n->prev->next = tmp;
             } else {
-        l->head = tmp;
-        }
+                l->head = tmp;
+            }
+            
+            spin_unlock(&l->group_list_lock);
+
             n->next = NULL;
             n->prev = NULL;
-        f = n->thread;
-        rt_node_deinit(n);
+            f = n->thread;
+            group_node_deinit(n);
+
             return f;
         }
         n = n->next;
     }
+    
+    spin_unlock(&l->group_list_lock);
     return NULL;
+}
+
+uint get_next_groupid(void){
+    parallel_thread_group_list * l = parallel_thread_group_list;
+    if (l->tail == NULL){
+        return 0;
+    } else {
+        return l->tail->group->group_id + 1;
+    }
+
 }
 
 
 // creating a thread group is done as easily as making a name
 struct nk_thread_group *nk_thread_group_create(char *name) {
-    
+    nk_thread_group* new_group = (nk_thread_group*) malloc(sizeof(nk_thread_group));
+    new_group->group_name = name;
+    new_group->thread_tracker_list = NULL;
+    new_group->group_size = 0;
+    new_group->init_fail = 0;
+    new_group->next_id = 0;
+    spinlock_init(&new_group->group_lock);
+    //new_group->group_id = get_next_groupid(); group id is assigned in group_list_enqueue()
+
+    if (group_list_enqueue(new_group)){//will acquire list_lock in group_list_queue
+        DEBUG("group_list enqueue failed");
+        FREE(new_group);
+        return -1;
+    } else {
+        return new_group;
+    }
 }
 
 // search for a thread group by name
-struct nk_thread_group *nk_thread_group_find(char *name);
+struct nk_thread_group *
+nk_thread_group_find(char *name){
+    parallel_thread_group_list * l = parallel_thread_group_list;
+
+    spin_lock(&l->group_list_lock);
+
+    group_node *n = l->head;
+    while (n != NULL) {
+        if (strcmp(n->group->group_name, name)) {
+            return n->group;
+        }
+        n = n->next;
+    }
+
+    spin_unlock(&l->group_list_lock);
+    return NULL;
+}
 
 // current thread joins a group
-int                     nk_thread_group_join(struct nk_thread_group *group);
+int                     
+nk_thread_group_join(struct nk_thread_group *group){
+    spin_lock(&group->group_lock);
+    group->group_size++;
+    int id = group->next_id++;
+    //also need to update size of barrier.
+    spin_unlock(&group->group_lock);
+    return id;
+}
 
 // current thread leaves a group
-int                     nk_thread_group_leave(struct nk_thread_group *group);
+int                     
+nk_thread_group_leave(struct nk_thread_group *group){
+    spin_lock(&group->group_lock);
+    group->group_size--;
+    spin_unlock(&group->group_lock);
+    
+    return 0;
+}
 
 // all threads in the group call to synchronize
-int                     nk_thread_group_barrier(struct nk_thread_group *group);
+int                     
+nk_thread_group_barrier(struct nk_thread_group *group);
 
 // all threads in the group call to select one thread as leader
-struct nk_thread       *nk_thread_group_election(struct nk_thread_group *group);
+struct nk_thread       
+*nk_thread_group_election(struct nk_thread_group *group);
 
 // maybe... 
 // broadcast a message to all members of the thread group
-int                     nk_thread_group_broadcast(struct nk_thread_group *group, void *message);
+int                     
+nk_thread_group_broadcast(struct nk_thread_group *group, void *message);
 
 // delete a group (should be empty)
-int                     nk_thread_group_delete(struct nk_thread_group *group);
+int                     
+nk_thread_group_delete(struct nk_thread_group *group){
+    if (group == group_list_remove(group)){
+        FREE(group);
+        return 0;
+    } else {
+        nk_vc_printf("delete group node failed!\n")
+        return -1;
+    }
+}
 
 //Parallel thread concept------------------------------------------------
 

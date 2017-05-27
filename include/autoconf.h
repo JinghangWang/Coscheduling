@@ -1,7 +1,7 @@
 /*
  * Automatically generated C config: don't edit
  * Nautilus version: 
- * Mon May 22 11:40:42 2017
+ * Sat May 27 15:04:07 2017
  */
 #define AUTOCONF_INCLUDED
 
@@ -56,7 +56,7 @@
  */
 #define NAUT_CONFIG_FPU_SAVE 1
 #define NAUT_CONFIG_KICK_SCHEDULE 1
-#undef NAUT_CONFIG_HALT_WHILE_IDLE
+#define NAUT_CONFIG_HALT_WHILE_IDLE 1
 #undef NAUT_CONFIG_THREAD_OPTIMIZE
 #undef NAUT_CONFIG_USE_IDLE_THREADS
 
