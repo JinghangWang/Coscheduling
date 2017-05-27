@@ -50,7 +50,7 @@
 #include <nautilus/random.h>
 #include <dev/apic.h>
 
-#define INSTRUMENT    0
+#define INSTRUMENT    1
 
 #define SANITY_CHECKS 0
 
@@ -2032,310 +2032,6 @@ struct nk_thread *nk_sched_need_resched()
     return _sched_need_resched(0);
 }
 
-//Parallel thread project-----------------------------------------------------------------------
-typedef struct global_request {
-    nk_thread_fun_t fun;
-    void * input;
-    void ** output;
-    uint8_t is_detached;
-    nk_stack_size_t stack_size;
-    nk_thread_id_t * tid;
-    int * bound_cpu;
-    uint32_t group_size;
-    int leader;
-} request;
-
-typedef struct tracker_unit {
-    int cpu_id;
-    int thread_id;
-    nk_thread_t *tracker;
-} tracker_unit;
-
-typedef struct group_manager {
-    request global_request;
-    tracker_unit *thread_tracker;
-    int admit_fail;
-    int change_constraints_fail;
-} group_manager;
-
-int admit_fail = 0;
-static group_manager global_group_manager;
-
-uint32_t
-nk_get_group_size()
-{
-    return global_group_manager.global_request.group_size;
-}
-
-int
-nk_get_my_tid()
-{
-    for (int i = 0; i < global_group_manager.global_request.group_size; i++) {
-        if (global_group_manager.thread_tracker[i].cpu_id == my_cpu_id()) {
-            return global_group_manager.thread_tracker[i].thread_id;
-        }
-    }
-
-    return -1;
-}
-
-void
-nk_change_constraints_fail() {
-    atomic_inc(global_group_manager.change_constraints_fail);
-}
-
-int
-nk_change_constraints_check() {
-    return global_group_manager.change_constraints_fail;
-}
-
-int
-nk_create_global_request (nk_thread_fun_t fun, 
-                void * input,
-                void ** output,
-                uint8_t is_detached,
-                nk_stack_size_t stack_size,
-                nk_thread_id_t * tid,
-                int * bound_cpu,
-                int group_size)
-{
-    global_group_manager.global_request.fun = fun;
-    global_group_manager.global_request.input = input;
-    global_group_manager.global_request.output = output;
-    global_group_manager.global_request.is_detached = is_detached;
-    global_group_manager.global_request.stack_size = stack_size;
-    global_group_manager.global_request.tid = tid;
-    global_group_manager.global_request.bound_cpu = bound_cpu;
-    global_group_manager.global_request.group_size = group_size;
-    global_group_manager.thread_tracker = malloc(group_size*sizeof(tracker_unit));
-
-    global_group_manager.admit_fail = 0;
-    global_group_manager.change_constraints_fail = 0;
-
-    for (int i = 0; i < global_group_manager.global_request.group_size; i++) {
-        global_group_manager.thread_tracker[i].cpu_id = global_group_manager.global_request.bound_cpu[i];
-        global_group_manager.thread_tracker[i].thread_id = i;
-    }
-    return 0;
-}
-
-//Need to be flushed out
-int
-nk_reset_global_request() 
-{
-    /*
-    global_group_manager.global_request.fun = NULL;
-    global_group_manager.global_request.input = NULL;
-    global_group_manager.global_request.output = NULL;
-    global_group_manager.global_request.is_detached = NULL;
-    global_group_manager.global_request.stack_size = NULL;
-    global_group_manager.global_request.tid = NULL;
-    global_group_manager.global_request.bound_cpu = NULL;
-    global_group_manager.global_request.group_size = NULL;
-    */
-
-    return 0;
-}
-
-//Need to be flushed out
-int
-nk_print_global_request()
-{
-    /*
-    nk_vc_printf("fun: \ninput: \noutput: \nis_detached: \nstack_size: \ntid: \nbound_cpu: \ngroup_size: \nleader: \n", 
-                    global_group_manager.global_request.fun, 
-                    global_group_manager.global_request.input, 
-                    global_group_manager.global_request.output, 
-                    global_group_manager.global_request.is_detached, 
-                    global_group_manager.global_request.stack_size, 
-                    global_group_manager.global_request.tid, 
-                    global_group_manager.global_request.bound_cpu, 
-                    global_group_manager.global_request.group_size);
-                    */
-    return 0;
-}
-
-int
-nk_thread_group_start (nk_thread_fun_t fun,
-                       void * input, 
-                       void ** output, 
-                       //uint8_t is_detached, //What's the problem?
-                       nk_stack_size_t stack_size, 
-                       nk_thread_id_t * tid,
-                       int bound_cpu);
-
-static nk_barrier_t * parallel_group_admit_barrier;
-
-void
-nk_group_admit_synchronize() {
-    int temp = nk_barrier_wait(parallel_group_admit_barrier);
-    if (temp == 0) {
-        return;
-    } else if (temp == NK_BARRIER_LAST) {
-        nk_vc_printf("I'm the last one in finalize\n");
-        return;
-    } else {
-        nk_vc_printf("nk_group_finalize_synchronize error\n");
-        return;
-    }
-}
-
-void
-nk_group_admit_finalize() {
-    if (nk_barrier_destroy(parallel_group_admit_barrier) == 0) {
-        nk_vc_printf("parallel_group_admit_barrier destroyed\n");
-    } else {
-        nk_vc_printf("wait on parallel_group_admit_barrier\n");
-    }
-}
-
-//ipi handler
-int
-nk_thread_group_join_handler ()
-{
-    int my_cpu_id = my_cpu_id();
-
-    nk_thread_id_t newtid   = NULL;
-    nk_thread_t * newthread = NULL;
-
-    int i;
-
-    for (i = 0; i < global_group_manager.global_request.group_size; i++) {
-        if (global_group_manager.thread_tracker[i].cpu_id == my_cpu_id) {
-            if (!nk_thread_group_start(global_group_manager.global_request.fun, 
-                            global_group_manager.global_request.input, 
-                            global_group_manager.global_request.output, 
-                            //global_group_manager.global_request.is_detached, 
-                            global_group_manager.global_request.stack_size, 
-                            global_group_manager.global_request.tid, 
-                            global_group_manager.thread_tracker[i].cpu_id))
-            {
-                nk_group_admit_synchronize();
-                if (global_group_manager.admit_fail != 0) {
-                    //delete thread
-                    nk_vc_printf("Global thread admit failed\n");
-                    return 1;
-                }
-                return 0;
-            } else {
-                atomic_inc(global_group_manager.admit_fail);
-                nk_group_admit_synchronize();
-                //delete thread
-                nk_vc_printf("On CPU %d: nk_thread_group_start failed\n", my_cpu_id);
-                return 1;
-            }
-        }
-    }
-
-    if (i == global_group_manager.global_request.group_size) {
-        nk_vc_printf("CPU %d isn't in group\n", my_cpu_id());
-        return 1;
-    }
-    return 0;
-}
-
-//Called by the creater of this group
-int
-nk_thread_group_join ()
-{
-    if (nk_barrier_init(parallel_group_admit_barrier, nk_get_group_size())) {
-        nk_vc_printf("Could not initialize parallel_group_admit_barrier\n");
-        return 1;
-    }
-
-    int my_cpu_id = my_cpu_id();
-    
-    struct apic_dev * apic = per_cpu_get(apic);
-    apic_bcast_ipi(apic, APIC_GROUP_JOIN_VEC);
-    
-    nk_thread_id_t newtid   = NULL;
-    nk_thread_t * newthread = NULL;
-
-    int i;
-
-    for (i = 0; i < global_group_manager.global_request.group_size; i++) {
-        if (global_group_manager.thread_tracker[i].cpu_id == my_cpu_id) {
-            if (!nk_thread_group_start(global_group_manager.global_request.fun, 
-                            global_group_manager.global_request.input, 
-                            global_group_manager.global_request.output, 
-                            //global_group_manager.global_request.is_detached, 
-                            global_group_manager.global_request.stack_size, 
-                            global_group_manager.global_request.tid, 
-                            global_group_manager.thread_tracker[i].cpu_id))
-            {
-                nk_group_admit_synchronize();
-                if (global_group_manager.admit_fail != 0) {
-                    //delete thread
-                    nk_vc_printf("Global thread admit failed\n");
-                    return 1;
-                }
-                return 0;
-            } else {
-                atomic_inc(global_group_manager.admit_fail);
-                nk_group_admit_synchronize();
-                //delete thread
-                nk_vc_printf("On CPU %d: nk_thread_group_start failed\n", my_cpu_id);
-                return 1;
-            }
-        }
-    }
-
-    if (i == global_group_manager.global_request.group_size) {
-        nk_vc_printf("CPU %d isn't in group\n", my_cpu_id());
-        return 1;
-    }
-
-    return 0;
-}
-
-int
-nk_thread_group_start (nk_thread_fun_t fun,
-                       void * input, 
-                       void ** output, 
-                       //uint8_t is_detached, //type conflict
-                       nk_stack_size_t stack_size, 
-                       nk_thread_id_t * tid,
-                       int bound_cpu)
-{
-    nk_thread_id_t newtid   = NULL;
-    nk_thread_t * newthread = NULL;
-    int i;
-    
-    for (i = 0; i < global_group_manager.global_request.group_size; i++) {
-        if (global_group_manager.thread_tracker[i].cpu_id == bound_cpu) {
-            global_group_manager.thread_tracker[i].tracker = newthread;
-            break;
-        }
-    }
-    
-    if (i == global_group_manager.global_request.group_size) {
-        nk_vc_printf("CPU %d isn't in the group\n", my_cpu_id());
-        return 1;
-    }
-
-    uint8_t is_detached = 1; //Hardcode it here
-
-    if (nk_thread_create(fun, input, output, is_detached, stack_size, &newtid, bound_cpu) < 0) {
-        nk_vc_printf("On CPU %d: Could not create thread\n", my_cpu_id());
-        return -1;
-    }
-
-    newthread = (nk_thread_t*)newtid;
-
-    if (tid) {
-        *tid = newtid;
-    }
-
-    if(nk_thread_run(newthread) == 0) {
-        return 0;
-    } else {
-        return 1;
-    }
-
-    return 0;
-}
-//Parallel thread project-----------------------------------------------------------------------
-
 int nk_sched_thread_change_constraints(struct nk_sched_constraints *constraints)
 {
     LOCAL_LOCK_CONF;
@@ -3263,6 +2959,214 @@ static int start_interrupt_thread_for_this_cpu()
 
 #endif
 
+//Parallel thread concept------------------------------------------------
+//Move to thread.c
+
+//
+// List implementation for use in scheduler
+// Avoids changing thread structures
+//
+typedef struct tracker_unit {
+    int cpu_id; //May not need
+    int thread_id;
+    nk_thread_t *tracker;
+} tracker_unit;
+
+typedef struct nk_thread_group
+{
+    uint group_id;
+    char *group_name;
+    uint group_size;
+    tracker_unit *thread_tracker_list; //May not need
+    int init_fail;
+} nk_thread_group;
+
+typedef struct group_node {
+    nk_thread_group        *group;
+    struct nk_thread_group *next;
+    struct nk_thread_group *prev;
+} group_node;
+
+typedef struct parallel_thread_group_list
+{
+    uint num_groups;
+    group_node *head;
+    group_node *tail;
+} parallel_thread_group_list;
+
+static parallel_thread_group_list parallel_thread_group_list; //Malloc at init
+
+static rt_list*   rt_list_init();
+static void       rt_list_deinit(rt_list *l);
+static int        rt_list_enqueue(rt_list *l, rt_thread *t);
+static rt_thread* rt_list_dequeue(rt_list *l);
+static rt_thread* rt_list_remove(rt_list *l, rt_thread *t);
+static void       rt_list_map(rt_list *l, void (*func)(rt_thread *t, void *priv), void *priv);
+static int        rt_list_empty(rt_list *l);
+
+int nk_thread_group_init(void) {
+    parallel_thread_group_list.num_groups = 0;
+    parallel_thread_group_list.head = NULL;
+    parallel_thread_group_list.tail = NULL;
+    return 0;
+}
+
+int nk_thread_group_deinit(void) {
+    if (parallel_thread_group_list.num_groups != 0) {
+        nk_vc_printf("Can't deinit group list\n");
+        return -1;
+    } else {
+        parallel_thread_group_list.head = NULL;
+        parallel_thread_group_list.tail = NULL;
+        return 0;
+    }
+}
+
+static group_node* group_node_init(nk_thread_group *g) 
+{
+    group_node *node = (group_node *)MALLOC(sizeof(group_node));
+    if (node) { 
+        node->group = g;
+        node->next = NULL;
+        node->prev = NULL;
+    }
+    return node;
+}
+
+static void group_node_deinit(group_node *n)
+{
+    FREE(n);
+}
+
+static int group_list_empty(void) 
+{
+    parallel_thread_group_list * l = parallel_thread_group_list;
+    return (l->head == NULL);
+}
+
+static int group_list_enqueue(nk_thread_group *g) 
+{
+    parallel_thread_group_list * l = parallel_thread_group_list;
+    if (l == NULL) {
+        ERROR("RT_LIST IS UNINITIALIZED.\n");
+        return -1;
+    }
+
+    if (l->head == NULL) {
+        l->head = rt_node_init(t);
+    if (!l->head) { 
+        return -1;
+    } else {
+        l->tail = l->head;
+        return 0;
+    }
+    }
+
+    rt_node *n = l->tail;
+    l->tail = rt_node_init(t);
+    if (!l->tail) { 
+    return -1;
+    }
+
+    l->tail->prev = n;
+    n->next = l->tail;
+
+    return 0;
+}
+
+
+static nk_thread_group* group_list_dequeue(void) 
+{
+    parallel_thread_group_list * l = parallel_thread_group_list;
+    if (l == NULL) {
+        ERROR("RT_LIST IS UNINITIALIZED.\n");
+        return NULL;
+    }
+
+    if (l->head == NULL) {
+        return NULL;
+    }
+
+    rt_node *n = l->head;
+    rt_thread *t= n->thread;
+
+    l->head = n->next;
+    l->head->prev = NULL;
+    n->next = NULL;
+    n->prev = NULL;
+    rt_node_deinit(n);
+    return t;
+}/*
+static void rt_list_map(rt_list *l, void (func)(rt_thread *t, void *priv), void *priv)  
+{
+    parallel_thread_group_list * l = parallel_thread_group_list;
+    rt_node *n = l->head;
+    while (n != NULL) {
+    func(n->thread,priv);
+        n = n->next;
+    }
+}
+*/
+
+static nk_thread_group* group_list_remove(nk_thread_group *g) 
+{
+    parallel_thread_group_list * l = parallel_thread_group_list;
+    rt_node *n = l->head;
+    while (n != NULL) {
+        if (n->thread == t) {
+            rt_node *tmp = n->next;
+        rt_thread *f;
+            if (n->next != NULL) {
+                n->next->prev = n->prev;
+            } else {
+        l->tail = n->prev;
+        }
+            if (n->prev != NULL) {
+                n->prev->next = tmp;
+            } else {
+        l->head = tmp;
+        }
+            n->next = NULL;
+            n->prev = NULL;
+        f = n->thread;
+        rt_node_deinit(n);
+            return f;
+        }
+        n = n->next;
+    }
+    return NULL;
+}
+
+
+// creating a thread group is done as easily as making a name
+struct nk_thread_group *nk_thread_group_create(char *name) {
+    
+}
+
+// search for a thread group by name
+struct nk_thread_group *nk_thread_group_find(char *name);
+
+// current thread joins a group
+int                     nk_thread_group_join(struct nk_thread_group *group);
+
+// current thread leaves a group
+int                     nk_thread_group_leave(struct nk_thread_group *group);
+
+// all threads in the group call to synchronize
+int                     nk_thread_group_barrier(struct nk_thread_group *group);
+
+// all threads in the group call to select one thread as leader
+struct nk_thread       *nk_thread_group_election(struct nk_thread_group *group);
+
+// maybe... 
+// broadcast a message to all members of the thread group
+int                     nk_thread_group_broadcast(struct nk_thread_group *group, void *message);
+
+// delete a group (should be empty)
+int                     nk_thread_group_delete(struct nk_thread_group *group);
+
+//Parallel thread concept------------------------------------------------
+
 static int shared_init(struct cpu *my_cpu, struct nk_sched_config *cfg)
 {
     nk_thread_t * main = NULL;
@@ -3352,18 +3256,15 @@ static int shared_init(struct cpu *my_cpu, struct nk_sched_config *cfg)
 	panic("Cannot start interrupt thread for CPU!\n");
 	return -1;
     }
-#endif	
+#endif
 
-//Parallel thread project-----------------------------------------------------------------------
-    if (register_int_handler(APIC_GROUP_JOIN_VEC, nk_thread_group_join_handler, NULL) != 0) {
-        ERROR_PRINT("Could not register nk_thread_group_join_handler\n");
-        return -1;
-    }
-    nk_vc_printf("APIC_GROUP_JOIN_VEC registered on cpu %d\n", my_cpu_id());
-//Parallel thread project-----------------------------------------------------------------------
+//Parallel thread concept------------------------------------------------
+//Parallel thread concept------------------------------------------------
 
     irq_enable_restore(flags);
 
+    //Parallel thread project
+    //register_int_handler
     return 0;
 
  fail_free:
@@ -3556,6 +3457,5 @@ void nk_sched_rt_stats(struct rt_stats *stats){
     stats->miss_num = t->miss_count;
     stats->miss_time = t->miss_time_sum;
     stats->period = t->constraints.periodic.period;
-    stats->slice = t->constraints.periodic.period;
+    stats->slice = t->constraints.periodic.slice;
 }
-
