@@ -170,6 +170,99 @@ nk_barrier_wait (nk_barrier_t * barrier)
     return res;
 }
 
+//Parallel thread concept------------------------------------------------
+int 
+group_barrier_init (nk_barrier_t * barrier) 
+{
+    DEBUG_PRINT("Initializing group barrier, group barrier at %p, count=%u\n", (void*)barrier, 0);
+
+    memset(barrier, 0, sizeof(nk_barrier_t));
+    barrier->lock = 0;
+    barrier->notify = 1;
+    barrier->init_count = 0;
+    barrier->remaining  = 0;
+
+    return 0;
+}
+
+int 
+group_barrier_wait (nk_barrier_t * barrier) 
+{
+    int res = 0;
+
+    DEBUG_PRINT("Thread (%p) entering barrier (%p)\n", (void*)get_cur_thread(), (void*)barrier);
+
+    bspin_lock(&barrier->lock);
+
+    if (--barrier->remaining == 0) {
+        res = NK_BARRIER_LAST;
+        barrier->remaining = barrier->init_count;
+        atomic_cmpswap(barrier->notify, 0, 1);
+        bspin_unlock(&barrier->lock);
+    } else {
+        bspin_unlock(&barrier->lock);
+        BARRIER_WHILE(barrier->notify != 1);
+    }
+
+    DEBUG_PRINT("Thread (%p) exiting barrier (%p)\n", (void*)get_cur_thread(), (void*)barrier);
+        
+    return res;
+}
+
+int
+group_barrier_join (nk_barrier_t * barrier)
+{
+    int res = 0;
+
+    DEBUG_PRINT("Thread (%p) joining barrier (%p)\n", (void*)get_cur_thread(), (void*)barrier);
+
+    bspin_lock(&barrier->lock);
+
+
+    if (barrier->notify) {
+        //Not in use
+        barrier->init_count += 1;
+        barrier->remaining += 1;
+    } else {
+        //In use
+        barrier->init_count += 1;
+    }
+
+    bspin_unlock(&barrier->lock);
+
+    return res;
+}
+
+int
+group_barrier_leave (nk_barrier_t * barrier)
+{
+    int res = 0;
+
+    DEBUG_PRINT("Thread (%p) leaving barrier (%p)\n", (void*)get_cur_thread(), (void*)barrier);
+
+    bspin_lock(&barrier->lock);
+
+
+    if (barrier->notify) {
+        //Not in use
+        barrier->init_count -= 1;
+    } else {
+        //In use
+        barrier->init_count -= 1;
+
+        if (--barrier->remaining == 0) {
+            //I'm the last one
+            res = NK_BARRIER_LAST;
+            barrier->remaining = barrier->init_count;
+            atomic_cmpswap(barrier->notify, 0, 1);
+        }
+    }
+
+    bspin_unlock(&barrier->lock);
+
+    return res;
+}
+//Parallel thread concept------------------------------------------------
 
 /* 
  * The below functions are for CORES. *NOT* 

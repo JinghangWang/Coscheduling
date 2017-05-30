@@ -325,6 +325,7 @@ typedef struct nk_thread_group
     uint64_t next_id;
     tracker_unit *thread_tracker_list; //May not need
     int init_fail;
+    nk_barrier_t * group_barrier;
 } nk_thread_group;
 
 typedef struct group_node {
@@ -552,8 +553,8 @@ nk_thread_group_join(struct nk_thread_group *group){
     spin_lock(&group->group_lock);
     group->group_size++;
     int id = group->next_id++;
-    //also need to update size of barrier.
     spin_unlock(&group->group_lock);
+    group_barrier_join(group->group_barrier);
     return id;
 }
 
@@ -563,7 +564,7 @@ nk_thread_group_leave(struct nk_thread_group *group){
     spin_lock(&group->group_lock);
     group->group_size--;
     spin_unlock(&group->group_lock);
-    
+    group_barrier_leave(group->group_barrier);
     return 0;
 }
 
@@ -581,22 +582,32 @@ int
 nk_thread_group_broadcast(struct nk_thread_group *group, void *message);
 
 
-struct nk_thread_group *nk_thread_group_create(char *name) {
-    nk_thread_group* new_group = (nk_thread_group*) malloc(sizeof(nk_thread_group));
+struct nk_thread_group *
+nk_thread_group_create(char *name) {
+    nk_thread_group* new_group = (nk_thread_group *) malloc(sizeof(nk_thread_group));
     new_group->group_name = name;
     new_group->thread_tracker_list = NULL;
     new_group->group_size = 0;
     new_group->init_fail = 0;
     new_group->next_id = 0;
+    new_group->group_barrier = (nk_barrier_t *) malloc(sizeof(nk_barrier_t));
+
     spinlock_init(&new_group->group_lock);
     //new_group->group_id = get_next_groupid(); group id is assigned in group_list_enqueue()
  
      if (group_list_enqueue(new_group)){//will acquire list_lock in group_list_queue
-         DEBUG_PRINT("group_list enqueue failed");
+         DEBUG_PRINT("group_list enqueue failed\n");
          FREE(new_group);
          return -1;
+     }
+
+     if(group_barrier_init(new_group->group_barrier)) {
+        DEBUG_PRINT("group_barrier_init failed\n");
+        FREE(new_group->group_barrier);
+        FREE(new_group);
+        return -1;
      } else {
-         return new_group;
+        return new_group;
      }
 }
 

@@ -52,6 +52,16 @@ int nk_barrier_destroy (nk_barrier_t * barrier);
 int nk_barrier_wait (nk_barrier_t * barrier);
 void nk_barrier_test(void);
 
+//Parallel thread concept------------------------------------------------
+int group_barrier_init (nk_barrier_t * barrier);
+
+int group_barrier_wait (nk_barrier_t * barrier);
+
+int group_barrier_join (nk_barrier_t * barrier);
+
+int group_barrier_leave (nk_barrier_t * barrier);
+//Parallel thread concept------------------------------------------------
+
 /* CORE barriers */
 int nk_core_barrier_raise(void);
 int nk_core_barrier_lower(void);
