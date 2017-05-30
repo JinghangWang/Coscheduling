@@ -311,21 +311,24 @@ thread_setup_init_stack (nk_thread_t * t, nk_thread_fun_t fun, void * arg)
 #define MALLOC(x) malloc(x)
 #define FREE(x) free(x)
 #endif // sanity checks
-typedef struct tracker_unit {
+typedef struct thread_unit {
     int tid;
-    nk_thread_t *tracker;
-} tracker_unit;
+    nk_thread_t *thread;
+} thread_unit;
 
 typedef struct nk_thread_group
 {
-    uint64_t group_id;
     char *group_name;
-    spinlock_t group_lock;
+    uint64_t group_id;
+    uint64_t group_leader;
     uint64_t group_size;
     uint64_t next_id;
-    tracker_unit *thread_tracker_list; //May not need
+    
+    thread_unit *thread_unit_list; //May not need, has not been implemented
+    
     int init_fail;
     nk_barrier_t * group_barrier;
+    spinlock_t group_lock;
 } nk_thread_group;
 
 typedef struct group_node {
@@ -360,7 +363,8 @@ int                     nk_thread_group_leave(struct nk_thread_group *group);
 int                     nk_thread_group_barrier(struct nk_thread_group *group);
 
 // all threads in the group call to select one thread as leader
-struct nk_thread       *nk_thread_group_election(struct nk_thread_group *group);
+//struct nk_thread       *nk_thread_group_election(struct nk_thread_group *group);
+uint64_t                nk_thread_group_election(struct nk_thread_group *group, uint64_t my_tid);
 
 // maybe... 
 // broadcast a message to all members of the thread group
@@ -553,6 +557,7 @@ nk_thread_group_join(struct nk_thread_group *group){
     spin_lock(&group->group_lock);
     group->group_size++;
     int id = group->next_id++;
+    //add to thread list
     spin_unlock(&group->group_lock);
     group_barrier_join(group->group_barrier);
     return id;
@@ -563,6 +568,7 @@ int
 nk_thread_group_leave(struct nk_thread_group *group){
     spin_lock(&group->group_lock);
     group->group_size--;
+    //remove from thread list
     spin_unlock(&group->group_lock);
     group_barrier_leave(group->group_barrier);
     return 0;
@@ -570,11 +576,21 @@ nk_thread_group_leave(struct nk_thread_group *group){
 
 // all threads in the group call to synchronize
 int                     
-nk_thread_group_barrier(struct nk_thread_group *group);
+nk_thread_group_barrier(struct  nk_thread_group *group) {
+    return group_barrier_wait(group->group_barrier);
+}
 
 // all threads in the group call to select one thread as leader
-struct nk_thread       
-*nk_thread_group_election(struct nk_thread_group *group);
+uint64_t
+nk_thread_group_election(struct nk_thread_group *group, uint64_t my_tid) {
+    //uint64_t my_tid = group_get_my_tid();
+    uint64_t leader = atomic_cmpswap(group->group_leader, -1, my_tid);
+    if (leader == -1){
+        leader = my_tid;
+    } 
+    
+    return leader;
+}
 
 // maybe... 
 // broadcast a message to all members of the thread group
@@ -586,7 +602,8 @@ struct nk_thread_group *
 nk_thread_group_create(char *name) {
     nk_thread_group* new_group = (nk_thread_group *) malloc(sizeof(nk_thread_group));
     new_group->group_name = name;
-    new_group->thread_tracker_list = NULL;
+    new_group->group_leader = -1;
+    new_group->thread_unit_list = NULL;
     new_group->group_size = 0;
     new_group->init_fail = 0;
     new_group->next_id = 0;
@@ -595,7 +612,7 @@ nk_thread_group_create(char *name) {
     spinlock_init(&new_group->group_lock);
     //new_group->group_id = get_next_groupid(); group id is assigned in group_list_enqueue()
  
-     if (group_list_enqueue(new_group)){//will acquire list_lock in group_list_queue
+     if (group_list_enqueue(new_group)){ //will acquire list_lock in group_list_queue
          DEBUG_PRINT("group_list enqueue failed\n");
          FREE(new_group);
          return -1;
