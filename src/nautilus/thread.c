@@ -303,8 +303,14 @@ thread_setup_init_stack (nk_thread_t * t, nk_thread_fun_t fun, void * arg)
 // List implementation for use in scheduler
 // Avoids changing thread structures
 //
-#define PAD     0
+#if SANITY_CHECKS
+#define PAD 0
+#define MALLOC(x) ({ void *p  = malloc((x)+2*PAD); if (!p) { panic("Failed to Allocate %d bytes\n",x); } memset(p,0,(x)+2*PAD); p+PAD; })
 #define FREE(x) do {if (x) { free(x-PAD); x=0;} } while (0)
+#else // no sanity checks
+#define MALLOC(x) malloc(x)
+#define FREE(x) free(x)
+#endif // sanity checks
 typedef struct tracker_unit {
     int tid;
     nk_thread_t *tracker;
@@ -573,6 +579,26 @@ struct nk_thread
 // broadcast a message to all members of the thread group
 int                     
 nk_thread_group_broadcast(struct nk_thread_group *group, void *message);
+
+
+struct nk_thread_group *nk_thread_group_create(char *name) {
+    nk_thread_group* new_group = (nk_thread_group*) malloc(sizeof(nk_thread_group));
+    new_group->group_name = name;
+    new_group->thread_tracker_list = NULL;
+    new_group->group_size = 0;
+    new_group->init_fail = 0;
+    new_group->next_id = 0;
+    spinlock_init(&new_group->group_lock);
+    //new_group->group_id = get_next_groupid(); group id is assigned in group_list_enqueue()
+ 
+     if (group_list_enqueue(new_group)){//will acquire list_lock in group_list_queue
+         DEBUG_PRINT("group_list enqueue failed");
+         FREE(new_group);
+         return -1;
+     } else {
+         return new_group;
+     }
+}
 
 // delete a group (should be empty)
 int                     
