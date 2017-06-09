@@ -560,8 +560,8 @@ void nk_sched_dump_time(int cpu_arg)
 
 	    struct apic_dev *apic = sys->cpus[cpu]->apic;
 			 
-            nk_vc_printf("%dc %luhz %luppt %lucpu %lucpt %luts %luct %lutc\n",
-			 cpu, apic->bus_freq_hz, apic->ps_per_tick,
+            nk_vc_printf("%dc %luhz %ludiv %luppt %lucpu %lucpt %luts %luct %lutc\n",
+			 cpu, apic->bus_freq_hz, APIC_TIMER_DIV, apic->ps_per_tick,
 			 apic->cycles_per_us, apic->cycles_per_tick,
 			 apic->timer_set, apic->current_ticks, apic->timer_count);
 	}

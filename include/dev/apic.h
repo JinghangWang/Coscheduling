@@ -234,10 +234,10 @@ struct apic_dev {
     uint_t   id;
     uint64_t spur_int_cnt;
     uint64_t err_int_cnt;
-    uint64_t bus_freq_hz;
-    uint64_t ps_per_tick;
+    uint64_t bus_freq_hz; // raw bus freq before division
+    uint64_t ps_per_tick; // per divided clock (APIC_TIMER_DIV)
     uint64_t cycles_per_us;
-    uint64_t cycles_per_tick;
+    uint64_t cycles_per_tick; //per divided clock (APIC_TIMER_DIV)
     uint8_t  timer_set;
     uint32_t current_ticks; // timeout currently being computed
     uint64_t timer_count;

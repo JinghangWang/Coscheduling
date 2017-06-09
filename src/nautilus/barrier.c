@@ -197,9 +197,10 @@ group_barrier_wait (nk_barrier_t * barrier)
     if (--barrier->remaining == 0) {
         res = NK_BARRIER_LAST;
         barrier->remaining = barrier->init_count;
-        atomic_cmpswap(barrier->notify, 0, 1);
+        atomic_cmpswap(barrier->notify, 0, 1); //last thread mark the barrier not in use
         bspin_unlock(&barrier->lock);
     } else {
+        atomic_cmpswap(barrier->notify, 1, 0); //first thread mark the barrie in use
         bspin_unlock(&barrier->lock);
         BARRIER_WHILE(barrier->notify != 1);
     }

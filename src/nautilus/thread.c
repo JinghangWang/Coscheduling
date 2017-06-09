@@ -364,7 +364,7 @@ int                     nk_thread_group_barrier(struct nk_thread_group *group);
 
 // all threads in the group call to select one thread as leader
 //struct nk_thread       *nk_thread_group_election(struct nk_thread_group *group);
-uint64_t                nk_thread_group_election(struct nk_thread_group *group, uint64_t my_tid);
+uint64_t                nk_thread_group_election(struct nk_thread_group *group, uint64_t my_tid);//failure modes, list of threads
 
 // maybe... 
 // broadcast a message to all members of the thread group

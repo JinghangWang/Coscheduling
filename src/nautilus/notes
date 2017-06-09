@@ -7,3 +7,11 @@ threads
 
 
 groups: join, leave, create, find_leader
+
+group api mostly finished:
+	not yet done: broadcast
+
+
+Todo:
+	phi serial output at the boot
+	wait queue for broadcast
