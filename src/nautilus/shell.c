@@ -138,6 +138,9 @@ void parallel_burner(void *in, void **out)
     }
 }
 */
+
+
+
 //Parallel thread concept------------------------------------------------
 
 static void burner(void *in, void **out)
@@ -882,6 +885,12 @@ static int handle_cmd(char *buf, int n)
     return 0;
   }
   */
+
+
+  if (!strncasecmp(buf,"group test",9)) {
+    nk_vc_printf("Starting group test\n");
+    group_test(5);
+  }   
 //Parallel thread concept------------------------------------------------
 
   if (sscanf(buf,"burn a %s %llu %u %llu", name, &size_ns, &tpr, &priority)==4) { 

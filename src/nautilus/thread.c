@@ -311,6 +311,8 @@ thread_setup_init_stack (nk_thread_t * t, nk_thread_fun_t fun, void * arg)
 #define MALLOC(x) malloc(x)
 #define FREE(x) free(x)
 #endif // sanity checks
+
+
 typedef struct thread_unit {
     int tid;
     nk_thread_t *thread;
@@ -376,6 +378,7 @@ int                     nk_thread_group_delete(struct nk_thread_group *group);
 // init/deinit of module
 int nk_thread_group_init(void);
 int nk_thread_group_deinit(void);
+
 
 static int        group_list_enqueue(nk_thread_group* g);
 static nk_thread_group* group_list_remove(nk_thread_group* g);
@@ -640,9 +643,52 @@ nk_thread_group_delete(struct nk_thread_group *group){
     }
 }
 
-//Parallel thread concept------------------------------------------------
+
+int group_test(int num_members){
+    nk_thread_group_init();
+    char group_name[20];
+    sprintf(group_name, "helloworld!");
+    nk_thread_group * new_group = nk_thread_group_create(group_name);
+        if (new_group != NULL) {
+            nk_vc_printf("group_create succeeded\n");
+        } else {
+            nk_vc_printf("group_create failed\n");
+            return -1;
+        }
+
+
+
+    return 0;
+}
+
+// creating a thread group is done as easily as making a name
+struct nk_thread_group *nk_thread_group_create(char *name);
+
+// search for a thread group by name
+struct nk_thread_group *nk_thread_group_find(char *name);
+
+// current thread joins a group
+int                     nk_thread_group_join(struct nk_thread_group *group);
+
+// current thread leaves a group
+int                     nk_thread_group_leave(struct nk_thread_group *group);
+
+// all threads in the group call to synchronize
+int                     nk_thread_group_barrier(struct nk_thread_group *group);
+
+// all threads in the group call to select one thread as leader
+//struct nk_thread       *nk_thread_group_election(struct nk_thread_group *group);
+uint64_t                nk_thread_group_election(struct nk_thread_group *group, uint64_t my_tid);//failure modes, list of threads
+
+// maybe... 
+// broadcast a message to all members of the thread group
+int                     nk_thread_group_broadcast(struct nk_thread_group *group, void *message);
+
+// delete a group (should be empty)
+int                     nk_thread_group_delete(struct nk_thread_group *group);
 
 //Parallel thread concept------------------------------------------------
+
 
 /* 
  * nk_thread_create
