@@ -26,11 +26,11 @@ CPU 4026589891: DEBUG: Cmd line:
 CPU 4026589891: DEBUG: Boot loader: GRUB 2.02~beta2-36ubuntu3.11
 CPU 4026589891: DEBUG: Unhandled tag type (0xa)
 CPU 4026589891: DEBUG: Multiboot2 memory map detected
-CPU 4026589891: DEBUG: ELF size=20, num=0, entsize=0, shndx=0, sechdr=0x0034ac10
+CPU 4026589891: DEBUG: ELF size=20, num=0, entsize=0, shndx=0, sechdr=0x00348c10
 CPU 4026589891: DEBUG: Multiboot2 basic meminfo detected
 CPU 4026589891: DEBUG: Boot device: (biosdev=0xe0,slice=4294967295,part=4294967295)
 CPU 4026589891: DEBUG: fb addr: 0x000b8000, fb_width: 80, fb_height: 25
-CPU 4026589891: DEBUG: Old ACPI: rsdp=0x0034ad78
+CPU 4026589891: DEBUG: Old ACPI: rsdp=0x00348d78
 ACPI: Parsing ACPI root table (at 0x000f63f0)
 ACPI: RSDP 00000000000f63f0 00014 (v00 BOCHS )
 ACPI: RSDT 000000007ffe1737 00034 (v01 BOCHS  BXPCRSDT 00000001 BXPC 00000001)
@@ -52,7 +52,6 @@ BOOTMEM:     =======
 BOOTMEM:     [TOTAL] (2126.512128 MB)
 Disabling legacy 8259 PIC
 Initializing i8254 PIT
-CPU 0: DEBUG: Initializing barier, barrier at 0x7fa00000, count=2
 CPU 0: timer: Timers inited
 CPU 0: kbd: init
 CPU 0: kbd: reset
@@ -63,108 +62,108 @@ PCI: [0000:01.32902] Multifunction Device detected
 PCI: 0000:00:02.0 1234:1111 (rev 2)
 PCI: 0000:00:03.0 8086:100e (rev 3)
 CPU 0: Scheduler: Initializing scheduler on BSP
-UDELAY(1000): 87000 
-UDELAY(1000): 68000 
-UDELAY(1000): 69000 
-UDELAY(1000): 69000 
-UDELAY(1000): 68000 
-UDELAY(1000): 61000 
-UDELAY(1000): 68000 
-UDELAY(1000): 62000 
-UDELAY(1000): 115000 
-UDELAY(1000): 69000 
-UDELAY(1000): 68000 
-UDELAY(1000): 61000 
-UDELAY(1000): 68000 
-UDELAY(1000): 69000 
-UDELAY(1000): 63000 
-UDELAY(1000): 63000 
-UDELAY(1000): 64000 
-UDELAY(1000): 68000 
-UDELAY(1000): 68000 
-UDELAY(1000): 69000 
-UDELAY(1000): 71000 
-UDELAY(1000): 64000 
-UDELAY(1000): 67000 
-UDELAY(1000): 70000 
-UDELAY(1000): 142000 
-UDELAY(1000): 148000 
-UDELAY(1000): 153000 
-UDELAY(1000): 132000 
-UDELAY(1000): 155000 
-UDELAY(1000): 130000 
-UDELAY(1000): 130000 
-UDELAY(1000): 118000 
-UDELAY(1000): 130000 
-UDELAY(1000): 136000 
-UDELAY(1000): 62000 
-UDELAY(1000): 69000 
-UDELAY(1000): 68000 
-UDELAY(1000): 68000 
-UDELAY(1000): 62000 
-UDELAY(1000): 69000 
-UDELAY(1000): 68000 
-UDELAY(1000): 68000 
-UDELAY(1000): 62000 
-UDELAY(1000): 68000 
-UDELAY(1000): 63000 
-UDELAY(1000): 64000 
-UDELAY(1000): 71000 
-UDELAY(1000): 71000 
-UDELAY(1000): 71000 
-UDELAY(1000): 70000 
-UDELAY(1000): average time in ns = 82340 in 50 samples
-get_real_time overhead: 4000 
-get_real_time overhead: 1000 
-get_real_time overhead: 0 
-get_real_time overhead: 0 
-get_real_time overhead: 0 
-get_real_time overhead: 1000 
-get_real_time overhead: 0 
-get_real_time overhead: 1000 
-get_real_time overhead: 1000 
-get_real_time overhead: 0 
-get_real_time overhead: 0 
-get_real_time overhead: 0 
-get_real_time overhead: 1000 
-get_real_time overhead: 0 
-get_real_time overhead: 0 
-get_real_time overhead: 1000 
-get_real_time overhead: 0 
-get_real_time overhead: 0 
-get_real_time overhead: 1000 
-get_real_time overhead: 0 
-get_real_time overhead: 0 
-get_real_time overhead: 1000 
-get_real_time overhead: 0 
-get_real_time overhead: 0 
-get_real_time overhead: 0 
-get_real_time overhead: 1000 
-get_real_time overhead: 0 
-get_real_time overhead: 0 
-get_real_time overhead: 1000 
-get_real_time overhead: 0 
-get_real_time overhead: 0 
-get_real_time overhead: 0 
-get_real_time overhead: 0 
-get_real_time overhead: 1000 
-get_real_time overhead: 0 
-get_real_time overhead: 0 
-get_real_time overhead: 0 
-get_real_time overhead: 1000 
-get_real_time overhead: 0 
-get_real_time overhead: 0 
-get_real_time overhead: 1000 
-get_real_time overhead: 0 
-get_real_time overhead: 0 
-get_real_time overhead: 0 
-get_real_time overhead: 0 
-get_real_time overhead: 0 
-get_real_time overhead: 0 
-get_real_time overhead: 1000 
-get_real_time overhead: 0 
-get_real_time overhead: 0 
-get_real_time overhead: average time in ns = 360 in 50 samples
+UDELAY(1000): 50908000 
+UDELAY(1000): 39836000 
+UDELAY(1000): 49086000 
+UDELAY(1000): 40165000 
+UDELAY(1000): 40138000 
+UDELAY(1000): 73486000 
+UDELAY(1000): 55435000 
+UDELAY(1000): 39847000 
+UDELAY(1000): 39613000 
+UDELAY(1000): 39843000 
+UDELAY(1000): 39756000 
+UDELAY(1000): 39850000 
+UDELAY(1000): 39656000 
+UDELAY(1000): 39965000 
+UDELAY(1000): 99366000 
+UDELAY(1000): 40147000 
+UDELAY(1000): 39624000 
+UDELAY(1000): 40091000 
+UDELAY(1000): 40125000 
+UDELAY(1000): 39378000 
+UDELAY(1000): 40026000 
+UDELAY(1000): 40155000 
+UDELAY(1000): 39880000 
+UDELAY(1000): 39811000 
+UDELAY(1000): 40230000 
+UDELAY(1000): 39932000 
+UDELAY(1000): 39813000 
+UDELAY(1000): 39709000 
+UDELAY(1000): 40061000 
+UDELAY(1000): 39951000 
+UDELAY(1000): 40023000 
+UDELAY(1000): 40339000 
+UDELAY(1000): 39869000 
+UDELAY(1000): 39768000 
+UDELAY(1000): 39928000 
+UDELAY(1000): 39882000 
+UDELAY(1000): 61027000 
+UDELAY(1000): 39877000 
+UDELAY(1000): 52475000 
+UDELAY(1000): 39917000 
+UDELAY(1000): 39887000 
+UDELAY(1000): 39334000 
+UDELAY(1000): 39471000 
+UDELAY(1000): 39990000 
+UDELAY(1000): 40503000 
+UDELAY(1000): 44847000 
+UDELAY(1000): 39932000 
+UDELAY(1000): 40128000 
+UDELAY(1000): 39690000 
+UDELAY(1000): 39765000 
+UDELAY(1000): average time in ns = 43250700 in 50 samples
+get_real_time overhead: 2662000 
+get_real_time overhead: 218000 
+get_real_time overhead: 236000 
+get_real_time overhead: 206000 
+get_real_time overhead: 209000 
+get_real_time overhead: 203000 
+get_real_time overhead: 206000 
+get_real_time overhead: 138000 
+get_real_time overhead: 188000 
+get_real_time overhead: 184000 
+get_real_time overhead: 226000 
+get_real_time overhead: 133000 
+get_real_time overhead: 200000 
+get_real_time overhead: 204000 
+get_real_time overhead: 123000 
+get_real_time overhead: 123000 
+get_real_time overhead: 122000 
+get_real_time overhead: 124000 
+get_real_time overhead: 122000 
+get_real_time overhead: 123000 
+get_real_time overhead: 853000 
+get_real_time overhead: 426000 
+get_real_time overhead: 366000 
+get_real_time overhead: 261000 
+get_real_time overhead: 321000 
+get_real_time overhead: 339000 
+get_real_time overhead: 240000 
+get_real_time overhead: 196000 
+get_real_time overhead: 139000 
+get_real_time overhead: 187000 
+get_real_time overhead: 138000 
+get_real_time overhead: 187000 
+get_real_time overhead: 183000 
+get_real_time overhead: 188000 
+get_real_time overhead: 191000 
+get_real_time overhead: 197000 
+get_real_time overhead: 186000 
+get_real_time overhead: 191000 
+get_real_time overhead: 191000 
+get_real_time overhead: 209000 
+get_real_time overhead: 204000 
+get_real_time overhead: 153000 
+get_real_time overhead: 218000 
+get_real_time overhead: 125000 
+get_real_time overhead: 122000 
+get_real_time overhead: 186000 
+get_real_time overhead: 199000 
+get_real_time overhead: 129000 
+get_real_time overhead: 177000 
+get_real_time overhead: 126000 
+get_real_time overhead: average time in ns = 255560 in 50 samples
 BOOTMEM: Reclaiming boot sections and data:
 BOOTMEM:     [Boot alloc. page map] (0.264 MB)
 BOOTMEM:     [Boot page tables and stack]     (0.4096 MB)
@@ -172,51 +171,28 @@ BOOTMEM:     =======
 BOOTMEM:     [TOTAL] (2.109704 MB)
 SMP: Setting up cross-core IPI event queue
 MWAIT not supported
+CPU 0: ERROR at src/nautilus/vc.c(1097): vc: vc <NULL> does not have a valid type
+CPU 0: ERROR at src/nautilus/vc.c(1097): vc: vc <NULL> does not have a valid type
 CPU 0: vc: init
 CPU 0: vc: List launched
 CPU 0: fs: inited
-CPU 0: Shell root-shell launched on cpu 0 as 0000000000105000
-Nautilus boot thread yielding (indefinitely)
-CPU 0: here 1
-CPU 0: DEBUG: Initializing group barrier, group barrier at 0000000000102400, count=0
-CPU 0: group_create succeeded
-root-shell> CPU 0: group_find ok
-CPU 0: DEBUG: Thread (0000000000107000) joining barrier 
-CPU 0: DEBUG: Thread (0000000000107000) joining barrier done, barrier size = 1 
-CPU 0: group_join ok, tid is 0, group_size is 1
 List of VCs (space to regenerate)
 
 a : default
 b : system-log
 c : vc-list
-d : root-shell
-CPU 1: group_find ok
-CPU 1: DEBUG: Thread (000000007fa07000) joining barrier 
-CPU 1: DEBUG: Thread (000000007fa07000) joining barrier done, barrier size = 2 
-CPU 1: group_join ok, tid is 1, group_size is 2
-CPU 0: group_find ok
-CPU 0: DEBUG: Thread (000000007fa05000) joining barrier 
-CPU 0: DEBUG: Thread (000000007fa05000) joining barrier done, barrier size = 3 
-CPU 0: group_join ok, tid is 2, group_size is 3
-CPU 0: group_find ok
-CPU 0: DEBUG: Thread (0000000000111000) joining barrier 
-CPU 0: DEBUG: Thread (0000000000111000) joining barrier done, barrier size = 4 
-CPU 0: group_join ok, tid is 3, group_size is 4
-CPU 0: group_find ok
-CPU 0: DEBUG: Thread (0000000000113000) joining barrier 
-CPU 0: DEBUG: Thread (0000000000113000) joining barrier done, barrier size = 5 
-CPU 0: group_join ok, tid is 4, group_size is 5
-CPU 0: about entering barrier
-CPU 0: DEBUG: Thread (0000000000113000) entering barrier (0000000000102400)
-CPU 0: DEBUG: remaining count = 4
-threads
-1t 1r 0cb (idle) sus yie 1920s 151c 151r 100d 0e aperiodic(0tp, 100) stats: 1a 2re 2rl 0sw 0m
-2t 1r 1cb (idle) sus adm 1919s 50c 50r 100d 0e aperiodic(0tp, 100) stats: 1a 2re 2rl 0sw 0m
-3t 1r 1c vc-list wai sle 1969s 1c 1r 100d 0e aperiodic(0tp, 100) stats: 1a 1re 1rl 1sw 0m
-4t 1r 0cb root-shell RUN adm 77457s 0c 90r 100d 0e aperiodic(0tp, 100) stats: 1a 8re 5rl 6sw 0m
-5t 1r 0c (noname) sus adm 77356s 101c 23989r 100d 0e aperiodic(0tp, 100) stats: 1a 325re 188rl 188sw 0m
-6t 1r 0c (noname) sus adm 77052s 146c 23502r 100d 0e aperiodic(0tp, 100) stats: 1a 320re 187rl 187sw 0m
-7t 1r 1c (noname) RUN adm 77457s 75486c 75486r 100d 0e aperiodic(0tp, 100) stats: 1a 746re 746rl 1sw 0m
-8t 1r 0c (noname) sus adm 77153s 100c 23769r 100d 0e aperiodic(0tp, 100) stats: 1a 320re 187rl 187sw 0m
-9t 1r 0c (noname) sus adm 77254s 101c 23383r 100d 0e aperiodic(0tp, 100) stats: 1a 316re 187rl 187sw 0m
-root-shell> 
+CPU 0: Shell root-shell launched on cpu 0 as 0000000000105000
+root-shell> Nautilus boot thread yielding (indefinitely)
+CPU 0: here 1
+CPU 0: group_create succeeded
+CPU 0: group_size = 1
+CPU 1: group_sCPU 0: group_join ok, tid is 0
+ize = 2
+CPU 1: group_jCPU 1: group_size = 3
+oin ok, tid is 1
+CPU 1: group_join ok, tid is 2
+CPU 1: group_size = 4
+CPU 1: group_join ok, tid is 3
+CPU 1: group_size = 5
+CPU 1: group_join ok, tid is 4
+CPU 1: about entering barrier

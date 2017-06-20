@@ -190,10 +190,9 @@ group_barrier_wait (nk_barrier_t * barrier)
 {
     int res = 0;
 
-    DEBUG_PRINT("Thread (%p) entering barrier (%p)\n", (void*)get_cur_thread(), (void*)barrier);
-
     bspin_lock(&barrier->lock);
-
+    DEBUG_PRINT("Thread (%p) entering barrier (%p)\n", (void*)get_cur_thread(), (void*)barrier);
+    
     if (--barrier->remaining == 0) {
         res = NK_BARRIER_LAST;
         barrier->remaining = barrier->init_count;

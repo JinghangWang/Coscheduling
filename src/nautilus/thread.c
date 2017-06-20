@@ -565,6 +565,7 @@ nk_thread_group_join(struct nk_thread_group *group){
     group->group_size++;
     int id = group->next_id++;
     //add to thread list
+    GROUP("group_size = %d\n", group->group_size);
     spin_unlock(&group->group_lock);
     group_barrier_join(group->group_barrier);
     return id;
@@ -656,9 +657,7 @@ nk_thread_group_delete(struct nk_thread_group *group){
 static void group_tester(void *in, void **out){
     // GROUP("group name in tester is : %s\n", (char*)in);
     nk_thread_group * dst = nk_thread_group_find((char*) in);
-    if (dst){
-        GROUP("group_find ok\n");
-    } else {
+    if (!dst){
         GROUP("group_find failed\n");
         return;
     }
@@ -668,7 +667,7 @@ static void group_tester(void *in, void **out){
         GROUP("group join failed\n");
         return;
     } else {
-        GROUP("group_join ok, tid is %d, group_size is %d\n", tid, dst->group_size);
+        GROUP("group_join ok, tid is %d\n", tid);
     }
 
     while(dst->group_size != 5) {
