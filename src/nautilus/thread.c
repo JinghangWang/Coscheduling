@@ -668,8 +668,24 @@ static void group_tester(void *in, void **out){
         GROUP("group join failed\n");
         return;
     } else {
-        GROUP("group_join ok, tid is %d\n", tid);
+        GROUP("group_join ok, tid is %d, group_size is %d\n", tid, dst->group_size);
     }
+
+    while(dst->group_size != 5) {
+        udelay(100);
+        // GROUP("group size = %d\n", dst->group_size);
+    }
+    GROUP("about entering barrier\n");
+    //barrier test
+    int i, ret;
+    #define NUM_LOOP    1
+    for (i = 0; i< NUM_LOOP; ++i){
+        ret = nk_thread_group_barrier(dst);
+        if (ret){
+            GROUP("last member quits\n");
+        }
+    }
+    GROUP("after barrier\n");
 
 }
 

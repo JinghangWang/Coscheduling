@@ -201,6 +201,7 @@ group_barrier_wait (nk_barrier_t * barrier)
         bspin_unlock(&barrier->lock);
     } else {
         atomic_cmpswap(barrier->notify, 1, 0); //first thread mark the barrie in use
+        DEBUG_PRINT("remaining count = %d\n", barrier->remaining);
         bspin_unlock(&barrier->lock);
         BARRIER_WHILE(barrier->notify != 1);
     }
@@ -215,10 +216,8 @@ group_barrier_join (nk_barrier_t * barrier)
 {
     int res = 0;
 
-    DEBUG_PRINT("Thread (%p) joining barrier (%p)\n", (void*)get_cur_thread(), (void*)barrier);
-
     bspin_lock(&barrier->lock);
-
+    DEBUG_PRINT("Thread (%p) joining barrier \n", (void*)get_cur_thread());
 
     if (barrier->notify) {
         //Not in use
@@ -229,8 +228,8 @@ group_barrier_join (nk_barrier_t * barrier)
         barrier->init_count += 1;
     }
 
+    DEBUG_PRINT("Thread (%p) joining barrier done, barrier size = %d \n", (void*)get_cur_thread(), barrier->init_count);
     bspin_unlock(&barrier->lock);
-
     return res;
 }
 

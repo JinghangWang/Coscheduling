@@ -1,7 +1,7 @@
 /*
  * Automatically generated C config: don't edit
  * Nautilus version: 
- * Tue Jun 20 14:47:03 2017
+ * Tue Jun 20 16:11:09 2017
  */
 #define AUTOCONF_INCLUDED
 
@@ -81,7 +81,7 @@
 #undef NAUT_CONFIG_DEBUG_SCHED
 #undef NAUT_CONFIG_DEBUG_TIMERS
 #undef NAUT_CONFIG_DEBUG_SYNCH
-#undef NAUT_CONFIG_DEBUG_BARRIER
+#define NAUT_CONFIG_DEBUG_BARRIER 1
 #undef NAUT_CONFIG_DEBUG_NUMA
 #undef NAUT_CONFIG_DEBUG_VIRTUAL_CONSOLE
 #undef NAUT_CONFIG_DEBUG_DEV
