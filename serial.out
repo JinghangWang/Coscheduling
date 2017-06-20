@@ -1,0 +1,196 @@
+CPU 4026589891: dev: devices inited
+CPU 4026589891: chardev: init
+CPU 4026589891: blkdev: init
+CPU 4026589891: netdev: init
+Welcome to                                         
+    _   __               __   _  __                
+   / | / /____ _ __  __ / /_ (_)/ /__  __ _____    
+  /  |/ // __ `// / / // __// // // / / // ___/    
+ / /|  // /_/ // /_/ // /_ / // // /_/ /(__  )     
+/_/ |_/ \__,_/ \__,_/ \__//_//_/ \__,_//____/  
++===============================================+  
+ Kyle C. Hale (c) 2014 | Northwestern University   
++===============================================+  
+
+Detected AuthenticAMD Processor
+BOOTMEM: Setting up boot memory allocator
+BOOTMEM: Memory map[0] - [0x00000000 - 0x0009f000] <usable RAM>
+BOOTMEM: Memory map[1] - [0x000a0000 - 0x000a0000] <reserved>
+BOOTMEM: Memory map[2] - [0x000f0000 - 0x00100000] <reserved>
+BOOTMEM: Memory map[3] - [0x00100000 - 0x7ffe0000] <usable RAM>
+BOOTMEM: Memory map[4] - [0x7ffe0000 - 0x80000000] <reserved>
+BOOTMEM: Memory map[5] - [0xfffc0000 - 0x100000000] <reserved>
+BOOTMEM: Detected 2146.958336 MB of usable System RAM
+CPU 4026589891: DEBUG: Multiboot info size 392B
+CPU 4026589891: DEBUG: Cmd line: 
+CPU 4026589891: DEBUG: Boot loader: GRUB 2.02~beta2-36ubuntu3.11
+CPU 4026589891: DEBUG: Unhandled tag type (0xa)
+CPU 4026589891: DEBUG: Multiboot2 memory map detected
+CPU 4026589891: DEBUG: ELF size=20, num=0, entsize=0, shndx=0, sechdr=0x00348c10
+CPU 4026589891: DEBUG: Multiboot2 basic meminfo detected
+CPU 4026589891: DEBUG: Boot device: (biosdev=0xe0,slice=4294967295,part=4294967295)
+CPU 4026589891: DEBUG: fb addr: 0x000b8000, fb_width: 80, fb_height: 25
+CPU 4026589891: DEBUG: Old ACPI: rsdp=0x00348d78
+ACPI: Parsing ACPI root table (at 0x000f63f0)
+ACPI: RSDP 00000000000f63f0 00014 (v00 BOCHS )
+ACPI: RSDT 000000007ffe1737 00034 (v01 BOCHS  BXPCRSDT 00000001 BXPC 00000001)
+ACPI: root table checksum pass
+ACPI: FACP 000000007ffe0c14 00074 (v01 BOCHS  BXPCFACP 00000001 BXPC 00000001)
+ACPI: SSDT 000000007ffe0c88 009F7 (v01 BOCHS  BXPCSSDT 00000001 BXPC 00000001)
+ACPI: APIC 000000007ffe167f 00080 (v01 BOCHS  BXPCAPIC 00000001 BXPC 00000001)
+ACPI: HPET 000000007ffe16ff 00038 (v01 BOCHS  BXPCHPET 00000001 BXPC 00000001)
+ACPI: Done parsing ACPI root table
+SMP: Detected 2 CPUs
+NUMA: Parsing ACPI NUMA information...
+NUMA: DONE.
+Remapping phys mem [0x00000000 - 0x100000000] with 2MB pages
+CPU 4026589891: KMEM: Malloc configured to support a maximum of: 0x7ff7f000 bytes of physical memory
+BOOTMEM: Adding boot memory regions to the kernel memory pool:
+BOOTMEM:     [Domain 00 : Region 00] (0.00 MB)
+BOOTMEM:     [Domain 00 : Region 01] (2126.512128 MB)
+BOOTMEM:     =======
+BOOTMEM:     [TOTAL] (2126.512128 MB)
+Disabling legacy 8259 PIC
+Initializing i8254 PIT
+CPU 0: timer: Timers inited
+CPU 0: kbd: init
+CPU 0: kbd: reset
+PCI: Probing PCI bus...
+PCI: 0000:00:00.0 8086:1237 (rev 2)
+PCI: 0000:00:01.0 8086:7000 (rev 0)
+PCI: [0000:01.32902] Multifunction Device detected
+PCI: 0000:00:02.0 1234:1111 (rev 2)
+PCI: 0000:00:03.0 8086:100e (rev 3)
+CPU 0: Scheduler: Initializing scheduler on BSP
+UDELAY(1000): 77642000 
+UDELAY(1000): 60290000 
+UDELAY(1000): 58920000 
+UDELAY(1000): 60160000 
+UDELAY(1000): 59666000 
+UDELAY(1000): 60058000 
+UDELAY(1000): 59766000 
+UDELAY(1000): 73067000 
+UDELAY(1000): 62103000 
+UDELAY(1000): 60054000 
+UDELAY(1000): 60612000 
+UDELAY(1000): 59949000 
+UDELAY(1000): 60486000 
+UDELAY(1000): 59825000 
+UDELAY(1000): 59308000 
+UDELAY(1000): 60085000 
+UDELAY(1000): 60107000 
+UDELAY(1000): 60362000 
+UDELAY(1000): 60197000 
+UDELAY(1000): 60185000 
+UDELAY(1000): 61474000 
+UDELAY(1000): 143411000 
+UDELAY(1000): 310482000 
+UDELAY(1000): 128002000 
+UDELAY(1000): 97719000 
+UDELAY(1000): 109618000 
+UDELAY(1000): 128634000 
+UDELAY(1000): 147157000 
+UDELAY(1000): 144370000 
+UDELAY(1000): 148694000 
+UDELAY(1000): 131834000 
+UDELAY(1000): 61717000 
+UDELAY(1000): 179785000 
+UDELAY(1000): 145498000 
+UDELAY(1000): 168508000 
+UDELAY(1000): 134390000 
+UDELAY(1000): 144361000 
+UDELAY(1000): 135823000 
+UDELAY(1000): 145710000 
+UDELAY(1000): 145267000 
+UDELAY(1000): 146286000 
+UDELAY(1000): 98613000 
+UDELAY(1000): 74128000 
+UDELAY(1000): 95196000 
+UDELAY(1000): 59627000 
+UDELAY(1000): 59985000 
+UDELAY(1000): 60062000 
+UDELAY(1000): 60142000 
+UDELAY(1000): 161383000 
+UDELAY(1000): 66448000 
+UDELAY(1000): average time in ns = 98543320 in 50 samples
+get_real_time overhead: 4781000 
+get_real_time overhead: 298000 
+get_real_time overhead: 294000 
+get_real_time overhead: 289000 
+get_real_time overhead: 273000 
+get_real_time overhead: 275000 
+get_real_time overhead: 279000 
+get_real_time overhead: 283000 
+get_real_time overhead: 301000 
+get_real_time overhead: 293000 
+get_real_time overhead: 212000 
+get_real_time overhead: 278000 
+get_real_time overhead: 310000 
+get_real_time overhead: 207000 
+get_real_time overhead: 235000 
+get_real_time overhead: 303000 
+get_real_time overhead: 209000 
+get_real_time overhead: 285000 
+get_real_time overhead: 280000 
+get_real_time overhead: 207000 
+get_real_time overhead: 369000 
+get_real_time overhead: 350000 
+get_real_time overhead: 215000 
+get_real_time overhead: 543000 
+get_real_time overhead: 290000 
+get_real_time overhead: 283000 
+get_real_time overhead: 212000 
+get_real_time overhead: 291000 
+get_real_time overhead: 277000 
+get_real_time overhead: 234000 
+get_real_time overhead: 307000 
+get_real_time overhead: 238000 
+get_real_time overhead: 281000 
+get_real_time overhead: 298000 
+get_real_time overhead: 301000 
+get_real_time overhead: 220000 
+get_real_time overhead: 304000 
+get_real_time overhead: 300000 
+get_real_time overhead: 207000 
+get_real_time overhead: 261000 
+get_real_time overhead: 276000 
+get_real_time overhead: 285000 
+get_real_time overhead: 215000 
+get_real_time overhead: 286000 
+get_real_time overhead: 260000 
+get_real_time overhead: 269000 
+get_real_time overhead: 281000 
+get_real_time overhead: 199000 
+get_real_time overhead: 341000 
+get_real_time overhead: 278000 
+get_real_time overhead: average time in ns = 367260 in 50 samples
+BOOTMEM: Reclaiming boot sections and data:
+BOOTMEM:     [Boot alloc. page map] (0.264 MB)
+BOOTMEM:     [Boot page tables and stack]     (0.4096 MB)
+BOOTMEM:     =======
+BOOTMEM:     [TOTAL] (2.109704 MB)
+SMP: Setting up cross-core IPI event queue
+MWAIT not supported
+CPU 0: vc: init
+CPU 0: vc: List launchedList of VCs (space to regenerate)
+
+a : default
+b : system-log
+c : vc-list
+
+CPU 0: fs: inited
+CPU 0: Shell root-shell launched on cpu 0 as 0000000000105000
+Nautilus boot thread yielding (indefinitely)
+CPU 0: here 1
+CPU 0: group_create succeeded
+CPU 1: group_find ok
+CPU 0: group_find ok
+CPU 1: group_find ok
+CPU 0: group_find ok
+CPUCPU 1: group_join ok, tid is 1CPU 0: group_join ok, tid is 3
+ 1: group_join ok, tid is 0
+CPU 0: group_
+rCPU 0: group_join ok, tid is 2
+find ok
+CPU 0: group_join ok, tid is 4
+oot-shell> 

@@ -312,6 +312,7 @@ thread_setup_init_stack (nk_thread_t * t, nk_thread_fun_t fun, void * arg)
 #define FREE(x) free(x)
 #endif // sanity checks
 
+#define GROUP(fmt, args...)     nk_vc_printf_wrap("CPU %d: " fmt, my_cpu_id(), ##args)
 
 typedef struct thread_unit {
     int tid;
@@ -447,12 +448,13 @@ static int group_list_enqueue(nk_thread_group *g)
 
     if (l->head == NULL) {
         l->head = group_node_init(g);
-    if (!l->head) { 
-        goto bad;
-    } else {
-        l->tail = l->head;
-        goto ok;
-    }
+        if (!l->head) { 
+            goto bad;
+        } else {
+            l->tail = l->head;
+            GROUP("here 1\n");
+            goto ok;
+        }
     }
 
     group_node *n = l->tail;
@@ -541,15 +543,17 @@ nk_thread_group_find(char *name){
     parallel_thread_group_list_t * l = &parallel_thread_group_list;;
 
     spin_lock(&l->group_list_lock);
-
+        // GROUP("In group_find\n");
     group_node *n = l->head;
     while (n != NULL) {
-        if (strcmp(n->group->group_name, name)) {
+            //GROUP("%s\n", n->group->group_name);
+        if (! (strcmp(n->group->group_name, name) ))  {
+            spin_unlock(&l->group_list_lock);
             return n->group;
         }
         n = n->next;
     }
-
+        GROUP("here 2\n");
     spin_unlock(&l->group_list_lock);
     return NULL;
 }
@@ -616,13 +620,13 @@ nk_thread_group_create(char *name) {
     //new_group->group_id = get_next_groupid(); group id is assigned in group_list_enqueue()
  
      if (group_list_enqueue(new_group)){ //will acquire list_lock in group_list_queue
-         DEBUG_PRINT("group_list enqueue failed\n");
+         GROUP("group_list enqueue failed\n");
          FREE(new_group);
          return -1;
      }
 
      if(group_barrier_init(new_group->group_barrier)) {
-        DEBUG_PRINT("group_barrier_init failed\n");
+        GROUP("group_barrier_init failed\n");
         FREE(new_group->group_barrier);
         FREE(new_group);
         return -1;
@@ -644,48 +648,94 @@ nk_thread_group_delete(struct nk_thread_group *group){
 }
 
 
+
+
+//testing
+
+
+static void group_tester(void *in, void **out){
+    // GROUP("group name in tester is : %s\n", (char*)in);
+    nk_thread_group * dst = nk_thread_group_find((char*) in);
+    if (dst){
+        GROUP("group_find ok\n");
+    } else {
+        GROUP("group_find failed\n");
+        return;
+    }
+
+    int tid = nk_thread_group_join(dst);
+    if (tid < 0) {
+        GROUP("group join failed\n");
+        return;
+    } else {
+        GROUP("group_join ok, tid is %d\n", tid);
+    }
+
+}
+
+static int launch_tester(char * group_name){
+    nk_thread_id_t tid;
+
+    if (nk_thread_start(group_tester, (void*)group_name , NULL, 1, PAGE_SIZE_4KB, &tid, -1)) { 
+        return -1;
+    } else {
+        return 0;
+    }
+}
+
 int group_test(int num_members){
     nk_thread_group_init();
     char group_name[20];
     sprintf(group_name, "helloworld!");
     nk_thread_group * new_group = nk_thread_group_create(group_name);
         if (new_group != NULL) {
-            nk_vc_printf("group_create succeeded\n");
+            GROUP("group_create succeeded\n");
         } else {
-            nk_vc_printf("group_create failed\n");
+            GROUP("group_create failed\n");
             return -1;
         }
 
-
+    nk_thread_group * ret = nk_thread_group_find(group_name);
+        if (ret != new_group){
+            GROUP("result from group_create does not match group_find!\n");
+        }
+    // launch a few aperiodic threads (testers), i.e. regular threads
+        // each join the group
+    int i;
+    for (i = 0; i < num_members; ++i){
+        if (launch_tester(group_name)){
+            GROUP("starting tester failed\n");
+        }
+    }
 
     return 0;
 }
 
 // creating a thread group is done as easily as making a name
-struct nk_thread_group *nk_thread_group_create(char *name);
+// struct nk_thread_group *nk_thread_group_create(char *name);
 
-// search for a thread group by name
-struct nk_thread_group *nk_thread_group_find(char *name);
+// // search for a thread group by name
+// struct nk_thread_group *nk_thread_group_find(char *name);
 
-// current thread joins a group
-int                     nk_thread_group_join(struct nk_thread_group *group);
+// // current thread joins a group
+// int                     nk_thread_group_join(struct nk_thread_group *group);
 
-// current thread leaves a group
-int                     nk_thread_group_leave(struct nk_thread_group *group);
+// // current thread leaves a group
+// int                     nk_thread_group_leave(struct nk_thread_group *group);
 
-// all threads in the group call to synchronize
-int                     nk_thread_group_barrier(struct nk_thread_group *group);
+// // all threads in the group call to synchronize
+// int                     nk_thread_group_barrier(struct nk_thread_group *group);
 
-// all threads in the group call to select one thread as leader
-//struct nk_thread       *nk_thread_group_election(struct nk_thread_group *group);
-uint64_t                nk_thread_group_election(struct nk_thread_group *group, uint64_t my_tid);//failure modes, list of threads
+// // all threads in the group call to select one thread as leader
+// //struct nk_thread       *nk_thread_group_election(struct nk_thread_group *group);
+// uint64_t                nk_thread_group_election(struct nk_thread_group *group, uint64_t my_tid);//failure modes, list of threads
 
-// maybe... 
-// broadcast a message to all members of the thread group
-int                     nk_thread_group_broadcast(struct nk_thread_group *group, void *message);
+// // maybe... 
+// // broadcast a message to all members of the thread group
+// int                     nk_thread_group_broadcast(struct nk_thread_group *group, void *message);
 
-// delete a group (should be empty)
-int                     nk_thread_group_delete(struct nk_thread_group *group);
+// // delete a group (should be empty)
+// int                     nk_thread_group_delete(struct nk_thread_group *group);
 
 //Parallel thread concept------------------------------------------------
 
