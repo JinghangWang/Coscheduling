@@ -332,6 +332,10 @@ typedef struct nk_thread_group
     int init_fail;
     nk_barrier_t * group_barrier;
     spinlock_t group_lock;
+
+    void *message;
+    void *msg_flag;
+    uint64_t msg_count;
 } nk_thread_group;
 
 typedef struct group_node {
@@ -371,7 +375,7 @@ uint64_t                nk_thread_group_election(struct nk_thread_group *group, 
 
 // maybe... 
 // broadcast a message to all members of the thread group
-int                     nk_thread_group_broadcast(struct nk_thread_group *group, void *message);
+static int                     nk_thread_group_broadcast(struct nk_thread_group *group, void *message, uint64_t tid, uint64_t src);
 
 // delete a group (should be empty)
 int                     nk_thread_group_delete(struct nk_thread_group *group);
@@ -553,7 +557,7 @@ nk_thread_group_find(char *name){
         }
         n = n->next;
     }
-        GROUP("here 2\n");
+    //GROUP("here 2\n");
     spin_unlock(&l->group_list_lock);
     return NULL;
 }
@@ -565,7 +569,7 @@ nk_thread_group_join(struct nk_thread_group *group){
     group->group_size++;
     int id = group->next_id++;
     //add to thread list
-    GROUP("group_size = %d\n", group->group_size);
+    //GROUP("group_size = %d\n", group->group_size);
     spin_unlock(&group->group_lock);
     group_barrier_join(group->group_barrier);
     return id;
@@ -585,6 +589,7 @@ nk_thread_group_leave(struct nk_thread_group *group){
 // all threads in the group call to synchronize
 int                     
 nk_thread_group_barrier(struct  nk_thread_group *group) {
+    //GROUP("nk_thread_group_barrier\n");
     return group_barrier_wait(group->group_barrier);
 }
 
@@ -601,9 +606,36 @@ nk_thread_group_election(struct nk_thread_group *group, uint64_t my_tid) {
 }
 
 // maybe... 
-// broadcast a message to all members of the thread group
+// broadcast a message to all members of the thread group be waiting here
+// if some threads don't get this message, they just enter the next round
 int                     
-nk_thread_group_broadcast(struct nk_thread_group *group, void *message);
+nk_thread_group_broadcast(struct nk_thread_group *group, void *message, uint64_t tid, uint64_t src) {
+  if(tid != src) {
+    atomic_inc_val(group->msg_count);
+    GROUP("msg_count = %d\n", group->msg_count);
+    while (group->msg_flag == 0) {
+      //GROUP("t%d is waiting\n", tid);
+    }
+    message = group->message;
+    //GROUP("recv: %s", (char *)message);
+    if (atomic_dec_val(group->msg_count) == 0) {
+      group->message = NULL;
+      group->msg_flag = 0;
+      GROUP("Reset msg\n");
+    }
+    GROUP("msg_count = %d\n", group->msg_count);
+  } else {
+    while(group->msg_flag == 1) {
+      //GROUP("t%d is sending\n", tid);
+    }
+    group->message = message;
+    group->msg_flag = 1;
+    GROUP("Msg sent\n");
+    //GROUP("send: %s", (char *)message);
+  }
+
+  return 0;
+}
 
 
 struct nk_thread_group *
@@ -616,6 +648,8 @@ nk_thread_group_create(char *name) {
     new_group->init_fail = 0;
     new_group->next_id = 0;
     new_group->group_barrier = (nk_barrier_t *) malloc(sizeof(nk_barrier_t));
+    new_group->message = NULL;
+    new_group->msg_flag = 0;
 
     spinlock_init(&new_group->group_lock);
     //new_group->group_id = get_next_groupid(); group id is assigned in group_list_enqueue()
@@ -640,10 +674,11 @@ nk_thread_group_create(char *name) {
 int                     
 nk_thread_group_delete(struct nk_thread_group *group){
     if (group == group_list_remove(group)){
+        GROUP("delete group node succeeded!\n");
         FREE(group);
         return 0;
     } else {
-        nk_vc_printf("delete group node failed!\n");
+        GROUP("delete group node failed!\n");
         return -1;
     }
 }
@@ -670,11 +705,31 @@ static void group_tester(void *in, void **out){
         GROUP("group_join ok, tid is %d\n", tid);
     }
 
-    while(dst->group_size != 5) {
-        udelay(100);
-        // GROUP("group size = %d\n", dst->group_size);
+    /*
+    char *msg_0;
+    char *msg_1;
+
+    if (tid == 1) {
+      msg_0 = "Hello\n";
     }
-    GROUP("about entering barrier\n");
+
+    if (tid == 0) {
+      msg_1 = "World\n";
+    }
+
+    GROUP("t%d is here\n", tid);
+
+    nk_thread_group_broadcast(dst, (void *)msg_0, tid, 1);
+
+    GROUP("t%d says %s\n", tid, msg_0);
+    
+    nk_thread_group_broadcast(dst, (void *)msg_1, tid, 0);
+
+    GROUP("t%d says %s\n", tid, msg_1);
+
+    while(1) {}
+    GROUP("thread %d is about entering barrier\n", tid);
+    
     //barrier test
     int i, ret;
     #define NUM_LOOP    1
@@ -684,11 +739,27 @@ static void group_tester(void *in, void **out){
             GROUP("last member quits\n");
         }
     }
-    GROUP("after barrier\n");
 
+    GROUP("after barrier\n");
+    */
+    nk_thread_group_leave(dst);
+    
+    GROUP("t%d says group size is %d\n", tid, dst->group_size);
+
+    nk_thread_group_delete(dst);
+    
+
+    /*
+    GROUP("t%d is here\n", tid);
+    while(dst->group_size != 5) {
+        udelay(100);
+        GROUP("group size = %d\n", dst->group_size);
+    }
+    */
 }
 
-static int launch_tester(char * group_name){
+
+static int launch_tester(char * group_name) {
     nk_thread_id_t tid;
 
     if (nk_thread_start(group_tester, (void*)group_name , NULL, 1, PAGE_SIZE_4KB, &tid, -1)) { 
@@ -703,19 +774,19 @@ int group_test(int num_members){
     char group_name[20];
     sprintf(group_name, "helloworld!");
     nk_thread_group * new_group = nk_thread_group_create(group_name);
-        if (new_group != NULL) {
-            GROUP("group_create succeeded\n");
-        } else {
-            GROUP("group_create failed\n");
-            return -1;
-        }
+    if (new_group != NULL) {
+        GROUP("group_create succeeded\n");
+    } else {
+        GROUP("group_create failed\n");
+        return -1;
+    }
 
     nk_thread_group * ret = nk_thread_group_find(group_name);
-        if (ret != new_group){
-            GROUP("result from group_create does not match group_find!\n");
-        }
+    if (ret != new_group){
+        GROUP("result from group_create does not match group_find!\n");
+    }
     // launch a few aperiodic threads (testers), i.e. regular threads
-        // each join the group
+    // each join the group
     int i;
     for (i = 0; i < num_members; ++i){
         if (launch_tester(group_name)){
