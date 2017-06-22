@@ -3256,6 +3256,13 @@ void nk_sched_rt_stats(struct rt_stats *stats){
 
 
 //Parallel thread concept------------------------------------------------
+int
+local_change_constraint(rt_scheduler *scheduler, 
+                        struct nk_thread *t, 
+                        struct nk_sched_constraints *constraints);
+int
+local_roll_back(struct nk_thread *t, struct nk_sched_constraints *roll_back_cons);
+
 void
 group_change_constraint_handler(void) {
   struct sys_info *sys = per_cpu_get(system);
@@ -3264,8 +3271,8 @@ group_change_constraint_handler(void) {
   struct nk_sched_constraints *constraints;
   //Get group constraint
   //for all member threads in this scheduler
-    REMOVE_RT_PENDING(scheduler, t);
-    REMOVE_APERIODIC(scheduler, t);
+    REMOVE_RT_PENDING(scheduler, t->sched_state);
+    REMOVE_APERIODIC(scheduler, t->sched_state);
     int ret;
     int fail_flag = 0;
     if (fail_flag != 0) {
@@ -3364,8 +3371,6 @@ local_change_constraint(rt_scheduler *scheduler,
 
 out_bad:
   LOCAL_UNLOCK(scheduler);
-out_bad_no_unlock:
-  return -1;
 
 out_good_no_unlock:
   return 0;
@@ -3380,7 +3385,7 @@ void local_roll_back_handler() {
   struct nk_sched_constraints roll_back_cons = { .type=APERIODIC, 
                  .aperiodic.priority=scheduler->cfg.aperiodic_default_priority };
   //for all member threads in this scheduler
-    local_roll_back(t, roll_back_cons);
+  local_roll_back(t, &roll_back_cons);
 }
 
 int
@@ -3401,5 +3406,6 @@ local_roll_back(struct nk_thread *t, struct nk_sched_constraints *roll_back_cons
   //handle_special_switch(CHANGING,1,_local_flags);
   // when we come back, we note that we have failed
   // we also have no lock
-  }
+  return 0;
+}
 //Parallel thread concept------------------------------------------------
