@@ -314,9 +314,13 @@ thread_setup_init_stack (nk_thread_t * t, nk_thread_fun_t fun, void * arg)
 
 #define GROUP(fmt, args...)     nk_vc_printf_wrap("CPU %d: " fmt, my_cpu_id(), ##args)
 
+#define MAX_CPU_NUM     100
+
 typedef struct thread_unit {
     int tid;
     nk_thread_t *thread;
+    struct thread_unit *next;
+    struct thread_unit *prev;
 } thread_unit;
 
 typedef struct nk_thread_group
@@ -327,14 +331,14 @@ typedef struct nk_thread_group
     uint64_t group_size;
     uint64_t next_id;
     
-    thread_unit *thread_unit_list; //May not need, has not been implemented
+    thread_unit* thread_unit_list[MAX_CPU_NUM]; //May not need, has not been implemented
     
     int init_fail;
-    nk_barrier_t * group_barrier;
+    nk_barrier_t* group_barrier;
     spinlock_t group_lock;
 
     void *message;
-    void *msg_flag;
+    int   msg_flag;
     uint64_t msg_count;
 } nk_thread_group;
 
@@ -446,7 +450,7 @@ static int group_list_enqueue(nk_thread_group *g)
     g->group_id = get_next_groupid();
 
     if (l == NULL) {
-        ERROR("GROUP_LIST IS UNINITIALIZED.\n");
+        GROUP("GROUP_LIST IS UNINITIALIZED.\n");
         goto bad;
     }
 
@@ -541,6 +545,58 @@ uint64_t get_next_groupid(void){
 
 
 
+
+
+
+
+void 
+thread_unit_list_enqueue(nk_thread_group* group, thread_unit* new_unit){
+    int cpu = new_unit->thread->current_cpu;
+    thread_unit* head = group->thread_unit_list[cpu];
+    if (head){
+        //non empty
+        while(head->next){
+            head = head->next;
+        }
+        new_unit->prev = head;
+        head->next = new_unit;
+    } else {
+        //empty 
+        group->thread_unit_list[cpu] = new_unit;
+        new_unit -> prev = NULL;
+    }
+
+    return;
+}
+
+thread_unit *
+thread_unit_list_dequeue(nk_thread_group* group, nk_thread_t* toremove){
+    int cpu = toremove->current_cpu;
+    thread_unit* head = group->thread_unit_list[cpu];
+    while (head){
+        if (head->thread == toremove){
+            thread_unit* hprev = head->prev;
+            thread_unit* hnext = head->next;
+
+            if (hprev){
+                hprev->next = hnext;
+            } else {
+                //it is the head
+                group->thread_unit_list[cpu] = hnext;
+            }
+
+            if (hnext){
+                hnext->prev = hprev;
+            } //it is not the tail
+
+            return head;
+        }
+        head = head->next;
+    }
+    GROUP("thread to remove is not found in group thread_unit_list\n");
+    return NULL;
+}
+
 // search for a thread group by name
 struct nk_thread_group *
 nk_thread_group_find(char *name){
@@ -569,6 +625,13 @@ nk_thread_group_join(struct nk_thread_group *group){
     group->group_size++;
     int id = group->next_id++;
     //add to thread list
+    thread_unit* new_thread_unit = malloc(sizeof(thread_unit));
+    new_thread_unit->tid = id;
+    new_thread_unit->thread = get_cur_thread();
+    new_thread_unit->next = NULL;
+    new_thread_unit->prev = NULL;
+
+    thread_unit_list_enqueue(group, new_thread_unit);
     //GROUP("group_size = %d\n", group->group_size);
     spin_unlock(&group->group_lock);
     group_barrier_join(group->group_barrier);
@@ -581,6 +644,9 @@ nk_thread_group_leave(struct nk_thread_group *group){
     spin_lock(&group->group_lock);
     group->group_size--;
     //remove from thread list
+    thread_unit* toremove = thread_unit_list_dequeue(group, get_cur_thread());
+    FREE(toremove);
+
     spin_unlock(&group->group_lock);
     group_barrier_leave(group->group_barrier);
     return 0;
@@ -611,6 +677,7 @@ nk_thread_group_election(struct nk_thread_group *group, uint64_t my_tid) {
 int                     
 nk_thread_group_broadcast(struct nk_thread_group *group, void *message, uint64_t tid, uint64_t src) {
   if(tid != src) {
+    //receiver
     atomic_inc_val(group->msg_count);
     GROUP("msg_count = %d\n", group->msg_count);
     while (group->msg_flag == 0) {
@@ -625,6 +692,7 @@ nk_thread_group_broadcast(struct nk_thread_group *group, void *message, uint64_t
     }
     GROUP("msg_count = %d\n", group->msg_count);
   } else {
+    //sender
     while(group->msg_flag == 1) {
       //GROUP("t%d is sending\n", tid);
     }
@@ -643,7 +711,10 @@ nk_thread_group_create(char *name) {
     nk_thread_group* new_group = (nk_thread_group *) malloc(sizeof(nk_thread_group));
     new_group->group_name = name;
     new_group->group_leader = -1;
-    new_group->thread_unit_list = NULL;
+    
+    //clear thread_unit_list
+    memset(new_group->thread_unit_list, 0, MAX_CPU_NUM * sizeof(thread_unit*));
+
     new_group->group_size = 0;
     new_group->init_fail = 0;
     new_group->next_id = 0;
@@ -657,14 +728,14 @@ nk_thread_group_create(char *name) {
      if (group_list_enqueue(new_group)){ //will acquire list_lock in group_list_queue
          GROUP("group_list enqueue failed\n");
          FREE(new_group);
-         return -1;
+         return NULL;
      }
 
      if(group_barrier_init(new_group->group_barrier)) {
         GROUP("group_barrier_init failed\n");
         FREE(new_group->group_barrier);
         FREE(new_group);
-        return -1;
+        return NULL;
      } else {
         return new_group;
      }
