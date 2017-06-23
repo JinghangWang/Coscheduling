@@ -340,6 +340,12 @@ typedef struct nk_thread_group
     void *message;
     int   msg_flag;
     uint64_t msg_count;
+
+    int changing_constraint;
+    int changing_fail;
+    uint64_t changing_count;
+
+    nk_thread_queue_t change__cons_wait_q;
 } nk_thread_group;
 
 typedef struct group_node {
@@ -678,7 +684,7 @@ int
 nk_thread_group_broadcast(struct nk_thread_group *group, void *message, uint64_t tid, uint64_t src) {
   if(tid != src) {
     //receiver
-    atomic_inc_val(group->msg_count);
+    int ret = atomic_inc_val(group->msg_count);
     GROUP("msg_count = %d\n", group->msg_count);
     while (group->msg_flag == 0) {
       //GROUP("t%d is waiting\n", tid);
@@ -743,7 +749,7 @@ nk_thread_group_create(char *name) {
 
 // delete a group (should be empty)
 int                     
-nk_thread_group_delete(struct nk_thread_group *group){
+nk_thread_group_delete(struct nk_thread_group *group) {
     if (group == group_list_remove(group)){
         GROUP("delete group node succeeded!\n");
         FREE(group);
@@ -753,12 +759,70 @@ nk_thread_group_delete(struct nk_thread_group *group){
         return -1;
     }
 }
+extern struct nk_sched_constraints* get_rt_constraint(struct nk_thread *t);
+int group_roll_back_constraint();
 
+int
+group_change_constraint(struct nk_thread_group *group, struct nk_sched_constraints *constraints) {
+  //store old constraint somewhere
+  struct nk_thread *t = get_cur_thread();
+  struct nk_sched_constraints *old = get_rt_constraint(t); //needed for retry, implement retry later
 
+  //check is group is locked, if not, lock it
+  atomic_cmpswap(group->changing_constraint, 0, 1);
 
+  //inc the counter, check if I'm the last one, if so, wake everyone, if not, go to sleep
+  if(atomic_inc_val(group->changing_count) == group->group_size) {
+    //check if there is failure, if so, don't do local change constraint
+    if (group->changing_fail == 0) {
+      if (nk_sched_thread_change_constraints(constraints) != 0) {
+        //if fail, set the failure flag
+        atomic_cmpswap(group->changing_fail, 0, 1);
+      }
+    }
+    //wait until all others are in the queue, then wake them up
+    nk_thread_queue_wake_all(&group->change__cons_wait_q);
+  } else {
+    //check if there is failure, if so, don't do local change constraint
+    if (group->changing_fail == 0) {
+      if (nk_sched_thread_change_constraints(constraints) != 0) {
+        //if fail, set the failure flag
+        atomic_cmpswap(group->changing_fail, 0, 1);
+      }
+    }
+    //go to sleep
+    nk_thread_queue_sleep(&group->change__cons_wait_q);
+  }
+
+  //wake up, check if there is failure, of so roll back
+  if (group->changing_fail) {
+    if(group_roll_back_constraint() != 0) {
+      //should not happen
+      panic("roll back should not fail!\n");
+    }
+  }
+
+  //finally leave this stage and dec counter, if I'm the last one, unlock the group
+  if(atomic_dec_val(group->changing_count) == 0) {
+    atomic_cmpswap(group->changing_constraint, 1, 0);
+  }
+}
+
+#define default_priority 1
+
+int
+group_roll_back_constraint() {
+  struct nk_sched_constraints roll_back_cons = { .type=APERIODIC, 
+                                                 .aperiodic.priority=default_priority};
+
+  if(nk_sched_thread_change_constraints(&roll_back_cons) != 0) {
+    return -1;
+  }
+
+  return 0;
+}
 
 //testing
-
 
 static void group_tester(void *in, void **out){
     // GROUP("group name in tester is : %s\n", (char*)in);
@@ -867,32 +931,6 @@ int group_test(int num_members){
 
     return 0;
 }
-
-// creating a thread group is done as easily as making a name
-// struct nk_thread_group *nk_thread_group_create(char *name);
-
-// // search for a thread group by name
-// struct nk_thread_group *nk_thread_group_find(char *name);
-
-// // current thread joins a group
-// int                     nk_thread_group_join(struct nk_thread_group *group);
-
-// // current thread leaves a group
-// int                     nk_thread_group_leave(struct nk_thread_group *group);
-
-// // all threads in the group call to synchronize
-// int                     nk_thread_group_barrier(struct nk_thread_group *group);
-
-// // all threads in the group call to select one thread as leader
-// //struct nk_thread       *nk_thread_group_election(struct nk_thread_group *group);
-// uint64_t                nk_thread_group_election(struct nk_thread_group *group, uint64_t my_tid);//failure modes, list of threads
-
-// // maybe... 
-// // broadcast a message to all members of the thread group
-// int                     nk_thread_group_broadcast(struct nk_thread_group *group, void *message);
-
-// // delete a group (should be empty)
-// int                     nk_thread_group_delete(struct nk_thread_group *group);
 
 //Parallel thread concept------------------------------------------------
 

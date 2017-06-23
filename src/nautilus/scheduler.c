@@ -3408,4 +3408,10 @@ local_roll_back(struct nk_thread *t, struct nk_sched_constraints *roll_back_cons
   // we also have no lock
   return 0;
 }
+
+struct nk_sched_constraints*
+get_rt_constraint(struct nk_thread *t) {
+  rt_thread *r = t->sched_state;
+  return &r->constraints;
+}
 //Parallel thread concept------------------------------------------------
