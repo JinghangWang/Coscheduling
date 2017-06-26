@@ -324,6 +324,7 @@ init (unsigned long mbd,
     nk_sched_init(&sched_cfg);
 
     //print actual time of udelay()
+    /*
     uint32_t i = 0, num_samples = 50;
     uint64_t    start, end, total;
     total = 0;
@@ -418,7 +419,7 @@ init (unsigned long mbd,
 
 
     //testing
-    group_test(5);
+    group_test(2);
 
     /* we don't come back from this */
     idle(NULL, NULL);
