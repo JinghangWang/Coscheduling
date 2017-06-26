@@ -1,7 +1,11 @@
 /*
  * Automatically generated C config: don't edit
  * Nautilus version: 
+<<<<<<< HEAD
  * Mon Jun 26 13:50:52 2017
+=======
+ * Fri Jun 23 14:32:31 2017
+>>>>>>> origin/coscheduling
  */
 #define AUTOCONF_INCLUDED
 
