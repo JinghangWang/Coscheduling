@@ -3256,6 +3256,7 @@ void nk_sched_rt_stats(struct rt_stats *stats){
 
 
 //Parallel thread concept------------------------------------------------
+/*
 int
 local_change_constraint(rt_scheduler *scheduler, 
                         struct nk_thread *t, 
@@ -3330,25 +3331,6 @@ local_change_constraint(rt_scheduler *scheduler,
 
   if (_sched_make_runnable(t,t->current_cpu,1,1)) {
     //set group admit fail flag
-    /*
-    DEBUG("Failed to re-admit %llu \"%s\" with new constraints\n" , t->tid,t->name);
-    // failed to admit task, bring it back up as aperiodic
-    // again.   This should just work
-    r->constraints = old;
-    if (_sched_make_runnable(t,t->current_cpu,1,1)) {
-      // very bad...
-      panic("Failed to recover to aperiodic when changing constraints\n");
-      goto out_bad;
-  }
-    DEBUG("Readmitted %llu \"%s\" with old constraints\n" , t->tid,t->name);
-    // we are now aperioidic
-    // since we are again on the run queue
-    // we need to kick ourselves off the cp
-    //handle_special_switch(CHANGING,1,_local_flags);
-    // when we come back, we note that we have failed
-    // we also have no lock
-    goto out_bad_no_unlock;
-    */
   } else {
     // we were admitted and are now on some queue
     // we now need to kick ourselves off the CPU
@@ -3407,5 +3389,12 @@ local_roll_back(struct nk_thread *t, struct nk_sched_constraints *roll_back_cons
   // when we come back, we note that we have failed
   // we also have no lock
   return 0;
+}
+*/
+
+struct nk_sched_constraints*
+get_rt_constraint(struct nk_thread *t) {
+  rt_thread *r = t->sched_state;
+  return &r->constraints;
 }
 //Parallel thread concept------------------------------------------------
