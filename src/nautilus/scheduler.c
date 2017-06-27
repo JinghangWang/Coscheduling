@@ -3252,3 +3252,149 @@ void nk_sched_rt_stats(struct rt_stats *stats){
     stats->period = t->constraints.periodic.period;
     stats->slice = t->constraints.periodic.slice;
 }
+
+
+
+//Parallel thread concept------------------------------------------------
+/*
+int
+local_change_constraint(rt_scheduler *scheduler, 
+                        struct nk_thread *t, 
+                        struct nk_sched_constraints *constraints);
+int
+local_roll_back(struct nk_thread *t, struct nk_sched_constraints *roll_back_cons);
+
+void
+group_change_constraint_handler(void) {
+  struct sys_info *sys = per_cpu_get(system);
+  rt_scheduler *scheduler = sys->cpus[my_cpu_id()]->sched_state;
+  struct nk_thread *t;
+  struct nk_sched_constraints *constraints;
+  //Get group constraint
+  //for all member threads in this scheduler
+    REMOVE_RT_PENDING(scheduler, t->sched_state);
+    REMOVE_APERIODIC(scheduler, t->sched_state);
+    int ret;
+    int fail_flag = 0;
+    if (fail_flag != 0) {
+      //start to roll back
+    }
+    ret = local_change_constraint(scheduler, t, constraints);
+    if (ret != 0) {
+      //set fail_flag
+    }
+}
+
+int
+local_change_constraint(rt_scheduler *scheduler, 
+                        struct nk_thread *t, 
+                        struct nk_sched_constraints *constraints) {
+  LOCAL_LOCK_CONF;
+  rt_thread *r = t->sched_state;
+  struct nk_sched_constraints old;
+
+  DEBUG("Changing constraints of %llu \"%s\"\n", t->tid,t->name);
+
+  LOCAL_LOCK(scheduler);
+
+  if (r->constraints.type != APERIODIC && constraints->type != APERIODIC) {
+
+    DEBUG("Transitioning %llu \"%s\" temporarily to aperiodic\n" , t->tid,t->name);
+
+    struct nk_sched_constraints temp = { .type=APERIODIC, 
+                 .aperiodic.priority=scheduler->cfg.aperiodic_default_priority };
+
+    old = r->constraints;
+    r->constraints = temp;
+
+    // although this is an admission, it's an admission for
+    // aperiodic, which is always yes, and fast
+    if (_sched_make_runnable(t,t->current_cpu,1,1)) {
+        ERROR("Failed to re-admit %llu \"%s\" as aperiodic\n" , t->tid,t->name);
+        panic("Unable to change thread's constraints to aperiodic!\n");
+        goto out_bad;
+    }
+    // we are now on the aperiodic run queue
+    // so we need to get running again with our new constraints
+    //handle_special_switch(CHANGING,1,_local_flags);
+    // we've now released the lock, so reacquire
+    LOCAL_LOCK(scheduler);
+  }
+
+
+  // now we are aperiodic and the scheduler is locked/interrupts off
+
+  old = r->constraints;
+  r->constraints = *constraints;
+
+  // we assume from here that we are aperiodic changing to other
+
+  if (_sched_make_runnable(t,t->current_cpu,1,1)) {
+    //set group admit fail flag
+  } else {
+    // we were admitted and are now on some queue
+    // we now need to kick ourselves off the CPU
+    DEBUG("Succeeded in admitting %llu \"%s\" with new constraints\n",t->tid,t->name);
+    DUMP_RT(scheduler,"runnable before handle special switch");
+    DUMP_RT_PENDING(scheduler,"pending before handle special switch");
+    DUMP_APERIODIC(scheduler,"aperiodic before handle special switch");
+
+    //handle_special_switch(CHANGING,1,_local_flags);
+
+    // we now have released lock and interrupts are back to prior
+
+    DEBUG("Thread is now state %d / %d\n",t->status, t->sched_state->status);
+    DUMP_RT(scheduler,"runnable after handle special switch");
+    DUMP_RT_PENDING(scheduler,"pending after handle special switch");
+    DUMP_APERIODIC(scheduler,"aperiodic after handle special switch");
+    // when we are back, we note success
+    goto out_good_no_unlock;
+  }
+
+out_bad:
+  LOCAL_UNLOCK(scheduler);
+
+out_good_no_unlock:
+  return 0;
+}
+
+void local_roll_back_handler() {
+  struct sys_info *sys = per_cpu_get(system);
+  rt_scheduler *scheduler = sys->cpus[my_cpu_id()]->sched_state;
+  struct nk_thread *t;
+  struct nk_sched_constraints *constraints;
+  rt_thread *r = t->sched_state;
+  struct nk_sched_constraints roll_back_cons = { .type=APERIODIC, 
+                 .aperiodic.priority=scheduler->cfg.aperiodic_default_priority };
+  //for all member threads in this scheduler
+  local_roll_back(t, &roll_back_cons);
+}
+
+int
+local_roll_back(struct nk_thread *t, struct nk_sched_constraints *roll_back_cons) {
+  rt_thread *r = t->sched_state;
+  DEBUG("Failed to re-admit %llu \"%s\" with new constraints\n" , t->tid,t->name);
+  // failed to admit task, bring it back up as aperiodic
+  // again.   This should just work
+  r->constraints = *roll_back_cons;
+  if (_sched_make_runnable(t,t->current_cpu,1,1)) {
+    // very bad...
+    panic("Failed to recover to aperiodic when changing constraints\n");
+  }
+  DEBUG("Readmitted %llu \"%s\" with old constraints\n" , t->tid,t->name);
+  // we are now aperioidic
+  // since we are again on the run queue
+  // we need to kick ourselves off the cp
+  //handle_special_switch(CHANGING,1,_local_flags);
+  // when we come back, we note that we have failed
+  // we also have no lock
+  return 0;
+}
+*/
+
+struct nk_sched_constraints*
+get_rt_constraint(struct nk_thread *t) {
+  rt_thread *r = t->sched_state;
+  return &r->constraints;
+}
+//Parallel thread concept------------------------------------------------

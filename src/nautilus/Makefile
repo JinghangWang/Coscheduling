@@ -1,4 +1,5 @@
 obj-y += \
+	burner.o \
 	fmtout.o \
 	printk.o \
 	doprnt.o \

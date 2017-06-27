@@ -15,3 +15,15 @@ group api mostly finished:
 Todo:
 	phi serial output at the boot
 	wait queue for broadcast
+
+6/21
+Broadcast: 
+	- blocking, only one message can be sent at a tinme
+	- queue for buffer? order of the message delivery?
+
+
+Group APIs:
+	- add opaque type definitions
+	- move prototypes
+
+remove "struct" before nk_thread_group in function inputs

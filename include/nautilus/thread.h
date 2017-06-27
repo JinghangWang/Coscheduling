@@ -42,6 +42,13 @@ extern "C" {
 #define TSTACK_1MB     0x100000
 #define TSTACK_2MB     0x200000
 
+
+
+//Parallel thread concept------------------------------------------------
+int group_test(int num_members);
+//Parallel thread concept------------------------------------------------
+
+
 /******** EXTERNAL INTERFACE **********/
 
 // opaque pointer given to users
