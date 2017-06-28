@@ -1592,6 +1592,7 @@ struct nk_thread *_sched_need_resched(int have_lock)
 	} else {
 	    // current aperiodic thread has initiated something special
 	    // it doesn't go back to the run queue until awoken
+        // rt_c->thread->status = NK_THR_SUSPENDED;
 	    DEBUG_DUMP(rt_c,CUR_SPECIAL_STR);
 	}
 	
@@ -2726,7 +2727,7 @@ static int rt_thread_admit(rt_scheduler *scheduler, rt_thread *thread, uint64_t 
 	  thread->constraints.type==APERIODIC ? "Aperiodic" :
 	  thread->constraints.type==PERIODIC ? "Periodic" :
 	  thread->constraints.type==SPORADIC ? "Sporadic" : "Unknown",
-	  thread->constraints.interrupt_priorty_class,
+	  thread->constraints.interrupt_priority_class,
 	  util_limit,aper_res,spor_res,per_res);
 
     if (thread->constraints.interrupt_priority_class > 0xe) {

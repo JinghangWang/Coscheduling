@@ -819,11 +819,13 @@ group_change_constraint(struct nk_thread_group *group, int tid) {
     nk_thread_queue_sleep_count(group->change_cons_wait_q, &group->sleep_count);
   }
 
+  int res = 0;
   //wake up, check if there is failure, of so roll back
   if (group->changing_fail) {
     if(group_roll_back_constraint() != 0) {
       panic("roll back should not fail!\n");
     }
+    res = 1;
   }
 
   //finally leave this stage and dec counter, if I'm the last one, unlock the group
@@ -831,7 +833,7 @@ group_change_constraint(struct nk_thread_group *group, int tid) {
     atomic_cmpswap(group->changing_constraint, 1, 0);
   }
 
-  return 0;
+  return res;
 }
 
 #define default_priority 1
@@ -864,6 +866,9 @@ static void group_tester(void *in, void **out){
   } else {
       GROUP("group_join ok, tid is %d\n", tid);
   }
+  char name[20];
+  sprintf(name, "tester %d", tid);
+  nk_thread_name(get_cur_thread(), name);
 
   int i = 0;
   while(atomic_add(dst->group_size, 0) != 5) {
@@ -892,6 +897,9 @@ static void group_tester(void *in, void **out){
   } else {
     GROUP("t%d change constraint succeeded#\n", tid);
   }
+
+  nk_thread_group_leave(dst);
+  nk_thread_group_delete(dst);
   /*
   char *msg_0;
   char *msg_1;
