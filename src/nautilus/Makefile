@@ -40,6 +40,7 @@ obj-y += \
 	blkdev.o \
 	netdev.o \
         fs.o \
+        loader.o \
         shell.o \
 	fprintk.o \
 
