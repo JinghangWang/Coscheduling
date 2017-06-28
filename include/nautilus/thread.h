@@ -1,17 +1,17 @@
-/* 
+/*
  * This file is part of the Nautilus AeroKernel developed
- * by the Hobbes and V3VEE Projects with funding from the 
- * United States National  Science Foundation and the Department of Energy.  
+ * by the Hobbes and V3VEE Projects with funding from the
+ * United States National  Science Foundation and the Department of Energy.
  *
  * The V3VEE Project is a joint project between Northwestern University
  * and the University of New Mexico.  The Hobbes Project is a collaboration
- * led by Sandia National Laboratories that includes several national 
+ * led by Sandia National Laboratories that includes several national
  * laboratories and universities. You can find out more at:
  * http://www.v3vee.org  and
  * http://xtack.sandia.gov/hobbes
  *
  * Copyright (c) 2015, Kyle C. Hale <kh@u.northwestern.edu>
- * Copyright (c) 2015, The V3VEE Project  <http://www.v3vee.org> 
+ * Copyright (c) 2015, The V3VEE Project  <http://www.v3vee.org>
  *                     The Hobbes Project <http://xstack.sandia.gov/hobbes>
  * All rights reserved.
  *
@@ -58,7 +58,7 @@ typedef uint64_t nk_stack_size_t;
 
 
 int
-nk_thread_create (nk_thread_fun_t fun, 
+nk_thread_create (nk_thread_fun_t fun,
 		  void * input,
 		  void ** output,
 		  uint8_t is_detached,
@@ -70,7 +70,7 @@ int
 nk_thread_run(nk_thread_id_t tid);
 
 int
-nk_thread_start (nk_thread_fun_t fun, 
+nk_thread_start (nk_thread_fun_t fun,
                  void * input,
                  void ** output,
                  uint8_t is_detached,
@@ -100,7 +100,7 @@ nk_thread_id_t nk_get_parent_tid(void);
 
 
 /* thread local storage */
-typedef unsigned int nk_tls_key_t; 
+typedef unsigned int nk_tls_key_t;
 int nk_tls_key_create(nk_tls_key_t * key, void (*destructor)(void*));
 int nk_tls_key_delete(nk_tls_key_t key);
 void* nk_tls_get(nk_tls_key_t key);
@@ -123,9 +123,9 @@ int nk_tls_set(nk_tls_key_t key, const void * val);
 /* thread status */
 typedef enum {
     NK_THR_INIT,
-    NK_THR_RUNNING, 
+    NK_THR_RUNNING,
     NK_THR_WAITING,
-    NK_THR_SUSPENDED, 
+    NK_THR_SUSPENDED,
     NK_THR_EXITED
 } nk_thread_status_t;
 
@@ -154,7 +154,7 @@ struct nk_thread {
     nk_queue_entry_t wait_node;
 
     nk_thread_queue_t * cur_run_q;
-    
+
     /* thread state */
     nk_thread_status_t status;
 
@@ -185,9 +185,9 @@ typedef struct nk_thread nk_thread_t;
 nk_thread_id_t __thread_fork(void);
 
 int
-_nk_thread_init (nk_thread_t * t, 
-		 void * stack, 
-		 uint8_t is_detached, 
+_nk_thread_init (nk_thread_t * t,
+		 void * stack,
+		 uint8_t is_detached,
 		 int bound_cpu, // -1 => not bound
 		 nk_thread_t * parent);
 
@@ -199,6 +199,9 @@ void nk_thread_queue_destroy(nk_thread_queue_t * q);
 inline void nk_enqueue_thread_on_runq(nk_thread_t * t, int cpu);
 inline nk_thread_t* nk_dequeue_thread_from_runq(nk_thread_t * t);
 int nk_thread_queue_sleep(nk_thread_queue_t * q);
+//Parallel thread project
+int nk_thread_queue_sleep_count(nk_thread_queue_t * q, int* count);
+//Parallel thread project
 int nk_thread_queue_wake_one(nk_thread_queue_t * q);
 int nk_thread_queue_wake_all(nk_thread_queue_t * q);
 
@@ -218,7 +221,7 @@ get_cur_thread (void)
 }
 
 static inline void
-put_cur_thread (nk_thread_t * t) 
+put_cur_thread (nk_thread_t * t)
 {
     per_cpu_put(cur_thread, t);
 }
@@ -242,7 +245,7 @@ put_cur_thread (nk_thread_t * t)
     movq %r13, -104(%rsp); \
     movq %r14, -112(%rsp); \
     movq %r15, -120(%rsp); \
-    subq $120, %rsp; 
+    subq $120, %rsp;
 
 #define RESTORE_GPRS() \
     movq (%rsp), %r15; \
@@ -260,7 +263,7 @@ put_cur_thread (nk_thread_t * t)
     movq 96(%rsp), %rcx; \
     movq 104(%rsp), %rbx; \
     movq 112(%rsp), %rax; \
-    addq $120, %rsp; 
+    addq $120, %rsp;
 
 #ifdef __cplusplus
 }

@@ -1,17 +1,17 @@
-/* 
+/*
  * This file is part of the Nautilus AeroKernel developed
- * by the Hobbes and V3VEE Projects with funding from the 
- * United States National  Science Foundation and the Department of Energy.  
+ * by the Hobbes and V3VEE Projects with funding from the
+ * United States National  Science Foundation and the Department of Energy.
  *
  * The V3VEE Project is a joint project between Northwestern University
  * and the University of New Mexico.  The Hobbes Project is a collaboration
- * led by Sandia National Laboratories that includes several national 
+ * led by Sandia National Laboratories that includes several national
  * laboratories and universities. You can find out more at:
  * http://www.v3vee.org  and
  * http://xstack.sandia.gov/hobbes
  *
  * Copyright (c) 2015, Kyle C. Hale <kh@u.northwestern.edu>
- * Copyright (c) 2015, The V3VEE Project  <http://www.v3vee.org> 
+ * Copyright (c) 2015, The V3VEE Project  <http://www.v3vee.org>
  *                     The Hobbes Project <http://xstack.sandia.gov/hobbes>
  * All rights reserved.
  *
@@ -81,7 +81,7 @@
 #include <nautilus/vmm.h>
 #endif
 
-#ifdef NAUT_CONFIG_REAL_MODE_INTERFACE 
+#ifdef NAUT_CONFIG_REAL_MODE_INTERFACE
 #include <nautilus/realmode.h>
 #endif
 
@@ -109,25 +109,25 @@ void ndpc_rt_test()
 {
     printk("Testing NDPC Library and Executable\n");
 
-    
+
 
 #if 1
     // this function will be linked to nautilus
     test_ndpc();
 #else
     thread_id_t tid;
-    
+
     ndpc_init_preempt_threads();
-    
+
     tid = ndpc_fork_preempt_thread();
 
-    if (!tid) { 
+    if (!tid) {
         printk("Error in initial fork\n");
         return;
-    } 
+    }
 
 
-    if (tid!=ndpc_my_preempt_thread()) { 
+    if (tid!=ndpc_my_preempt_thread()) {
         printk("Parent!\n");
         ndpc_join_preempt_thread(tid);
         printk("Joinend with foo\n");
@@ -138,14 +138,14 @@ void ndpc_rt_test()
 
     ndpc_deinit_preempt_threads();
 
-#endif 
+#endif
 
 
 }
 #endif /* !NAUT_CONFIG_NDPC_RT */
 
 
-static int 
+static int
 sysinfo_init (struct sys_info * sys)
 {
     sys->core_barrier = (nk_barrier_t*)malloc(sizeof(nk_barrier_t));
@@ -211,7 +211,7 @@ static int launch_vmm_environment()
 #ifdef NAUT_CONFIG_PALACIOS_MGMT_VM
   extern int guest_start;
   mgmt_vm = nk_vmm_start_vm("management-vm",&guest_start,0xffffffff);
-  if (!mgmt_vm) { 
+  if (!mgmt_vm) {
     ERROR_PRINT("Failed to start embedded management VM\n");
     return -1;
   }
@@ -263,7 +263,7 @@ init (unsigned long mbd,
     nk_net_dev_init();
 
     nk_vc_print(NAUT_WELCOME);
-    
+
     detect_cpu();
 
     /* setup the temporary boot-time allocator */
@@ -282,7 +282,7 @@ init (unsigned long mbd,
     smp_early_init(naut);
 
 
-    /* this will populate NUMA-related structures and 
+    /* this will populate NUMA-related structures and
      * also initialize the relevant ACPI tables if they exist */
     nk_numa_init();
 
@@ -323,29 +323,6 @@ init (unsigned long mbd,
 
     nk_sched_init(&sched_cfg);
 
-    //print actual time of udelay()
-    uint32_t i = 0, num_samples = 50;
-    uint64_t    start, end, total;
-    total = 0;
-    for (i= 0; i < num_samples; ++i){
-        start = nk_sched_get_realtime();
-        udelay(1000);
-        end = nk_sched_get_realtime();
-        nk_vc_printf("UDELAY(1000): %llu \n", end - start);
-        total += (end - start);
-    }
-    nk_vc_printf("UDELAY(1000): average time in ns = %llu in %llu samples\n", total/num_samples, num_samples);
-
-    total = 0;
-    for (i = 0; i < num_samples; ++i){
-        start = nk_sched_get_realtime();
-        end = nk_sched_get_realtime();
-        nk_vc_printf("get_real_time overhead: %llu \n", end - start);
-        total += (end - start);
-    }
-    nk_vc_printf("get_real_time overhead: average time in ns = %llu in %llu samples\n", total/num_samples, num_samples);
-
-
     /* we now switch away from the boot-time stack in low memory */
     naut = smp_ap_stack_switch(get_cur_thread()->rsp, get_cur_thread()->rsp, naut);
 
@@ -353,7 +330,7 @@ init (unsigned long mbd,
 
     smp_setup_xcall_bsp(naut->sys.cpus[0]);
 
-    nk_cpu_topo_discover(naut->sys.cpus[0]); 
+    nk_cpu_topo_discover(naut->sys.cpus[0]);
 #ifdef NAUT_CONFIG_HPET
     nk_hpet_init();
 #endif
@@ -362,7 +339,7 @@ init (unsigned long mbd,
     nk_instrument_init();
 #endif
 
-#ifdef NAUT_CONFIG_REAL_MODE_INTERFACE 
+#ifdef NAUT_CONFIG_REAL_MODE_INTERFACE
     nk_real_mode_init();
 #endif
 
@@ -380,7 +357,7 @@ init (unsigned long mbd,
     extern void nk_cxx_init(void);
     // Assuming we don't encounter C++ before here
     nk_cxx_init();
-#endif 
+#endif
 
     /* interrupts on */
     sti();
