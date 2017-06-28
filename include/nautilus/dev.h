@@ -8,7 +8,7 @@
  * led by Sandia National Laboratories that includes several national 
  * laboratories and universities. You can find out more at:
  * http://www.v3vee.org  and
- * http://xtack.sandia.gov/hobbes
+ * http://xstack.sandia.gov/hobbes
  *
  * Copyright (c) 2016, Peter Dinda <pdinda@northwestern.edu>
  * Copyright (c) 2015, The V3VEE Project  <http://www.v3vee.org> 
@@ -26,8 +26,17 @@
 
 #include <nautilus/list.h>
 
+
 #define DEV_NAME_LEN 32
-typedef enum {NK_DEV_CHAR, NK_DEV_BLK, NK_DEV_NET} nk_dev_type_t ; 
+typedef enum {
+    NK_DEV_GENERIC, 
+    NK_DEV_INTR, 
+    NK_DEV_TIMER,
+    NK_DEV_BUS,
+    NK_DEV_CHAR, 
+    NK_DEV_BLK, 
+    NK_DEV_NET
+} nk_dev_type_t ; 
 
 
 // this is the abstract base class for device interfaces
@@ -36,6 +45,8 @@ struct nk_dev_int {
     int (*open)(void *state);
     int (*close)(void *state);
 };
+
+typedef struct nk_queue nk_thread_queue_t;
 
 // this is the class for devices.  It should be the first
 // member of any specific type of device
@@ -48,9 +59,14 @@ struct nk_dev {
     void *state; // driver state
     
     struct nk_dev_int *interface;
+    
+    nk_thread_queue_t *waiting_threads;
 };
 
-typedef enum {NK_DEV_REQ_BLOCKING, NK_DEV_REQ_NONBLOCKING} nk_dev_request_type_t;
+// Not all request types apply to all device types
+// Not all devices support the request types valid
+// for a specific device type
+typedef enum {NK_DEV_REQ_BLOCKING, NK_DEV_REQ_NONBLOCKING, NK_DEV_REQ_CALLBACK} nk_dev_request_type_t;
 
 int nk_dev_init();
 int nk_dev_deinit();
@@ -59,6 +75,9 @@ struct nk_dev *nk_dev_register(char *name, nk_dev_type_t type, uint64_t flags, s
 int            nk_dev_unregister(struct nk_dev *);
 
 struct nk_dev *nk_dev_find(char *name);
+
+void nk_dev_wait(struct nk_dev *);
+void nk_dev_signal(struct nk_dev *);
 
 void nk_dev_dump_devices();
 

@@ -57,7 +57,7 @@
 #include <dev/hpet.h>
 #include <dev/ioapic.h>
 #include <dev/i8254.h>
-#include <dev/kbd.h>
+#include <dev/ps2.h>
 #include <dev/serial.h>
 #include <dev/vga.h>
 #ifdef NAUT_CONFIG_VIRTIO_PCI
@@ -71,6 +71,9 @@
 #endif
 #ifdef NAUT_CONFIG_EXT2_FILESYSTEM_DRIVER
 #include <fs/ext2/ext2.h>
+#endif
+#ifdef NAUT_CONFIG_FAT32_FILESYSTEM_DRIVER
+#include <fs/fat32/fat32.h>
 #endif
 
 #ifdef NAUT_CONFIG_NDPC_RT
@@ -246,7 +249,7 @@ init (unsigned long mbd,
 
     memset(naut, 0, sizeof(struct naut_info));
 
-    vga_init();
+    vga_early_init();
 
     spinlock_init(&printk_lock);
 
@@ -255,7 +258,7 @@ init (unsigned long mbd,
     nk_int_init(&(naut->sys));
 
     // Bring serial device up early so we can have output
-    serial_init();
+    serial_early_init();
 
     nk_dev_init();
     nk_char_dev_init();
@@ -263,7 +266,7 @@ init (unsigned long mbd,
     nk_net_dev_init();
 
     nk_vc_print(NAUT_WELCOME);
-
+ 
     detect_cpu();
 
     /* setup the temporary boot-time allocator */
@@ -317,7 +320,7 @@ init (unsigned long mbd,
 
     nk_rand_init(naut->sys.cpus[0]);
 
-    kbd_init(naut);
+    ps2_init(naut);
 
     pci_init(naut);
 
@@ -359,10 +362,21 @@ init (unsigned long mbd,
     nk_cxx_init();
 #endif
 
+    // reinit the early-initted devices now that
+    // we have malloc and the device framework functional
+    vga_init();
+    serial_init();
+
+
     /* interrupts on */
     sti();
 
     nk_vc_init();
+
+    
+#ifdef NAUT_CONFIG_VIRTUAL_CONSOLE_CHARDEV_CONSOLE
+    nk_vc_start_chardev_console(NAUT_CONFIG_VIRTUAL_CONSOLE_CHARDEV_CONSOLE_NAME);
+#endif
 
 #ifdef NAUT_CONFIG_RAMDISK
     nk_ramdisk_init(naut);
@@ -381,6 +395,12 @@ init (unsigned long mbd,
 #ifdef NAUT_CONFIG_EXT2_FILESYSTEM_DRIVER
 #ifdef NAUT_CONFIG_RAMDISK_EMBED
     nk_fs_ext2_attach("ramdisk0","rootfs", 1);
+#endif
+#endif
+
+#ifdef NAUT_CONFIG_FAT32_FILESYSTEM_DRIVER
+#ifdef NAUT_CONFIG_RAMDISK_EMBED
+    nk_fs_fat32_attach("ramdisk0","rootfs", 1);
 #endif
 #endif
 

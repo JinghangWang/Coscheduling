@@ -1,18 +1,25 @@
 menu "Device options"
 
 config SERIAL_REDIRECT
-    bool "Serial Debugging"
+    bool "Serial Redirect"
     depends on !HVM_HRT
     default n
     help
-        Redirect all printing to serial device
+        Redirect printing to serial device
+        Uses early serial output at boot and then
+        switches to ordinary serial interface afterwards
+        What specifically is printed to serial also depends
+        on how mirroring is set up (if at all) in the 
+        virtual console configuration
 
-config SERIAL_PORT
-    int "Serial COM Port"
+config SERIAL_REDIRECT_PORT
+    depends on SERIAL_REDIRECT
+    int "Serial COM Port for redirection"
     range 1 4
     default "1"
     help
-      Specifies which serial port to use. E.g. 1 is COM1.
+      Specifies which serial port to use for serial redirection. E.g. 1 is COM1.
+      
 
 config APIC_FORCE_XAPIC_MODE
     bool "Force APIC to use XAPIC mode"
@@ -50,12 +57,12 @@ config DEBUG_PCI
     help 
         Turn on debug prints for PCI devices
 
-config DEBUG_KBD
-    bool "Debug Keyboard"
+config DEBUG_PS2
+    bool "Debug PS2 interface (Keyboard/Mouse)"
     depends on DEBUG_PRINTS
     default n
     help
-        Turn on debug prints for the keyboard
+        Turn on debug prints for the keyboard/mouse on the PS/2 interface
 
 config DEBUG_PIT
     bool "Debug PIT"

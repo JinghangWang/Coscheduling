@@ -75,10 +75,10 @@ static int read_write_superblock(struct ext2_state *fs, int write)
 	  rw[write], SUPERBLOCK_OFFSET, SUPERBLOCK_SIZE, fs->fs->name, fs->chars.block_size, dev_offset, dev_num);
 
     if (write) { 
-	rc = nk_block_dev_write(fs->dev,dev_offset,dev_num,&fs->super,NK_DEV_REQ_BLOCKING); 
+	rc = nk_block_dev_write(fs->dev,dev_offset,dev_num,&fs->super,NK_DEV_REQ_BLOCKING,0,0); 
 	// TODO: write shadow copies
     } else {
-	rc = nk_block_dev_read(fs->dev,dev_offset,dev_num,&fs->super,NK_DEV_REQ_BLOCKING);
+	rc = nk_block_dev_read(fs->dev,dev_offset,dev_num,&fs->super,NK_DEV_REQ_BLOCKING,0,0);
     }
     
     if (rc) { 
@@ -116,9 +116,9 @@ static int read_write_block(struct ext2_state * fs, uint32_t block_num, void *sr
 	  rw[write], block_num, fs->fs->name, fs->dev->dev.name, block_size, dev_offset, dev_num);
 
     if (write) { 
-	rc = nk_block_dev_write(fs->dev,dev_offset,dev_num,srcdest,NK_DEV_REQ_BLOCKING); 
+	rc = nk_block_dev_write(fs->dev,dev_offset,dev_num,srcdest,NK_DEV_REQ_BLOCKING,0,0); 
     } else {
-	rc = nk_block_dev_read(fs->dev,dev_offset,dev_num,srcdest,NK_DEV_REQ_BLOCKING);
+	rc = nk_block_dev_read(fs->dev,dev_offset,dev_num,srcdest,NK_DEV_REQ_BLOCKING,0,0);
     }
     
     if (rc) { 
@@ -309,6 +309,9 @@ static uint32_t get_inode_num_from_dir(struct ext2_state *fs,
 {
     struct ext2_dir_entry_2 dentry;
     uint32_t inum;
+
+    DEBUG("get_inode_num_from_dir on %s, inode_num=%u, dir=%p, search=%s\n",
+	  fs->fs->name,inode_num,dir,name);
 
     strcpy(dentry.name,name);
     dentry.name_len=strlen(name);

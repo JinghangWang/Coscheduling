@@ -10,38 +10,25 @@
  * http://www.v3vee.org  and
  * http://xstack.sandia.gov/hobbes
  *
- * Copyright (c) 2015, Kyle C. Hale <kh@u.northwestern.edu>
- * Copyright (c) 2015, The V3VEE Project  <http://www.v3vee.org> 
+ * Copyright (c) 2017, Yingyi Luo, Guixing Lin, and Jinghang Wang
+ * Copyright (c) 2017, Peter Dinda
+ * Copyright (c) 2017, The V3VEE Project  <http://www.v3vee.org> 
  *                     The Hobbes Project <http://xstack.sandia.gov/hobbes>
  * All rights reserved.
  *
- * Author: Kyle C. Hale <kh@u.northwestern.edu>
- *         Peter A. Dinda <pdinda@northwestern.edu>
+ * Authors:  Yingyi Luo <YingyiLuo2015@u.northwestern.edu>
+ *           Guixing Lin <GuixingLin2018@u.northwestern.edu>
+ *           Jinghang Wang <JinghangWang2018@u.northwestern.edu>
+ *           Peter Dinda <pdinda@northwestern.edu>
  *
  * This is free software.  You are permitted to use,
  * redistribute, and modify it as specified in the file "LICENSE.txt".
  */
-#ifndef __SERIAL_H__
-#define __SERIAL_H__
 
-#include <stddef.h>
-#include <stdarg.h>
-#include <dev/serial.h>
+#ifndef __FS_FAT32_H__
+#define __FS_FAT32_H__
 
-#ifndef SERIAL_PRINT_DEBUG_LEVEL
-#define SERIAL_PRINT_DEBUG_LEVEL  10
-#endif
-
-void serial_putchar(unsigned char c);
-void serial_write(const char *buf);
-void serial_puts(const char *buf);
-void serial_print(const char * format, ...);
-
-void serial_printlevel(int level, const char * format, ...);
-
-
-void  serial_early_init(void);
-
-void  serial_init(void);
+int nk_fs_fat32_attach(char *devname, char *fsname, int readonly);
+int nk_fs_fat32_detach(char *fsname);
 
 #endif

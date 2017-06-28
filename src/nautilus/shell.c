@@ -47,6 +47,25 @@
 #include <nautilus/realmode.h>
 #endif
 
+#ifdef NAUT_CONFIG_ISOCORE
+#include <nautilus/isocore.h>
+#endif
+
+// enable this to flip a GPIO periodically within
+// the main loop of test thread
+#define GPIO_OUTPUT 0
+
+#if GPIO_OUPUT
+#define GET_OUT() inb(0xe010)
+#define SET_OUT(x) outb(x,0xe010)
+#else
+#define GET_OUT() 
+#define SET_OUT(x) 
+#endif
+
+#define SWITCH() SET_OUT(~GET_OUT())
+#define LOOP() {SWITCH(); udelay(1000); }
+
 //Parallel thread concept------------------------------------------------
 /*
 int parallel_thread_initialize(void *in)
@@ -144,6 +163,7 @@ void parallel_burner(void *in, void **out)
 
 
 //Parallel thread concept------------------------------------------------
+
 
 
 static int handle_cat(char *buf)
@@ -394,12 +414,12 @@ static int handle_blktest(char * buf)
 	    for (j=0;j<c.block_size;j++) { 
 		data[j] = "abcdefghijklmnopqrstuvwxyz0123456789"[j%36];
 	    }
-	    if (nk_block_dev_write(d,i,1,data,NK_DEV_REQ_BLOCKING)) {
+	    if (nk_block_dev_write(d,i,1,data,NK_DEV_REQ_BLOCKING,0,0)) {
 		nk_vc_printf("Failed to write block %lu\n",i);
 		return -1;
 	    }
 	} else if (*rw == 'r') {
-	    if (nk_block_dev_read(d,i,1,data,NK_DEV_REQ_BLOCKING)) {
+	    if (nk_block_dev_read(d,i,1,data,NK_DEV_REQ_BLOCKING,0,0)) {
 		nk_vc_printf("Failed to read block %lu\n",i);
 		return -1;
 	    }
@@ -451,6 +471,37 @@ static int handle_benchmarks(char * buf)
     return 0;
 }
 
+#ifdef NAUT_CONFIG_ISOCORE
+
+static void isotest(void *arg)
+{
+    // note trying to do anything in here with NK
+    // features, even a print, is unlikely to work due to
+    // relocation, interrupts off, etc.   
+    //serial_print("Hello from isocore, my arg is %p\n", arg);
+    serial_putchar('H');
+    serial_putchar('I');
+    serial_putchar('!');
+    serial_putchar('\n');
+    while (1) { }  // does actually get here in testing
+}
+
+static int handle_isotest(char *buf)
+{
+    void (*code)(void*) = isotest;
+    uint64_t codesize = PAGE_SIZE_4KB; // we are making pretend here
+    uint64_t stacksize = PAGE_SIZE_4KB;
+    void *arg = (void*)0xdeadbeef;
+
+    return nk_isolate(code, 
+		      codesize,
+		      stacksize,
+		      arg);
+}
+
+
+#endif
+
 static int handle_cmd(char *buf, int n)
 {
   char name[MAX_CMD];
@@ -480,12 +531,19 @@ static int handle_cmd(char *buf, int n)
     return 0;
   }
 #endif
+
+#ifdef NAUT_CONFIG_ISOCORE
+  if (!strncasecmp(buf,"isotest",4)) { 
+    handle_isotest(buf);
+    return 0;
+  }
+#endif
   
   if (!strncasecmp(buf,"help",4)) { 
     nk_vc_printf("help\nexit\nvcs\ncores [n]\ntime [n]\nthreads [n]\n");
     nk_vc_printf("devs | fses | ofs | cat [path]\n");
     nk_vc_printf("shell name\n");
-    nk_vc_printf("regs [t]\npeek [bwdq] x | mem x n [s] | poke [bwdq] x y\nrdmsr x [n] | wrmsr x y\ncpuid f [n] | cpuidsub f s\n");
+    nk_vc_printf("regs [t]\npeek [bwdq] x | mem x n [s] | poke [bwdq] x y\nin [bwd] addr | out [bwd] addr data\nrdmsr x [n] | wrmsr x y\ncpuid f [n] | cpuidsub f s\n");
     nk_vc_printf("reap\n");
     nk_vc_printf("burn a name size_ms tpr priority\n");
     nk_vc_printf("burn s name size_ms tpr phase size deadline priority\n");
@@ -494,7 +552,8 @@ static int handle_cmd(char *buf, int n)
     nk_vc_printf("ipitest type (oneway | roundtrip | broadcast) trials [-f <filename>] [-s <src_id> | all] [-d <dst_id> | all]\n");
     nk_vc_printf("bench\n");
     nk_vc_printf("blktest dev r|w start count\n");
-    nk_vc_printf("attach blkdev fstype fsname\n");
+    nk_vc_printf("blktest dev r|w start count\n");
+    nk_vc_printf("isotest\n");
     nk_vc_printf("vm name [embedded image]\n");
     return 0;
   }
@@ -599,6 +658,31 @@ static int handle_cmd(char *buf, int n)
       return 0;
   }
 
+  if (((bwdq='b', sscanf(buf,"in b %lx", &addr))==1) ||
+      ((bwdq='w', sscanf(buf,"in w %lx", &addr))==1) ||
+      ((bwdq='d', sscanf(buf,"in d %lx", &addr))==1) ||
+      ((bwdq='b', sscanf(buf,"in %lx", &addr))==1)) {
+      addr &= 0xffff; // 16 bit address space
+      switch (bwdq) { 
+      case 'b': 
+	  data = (uint64_t) inb(addr);
+	  nk_vc_printf("IO[0x%04lx] = 0x%02lx\n",addr,data);
+	  break;
+      case 'w': 
+	  data = (uint64_t) inw(addr);
+	  nk_vc_printf("IO[0x%04lx] = 0x%04lx\n",addr,data);
+	  break;
+      case 'd': 
+	  data = (uint64_t) inl(addr);
+	  nk_vc_printf("IO[0x%04lx] = 0x%08lx\n",addr,data);
+	  break;
+      default:
+	  nk_vc_printf("Unknown size requested\n",bwdq);
+	  break;
+      }
+      return 0;
+  }
+
 #define BYTES_PER_LINE 16
 
   if ((sscanf(buf, "mem %lx %lu %lu",&addr,&len,&size)==3) ||
@@ -629,7 +713,7 @@ static int handle_cmd(char *buf, int n)
       ((bwdq='w', sscanf(buf,"poke w %lx %lx", &addr,&data))==2) ||
       ((bwdq='d', sscanf(buf,"poke d %lx %lx", &addr,&data))==2) ||
       ((bwdq='q', sscanf(buf,"poke q %lx %lx", &addr,&data))==2) ||
-      ((bwdq='q', sscanf(buf,"poke %lx", &addr, &data))==2)) {
+      ((bwdq='q', sscanf(buf,"poke %lx %lx", &addr, &data))==2)) {
       switch (bwdq) { 
       case 'b': 
 	  *(uint8_t*)addr = data;
@@ -647,6 +731,33 @@ static int handle_cmd(char *buf, int n)
 	  *(uint64_t*)addr = data;
 	  nk_vc_printf("Mem[0x%016lx] = 0x%016lx\n",addr,data);
 	  break;
+      default:
+	  nk_vc_printf("Unknown size requested\n");
+	  break;
+      }
+      return 0;
+  }
+
+  if (((bwdq='b', sscanf(buf,"out b %lx %lx", &addr,&data))==2) ||
+      ((bwdq='w', sscanf(buf,"out w %lx %lx", &addr,&data))==2) ||
+      ((bwdq='d', sscanf(buf,"out d %lx %lx", &addr,&data))==2) ||
+      ((bwdq='q', sscanf(buf,"out %lx %lx", &addr, &data))==2)) {
+      addr &= 0xffff;
+      switch (bwdq) { 
+      case 'b': 
+	  data &= 0xff;
+	  outb((uint8_t) data, (uint16_t)addr);
+	  nk_vc_printf("IO[0x%04lx] = 0x%02lx\n",addr,data);
+	  break;
+      case 'w': 
+	  data &= 0xffff;
+	  outw((uint16_t) data, (uint16_t)addr);
+	  nk_vc_printf("IO[0x%04lx] = 0x%04lx\n",addr,data);
+	  break;
+      case 'd': 
+	  data &= 0xffffffff;
+	  outl((uint32_t) data, (uint16_t)addr);
+	  nk_vc_printf("IO[0x%04lx] = 0x%08lx\n",addr,data);
       default:
 	  nk_vc_printf("Unknown size requested\n");
 	  break;
