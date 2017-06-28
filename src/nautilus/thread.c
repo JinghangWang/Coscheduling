@@ -624,6 +624,7 @@ nk_thread_group_find(char *name){
 int
 nk_thread_group_join(struct nk_thread_group *group){
     spin_lock(&group->group_lock);
+    group_barrier_join(group->group_barrier);
     group->group_size++;
     int id = group->next_id++;
     //add to thread list
@@ -636,7 +637,7 @@ nk_thread_group_join(struct nk_thread_group *group){
     thread_unit_list_enqueue(group, new_thread_unit);
     //GROUP("group_size = %d\n", group->group_size);
     spin_unlock(&group->group_lock);
-    group_barrier_join(group->group_barrier);
+
     return id;
 }
 

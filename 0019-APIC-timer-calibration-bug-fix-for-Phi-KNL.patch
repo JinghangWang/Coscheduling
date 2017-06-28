@@ -1,0 +1,75 @@
+From d1367efccf05c4ff5a66ec50bc43602715156038 Mon Sep 17 00:00:00 2001
+From: Jinghang Wang <JinghangWang2018@u.northwestern.edu>
+Date: Wed, 28 Jun 2017 11:37:56 -0500
+Subject: [PATCH 19/20] APIC timer calibration bug fix for Phi KNL
+
+Timer interrupt masking on the Phi KNL apparently also
+resets the timer count (huh?).   This results in bogus
+time calibration that still "works".   The fix moves
+interrupt masking earlier to avoid this issue.
+---
+ include/dev/apic.h |  2 +-
+ src/dev/apic.c     | 12 ++++++------
+ 2 files changed, 7 insertions(+), 7 deletions(-)
+
+diff --git a/include/dev/apic.h b/include/dev/apic.h
+index 69ea501..3ad854d 100644
+--- a/include/dev/apic.h
++++ b/include/dev/apic.h
+@@ -205,7 +205,7 @@ extern "C" {
+ #endif
+ 
+ 
+-#define APIC_TIMER_DISABLE  0x10000
++#define APIC_TIMER_MASK     0x10000
+ #define APIC_TIMER_ONESHOT  0x00000
+ #define APIC_TIMER_PERIODIC 0x20000
+ #define APIC_TIMER_TSCDLINE 0x40000
+diff --git a/src/dev/apic.c b/src/dev/apic.c
+index 57f0845..e30322c 100644
+--- a/src/dev/apic.c
++++ b/src/dev/apic.c
+@@ -1049,7 +1049,9 @@ static void calibrate_apic_timer(struct apic_dev *apic)
+     // Use APIC in one shot mode with the divider we will use 
+     // in normal execution.  We will count down from a large number
+     // and do not expect interrupts because it should not hit zero.
+-    apic_write(apic, APIC_REG_LVTT, APIC_TIMER_ONESHOT | APIC_DEL_MODE_FIXED | APIC_TIMER_INT_VEC);
++    // timer is masked because we don't want an interrupt to occur at all
++    // On KNL, masking also seems to have the side effect of reseting the count
++    apic_write(apic, APIC_REG_LVTT, APIC_TIMER_ONESHOT | APIC_DEL_MODE_FIXED | APIC_TIMER_INT_VEC | APIC_TIMER_MASK);
+     apic_write(apic, APIC_REG_TMDCR, APIC_TIMER_DIVCODE);
+ 
+     // Now configure the PIT to count down the test period
+@@ -1098,9 +1100,6 @@ static void calibrate_apic_timer(struct apic_dev *apic)
+     // a known amount of real-time
+     // has now finished
+ 
+-    /* stop the APIC timer */
+-    apic_write(apic, APIC_REG_LVTT, APIC_TIMER_DISABLE);
+-
+     // Now we have 1/TEST_TIME_SEC_RECIP seconds of real time in APIC timer ticks
+     uint32_t apic_timer_ticks = 0xffffffff - apic_read(apic,APIC_REG_TMCCT) + 1;
+ 
+@@ -1153,7 +1152,8 @@ static void calibrate_apic_timer(struct apic_dev *apic)
+ 
+     for (i = 0; i < num_trials; i++) {
+ 	// set APIC for a long countdown time, longer than our test 
+-	apic_write(apic, APIC_REG_LVTT, APIC_TIMER_ONESHOT | APIC_DEL_MODE_FIXED | APIC_TIMER_INT_VEC);
++	// mask to avoid interrupt, also to deal with mask side effect on KNL
++	apic_write(apic, APIC_REG_LVTT, APIC_TIMER_ONESHOT | APIC_DEL_MODE_FIXED | APIC_TIMER_INT_VEC | APIC_TIMER_MASK);
+ 	apic_write(apic, APIC_REG_TMDCR, APIC_TIMER_DIVCODE);
+ 	// start it
+ 	apic_write(apic, APIC_REG_TMICT, 0xffffffff);
+@@ -1165,8 +1165,8 @@ static void calibrate_apic_timer(struct apic_dev *apic)
+ 
+ 	// now collect time using both
+ 	end = rdtsc();
+-	apic_write(apic, APIC_REG_LVTT, APIC_TIMER_DISABLE);
+ 	tsc_diff = (end - start);
++
+ 	apic_diff = (0xffffffff - apic_read(apic, APIC_REG_TMCCT) + 1);
+ 	
+ 	scale = tsc_diff / apic_diff;
+-- 
+1.9.1
+

@@ -1,0 +1,25 @@
+From cd66942ba4b5a1bbaf73cee9e94f1016afa52504 Mon Sep 17 00:00:00 2001
+From: Panitan Wongse-Ammat <Q9T8D1@u.northwestern.edu>
+Date: Sun, 28 May 2017 13:51:13 -0500
+Subject: [PATCH 11/20] Netdev bug fix (wrong initializer)
+
+---
+ src/nautilus/netdev.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/src/nautilus/netdev.c b/src/nautilus/netdev.c
+index 43a2389..d2c9bd5 100644
+--- a/src/nautilus/netdev.c
++++ b/src/nautilus/netdev.c
+@@ -59,7 +59,7 @@ int nk_net_dev_deinit()
+ struct nk_net_dev * nk_net_dev_register(char *name, uint64_t flags, struct nk_net_dev_int *inter, void *state)
+ {
+     INFO("register device %s\n",name);
+-    return (struct nk_net_dev *) nk_dev_register(name,NK_DEV_BLK,flags,(struct nk_dev_int *)inter,state);
++    return (struct nk_net_dev *) nk_dev_register(name,NK_DEV_NET,flags,(struct nk_dev_int *)inter,state);
+ }
+ 
+ int                   nk_net_dev_unregister(struct nk_net_dev *d)
+-- 
+1.9.1
+
