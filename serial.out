@@ -1,0 +1,113 @@
+CPU ? (): dev: devices inited
+CPU ? (): chardev: init
+CPU ? (): blkdev: init
+CPU ? (): netdev: init
+Welcome to                                         
+    _   __               __   _  __                
+   / | / /____ _ __  __ / /_ (_)/ /__  __ _____    
+  /  |/ // __ `// / / // __// // // / / // ___/    
+ / /|  // /_/ // /_/ // /_ / // // /_/ /(__  )     
+/_/ |_/ \__,_/ \__,_/ \__//_//_/ \__,_//____/  
++===============================================+  
+ Kyle C. Hale (c) 2014 | Northwestern University   
++===============================================+  
+
+Detected AuthenticAMD Processor
+BOOTMEM: Setting up boot memory allocator
+BOOTMEM: Memory map[0] - [0x00000000 - 0x0009f000] <usable RAM>
+BOOTMEM: Memory map[1] - [0x000a0000 - 0x000a0000] <reserved>
+BOOTMEM: Memory map[2] - [0x000f0000 - 0x00100000] <reserved>
+BOOTMEM: Memory map[3] - [0x00100000 - 0x7ffe0000] <usable RAM>
+BOOTMEM: Memory map[4] - [0x7ffe0000 - 0x80000000] <reserved>
+BOOTMEM: Memory map[5] - [0xfffc0000 - 0x100000000] <reserved>
+BOOTMEM: Detected 2146.958336 MB of usable System RAM
+ACPI: Parsing ACPI root table (at 0x000f63f0)
+ACPI: RSDP 00000000000f63f0 00014 (v00 BOCHS )
+ACPI: RSDT 000000007ffe1737 00034 (v01 BOCHS  BXPCRSDT 00000001 BXPC 00000001)
+ACPI: root table checksum pass
+ACPI: FACP 000000007ffe0c14 00074 (v01 BOCHS  BXPCFACP 00000001 BXPC 00000001)
+ACPI: SSDT 000000007ffe0c88 009F7 (v01 BOCHS  BXPCSSDT 00000001 BXPC 00000001)
+ACPI: APIC 000000007ffe167f 00080 (v01 BOCHS  BXPCAPIC 00000001 BXPC 00000001)
+ACPI: HPET 000000007ffe16ff 00038 (v01 BOCHS  BXPCHPET 00000001 BXPC 00000001)
+ACPI: Done parsing ACPI root table
+SMP: Detected 2 CPUs
+NUMA: Parsing ACPI NUMA information...
+NUMA: DONE.
+Remapping phys mem [0x00000000 - 0x100000000] with 2MB pages
+CPU ? (): KMEM: Malloc configured to support a maximum of: 0x7ff7f000 bytes of physical memory
+BOOTMEM: Adding boot memory regions to the kernel memory pool:
+BOOTMEM:     [Domain 00 : Region 00] (0.00 MB)
+BOOTMEM:     [Domain 00 : Region 01] (2126.512128 MB)
+BOOTMEM:     =======
+BOOTMEM:     [TOTAL] (2126.512128 MB)
+Disabling legacy 8259 PIC
+Initializing i8254 PIT
+CPU 0 (P 0 "*none*"): dev: Added device with name i8254, type 2, flags 0x0
+CPU 0 (P 0 "*none*"): dev: Added device with name ioapic0, type 1, flags 0x0
+CPU 0 (P 0 "*none*"): timer: Timers inited
+CPU 0 (P 0 "*none*"): dev: Added device with name apic0, type 1, flags 0x0
+CPU 0 (P 0 "*none*"): ps2: init
+CPU 0 (P 0 "*none*"): dev: Added device with name ps2-keyboard, type 0, flags 0x0
+CPU 0 (P 0 "*none*"): dev: Added device with name ps2-mouse, type 0, flags 0x0
+PCI: Probing PCI bus...
+PCI: 0000:00:00.0 8086:1237 (rev 2)
+PCI: 0000:00:01.0 8086:7000 (rev 0)
+PCI: [0000:01.32902] Multifunction Device detected
+PCI: 0000:00:02.0 1234:1111 (rev 2)
+PCI: 0000:00:03.0 8086:100e (rev 3)
+CPU 0 (P 0 "*none*"): dev: Added device with name pci0, type 3, flags 0x0
+CPU 0 (P 0 "*none*"): dev: Added device with name isa, type 3, flags 0x0
+CPU 0 (P 0 "*none*"): Scheduler: Initializing scheduler on BSP
+BOOTMEM: Reclaiming boot sections and data:
+BOOTMEM:     [Boot alloc. page map] (0.264 MB)
+BOOTMEM:     [Boot page tables and stack]     (0.4096 MB)
+BOOTMEM:     =======
+BOOTMEM:     [TOTAL] (2.109704 MB)
+SMP: Setting up cross-core IPI event queue
+CPU 1 (P 0 "*none*"): dev: Added device with name apic1, type 1, flags 0x0
+MWAIT not supported
+CPU 0 (P 1 "*unnamed*"): dev: Added device with name vga, type 0, flags 0x0
+CPU 0 (P 1 "*unnamed*"): dev: Added device with name serial-boot, type 0, flags 0x0
+CPU 0 (P 1 "*unnamed*"): chardev: register device serial0
+CPU 0 (P 1 "*unnamed*"): dev: Added device with name serial0, type 4, flags 0x0
+CPU 0 (P 1 "*unnamed*"): vc: init
+List of VCs (space to regenerate)
+
+a : default
+b : system-log
+c : vc-list
+CPU 0 (P 1 "*unnamed*"): vc: List launched
+CPU 0 (P 1 "*unnamed*"): fs: inited
+CPU 0 (P 1 "*unnamed*"): Shell root-shell launched on cpu 0 as 000000007fa04000
+Nautilus boot thread yielding (indefinitely)
+root-shell> group_test
+Starting group test
+CPU 0: here 1
+CPU 0: group_create succeeded
+CPU 0: group_CPU 1: group_join okjoin ok, tid is 0
+, tid is 1
+root-shell> CPU 1: group_join ok, tid is 2
+CPU 0: group_join ok, tid is 3
+CPU 0: group_join ok, tid is 4
+CPU 0: All joined!
+CPU 0: t3 change constraint succeeded#
+CPU 0: t0 change constraint succeeded#
+CPU 1: t2 change constraint succeeded#
+CPU 0: delete group node succeeded!
+CPU 1: t1 change constraint succeeded#
+CPU 1: delete group node failed!
+CCPU 0: t4 change constraint succeeded#
+CPU 1: delete group node failed!
+PU 0: delete group node failed!
+CPU 0: delete group node failed!
+threads
+1t 1r 0cb (idle) sus yie 908806s 9460c 538111r 100d 0e aperiodic(0tp, 100) stats: 1a 1681606re 1681606rl 48sw 0m
+2t 1r 1cb (idle) RUN yie 909806s 459c 536531r 100d 0e aperiodic(0tp, 100) stats: 1a 1325352re 1325352rl 27sw 0m
+3t 1r 0cb vc-list wai sle 363874s 120c 545r 100d 0e aperiodic(0tp, 100) stats: 1a 4re 4rl 4sw 0m
+4t 1r 0cb root-shell RUN adm 909359s 0c 5111r 100d 0e aperiodic(0tp, 100) stats: 1a 46re 45rl 26sw 0m
+5t 1r 0c tester 0 sus adm 908943s 161c 161r 918838d 0e periodic(1tp, 10000,100) stats: 27a 28re 28rl 26sw 0m
+6t 1r 1c tester 1 sus adm 908928s 135c 135r 918908d 0e periodic(1tp, 10000,100) stats: 27a 31re 31rl 26sw 0m
+7t 1r 1c tester 2 sus adm 909064s 282c 282r 918910d 0e periodic(1tp, 10000,100) stats: 27a 28re 28rl 26sw 0m
+8t 1r 0c tester 4 sus adm 909105s 256c 256r 918839d 0e periodic(1tp, 10000,100) stats: 27a 29re 28rl 26sw 0m
+9t 1r 0c tester 3 sus adm 908845s 137c 137r 918806d 0e periodic(1tp, 10000,100) stats: 27a 57re 57rl 26sw 0m
+root-shell> 
