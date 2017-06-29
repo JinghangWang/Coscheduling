@@ -21,16 +21,6 @@ BOOTMEM: Memory map[3] - [0x00100000 - 0x7ffe0000] <usable RAM>
 BOOTMEM: Memory map[4] - [0x7ffe0000 - 0x80000000] <reserved>
 BOOTMEM: Memory map[5] - [0xfffc0000 - 0x100000000] <reserved>
 BOOTMEM: Detected 2146.958336 MB of usable System RAM
-CPU ? (): DEBUG: Multiboot info size 392B
-CPU ? (): DEBUG: Cmd line: 
-CPU ? (): DEBUG: Boot loader: GRUB 2.02~beta2-36ubuntu3.11
-CPU ? (): DEBUG: Unhandled tag type (0xa)
-CPU ? (): DEBUG: Multiboot2 memory map detected
-CPU ? (): DEBUG: ELF size=20, num=0, entsize=0, shndx=0, sechdr=0x00316e51
-CPU ? (): DEBUG: Multiboot2 basic meminfo detected
-CPU ? (): DEBUG: Boot device: (biosdev=0xe0,slice=4294967295,part=4294967295)
-CPU ? (): DEBUG: fb addr: 0x000b8000, fb_width: 80, fb_height: 25
-CPU ? (): DEBUG: Old ACPI: rsdp=0x003b41b8
 ACPI: Parsing ACPI root table (at 0x000f63f0)
 ACPI: RSDP 00000000000f63f0 00014 (v00 BOCHS )
 ACPI: RSDT 000000007ffe1737 00034 (v01 BOCHS  BXPCRSDT 00000001 BXPC 00000001)
@@ -82,22 +72,27 @@ CPU 0 (P 1 "*unnamed*"): chardev: register device serial0
 CPU 0 (P 1 "*unnamed*"): dev: Added device with name serial0, type 4, flags 0x0
 CPU 0 (P 1 "*unnamed*"): vc: init
 CPU 0 (P 1 "*unnamed*"): vc: List launched
+List of VCs (space to regenerate)
+
 CPU 0 (P 1 "*unnamed*"): fs: inited
 CPU 0 (P 1 "*unnamed*"): Shell root-shell launched on cpu 0 as 000000007fa04000
 Nautilus boot thread yielding (indefinitely)
-List of VCs (space to regenerate)
-
 a : default
 b : system-log
 c : vc-list
-root-shell> test thread
-Create-join test of 10 passes with 512 threads each: PASS
-Fork-join test of 10 passes with 512 threads each: PASS
-Recursive create-join test of 10 passes with depth 8 (512 threads): PASS
-Recursive fork-join test of 10 passes with depth 8 (512 threads): PASS
-root-shell> test thread
-Create-join test of 10 passes with 512 threads each: PASS
-Fork-join test of 10 passes with 512 threads each: PASS
-Recursive create-join test of 10 passes with depth 8 (512 threads): PASS
-Recursive fork-join test of 10 passes with depth 8 (512 threads): PASS
-root-shell> 
+root-shell> grouop
+Don't understand "grouop"
+root-shell> group_test
+Starting group test
+CPU 0: here 1
+CPU 0: group_create succeeded
+root-shell> CPU 1: group_join ok, tid is 0
+CPU 0: group_join ok, tid is 1
+CPU 1: group_join ok, tid is 2
+CPU 1: group_join ok, tid is 3
+CPU 1: group_join ok, tid is 4
+CPU 1: All joined!
+CPCU P0:U  t11 : ctha0ng chaen cgoen cstronasintraint succeeded#
+Ct PsuUc c1ee: ddede#l
+CetPUe  g0r: odupelete gr ounpo ndode e sfauilcedc!ee
+ded!

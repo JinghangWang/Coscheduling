@@ -109,14 +109,14 @@ thread_detach (nk_thread_t * t)
     --t->refcount;
 
     // conditional reaping is done by the scheduler when threads are created
-    // this makes the join+exit path much faster in the common case and 
+    // this makes the join+exit path much faster in the common case and
     // bulks reaping events together
     // the user can also explictly reap when needed
-    // plus the autoreaper thread can be enabled 
+    // plus the autoreaper thread can be enabled
     // the following code can be enabled if you want to reap immediately once
     // a thread's refcount drops to zero
-    // 
-    //if (t->refcount==0) { 
+    //
+    //if (t->refcount==0) {
     //   nk_thread_destroy(t);
     //}
 
@@ -769,15 +769,15 @@ group_change_constraint(struct nk_thread_group *group, int tid) {
   if(atomic_inc_val(group->changing_count) == group->group_size) {
     //check if there is failure, if so, don't do local change constraint
     if (group->changing_fail == 0) {
-      GROUP("t%d change cons\n", tid);
-      //if (nk_sched_thread_change_constraints(group->group_constraints) != 0) {
+      //GROUP("t%d change cons\n", tid);
+      if (nk_sched_thread_change_constraints(group->group_constraints) != 0) {
         //if fail, set the failure flag
-      //  atomic_cmpswap(group->changing_fail, 0, 1);
-      //}
+        atomic_cmpswap(group->changing_fail, 0, 1);
+      }
     }
     int i = 0;
     //wait until all others are in the queue, then wake them up
-    GROUP("t%d go to wake up\n", tid);
+    //GROUP("t%d go to wake up\n", tid);
     while(atomic_add(group->sleep_count, 0) != (group->group_size - 1)) {
       i += 1;
       if(i == 0xffffff) {
@@ -789,14 +789,14 @@ group_change_constraint(struct nk_thread_group *group, int tid) {
   } else {
     //check if there is failure, if so, don't do local change constraint
     if (group->changing_fail == 0) {
-      GROUP("t%d change cons\n", tid);
+      //GROUP("t%d change cons\n", tid);
       if (nk_sched_thread_change_constraints(group->group_constraints) != 0) {
         //if fail, set the failure flag
         atomic_cmpswap(group->changing_fail, 0, 1);
       }
     }
     //go to sleep
-    GROUP("t%d go to sleep\n", tid);
+    //GROUP("t%d go to sleep\n", tid);
     // nk_thread_queue_sleep_count(group->change_cons_wait_q, &group->sleep_count);
   }
 
@@ -863,14 +863,17 @@ static void group_tester(void *in, void **out){
   if(tid == 0) {
     GROUP("All joined!\n");
   }
-  
+
   int leader = nk_thread_group_election(dst, tid);
-  GROUP("t%d says leader is t%d\n", tid, leader);
+  //GROUP("t%d says leader is t%d\n", tid, leader);
   if (leader == tid) {
-    GROUP("t%d set constraints\n", tid);
+    //GROUP("t%d set constraints\n", tid);
     //group_set_constraint(dst);
-    dst->group_constraints->type = APERIODIC;
-    dst->group_constraints->aperiodic.priority = default_priority;
+    dst->group_constraints->type = PERIODIC;
+    dst->group_constraints->interrupt_priority_class = 0xe;
+    dst->group_constraints->periodic.phase = 0;
+    dst->group_constraints->periodic.period = 100000000;
+    dst->group_constraints->periodic.slice = 1000000;
   }
 
   if(group_change_constraint(dst, tid)) {
@@ -881,6 +884,10 @@ static void group_tester(void *in, void **out){
 
   nk_thread_group_leave(dst);
   nk_thread_group_delete(dst);
+
+  while(1){
+
+  }
   /*
   char *msg_0;
   char *msg_1;
@@ -1189,7 +1196,7 @@ static void _thread_queue_wake_all (nk_thread_queue_t * q, int have_lock)
 
     ASSERT(q);
 
-    if (!have_lock) { 
+    if (!have_lock) {
 	flags = spin_lock_irq_save(&q->lock);
     }
 
@@ -1203,7 +1210,7 @@ static void _thread_queue_wake_all (nk_thread_queue_t * q, int have_lock)
         ASSERT(t);
 	ASSERT(t->status == NK_THR_WAITING);
 
-	if (nk_sched_awaken(t, t->current_cpu)) { 
+	if (nk_sched_awaken(t, t->current_cpu)) {
 	    THREAD_ERROR("Failed to awaken thread\n");
 	    goto out;
 	}
@@ -1243,7 +1250,7 @@ void nk_thread_exit (void * retval)
 
     /* wait for my children to finish */
     nk_join_all_children(NULL);
-    
+
     THREAD_DEBUG("Children joined\n");
 
     /* clear any thread local storage that may have been allocated */
@@ -1267,7 +1274,7 @@ void nk_thread_exit (void * retval)
     me->status      = NK_THR_EXITED;
 
     // force arch and compiler to do above writes now
-    __asm__ __volatile__ ("mfence" : : : "memory"); 
+    __asm__ __volatile__ ("mfence" : : : "memory");
 
     THREAD_DEBUG("State update complete\n");
 
@@ -1317,7 +1324,7 @@ nk_thread_destroy (nk_thread_id_t t)
     nk_sched_thread_state_deinit(thethread);
     free(thethread->stack);
     free(thethread);
-    
+
     preempt_enable();
 }
 
@@ -1325,11 +1332,11 @@ nk_thread_destroy (nk_thread_id_t t)
 static int exit_check(void *state)
 {
     volatile nk_thread_t *thethread = (nk_thread_t *)state;
-    
+
     THREAD_DEBUG("exit_check: thread (%lu %s) status is %u\n",thethread->tid,thethread->name,thethread->status);
     return thethread->status==NK_THR_EXITED;
 }
-    
+
 
 /*
  * nk_join
@@ -1353,7 +1360,7 @@ nk_join (nk_thread_id_t t, void ** retval)
     ASSERT(thethread->parent == get_cur_thread());
 
     nk_thread_queue_sleep_extended(thethread->waitq, exit_check, thethread);
- 
+
     THREAD_DEBUG("Join commenced for thread %lu \"%s\"\n", thethread->tid, thethread->name);
 
     ASSERT(exit_check(thethread));
@@ -1435,10 +1442,10 @@ nk_set_thread_fork_output (void * result)
  *
  * Goes to sleep on the given queue, checking a condition as it does so
  *
- * @q: the thread queue to sleep on 
+ * @q: the thread queue to sleep on
  * @cond_check - condition to check (return nonzero if true) atomically with queuing
  * @state - state for cond_check
- *  
+ *
  */
 
 void nk_thread_queue_sleep_extended(nk_thread_queue_t *wq, int (*cond_check)(void *state), void *state)
@@ -1456,7 +1463,7 @@ void nk_thread_queue_sleep_extended(nk_thread_queue_t *wq, int (*cond_check)(voi
     // we have raced with with it and it has just finished
     // we therefore need to double check the condition now
 
-    if (cond_check && cond_check(state)) { 
+    if (cond_check && cond_check(state)) {
    // The condition we are waiting on has been achieved
    // already.  The waker is either done waking up
    // threads or has not yet started.  In either case
@@ -1465,40 +1472,40 @@ void nk_thread_queue_sleep_extended(nk_thread_queue_t *wq, int (*cond_check)(voi
    THREAD_DEBUG("Thread %lu (%s) has fast wakeup on queue %p - condition already met\n", t->tid, t->name, (void*)wq);
    return;
     } else {
-   // the condition still is not signalled 
+   // the condition still is not signalled
    // or the condition is not important, therefore
-   // while still holding the lock, put ourselves on the 
+   // while still holding the lock, put ourselves on the
    // wait queue
 
    THREAD_DEBUG("Thread %lu (%s) is queueing itself on queue %p\n", t->tid, t->name, (void*)wq);
-   
+
    t->status = NK_THR_WAITING;
    nk_enqueue_entry(wq, &(t->wait_node));
 
    // force arch and compiler to do above writes
-   __asm__ __volatile__ ("mfence" : : : "memory"); 
+   __asm__ __volatile__ ("mfence" : : : "memory");
 
    // disallow the scheduler from context switching this core
    // until we (in particular nk_sched_sleep()) decide otherwise
-   preempt_disable(); 
+   preempt_disable();
 
    // reenable local interrupts - the scheduler is still blocked
    // because we have preemption off
    // any waker at this point will still get stuck on the wait queue lock
    // it will be a short spin, hopefully
    irq_enable_restore(flags);
-   
+
    THREAD_DEBUG("Thread %lu (%s) is having the scheduler put itself to sleep on queue %p\n", t->tid, t->name, (void*)wq);
 
    // We now get the scheduler to do a context switch
-   // and just after it completes its scheduling pass, 
+   // and just after it completes its scheduling pass,
    // it will release the wait queue lock for us
    // it will also reenable preemption on its context switch out
    nk_sched_sleep(&wq->lock);
-   
+
    THREAD_DEBUG("Thread %lu (%s) has slow wakeup on queue %p\n", t->tid, t->name, (void*)wq);
 
-   // note no spin_unlock here since nk_sched_sleep will have 
+   // note no spin_unlock here since nk_sched_sleep will have
    // done it for us
 
    return;
@@ -1794,9 +1801,9 @@ __thread_fork (void)
     __asm__ __volatile__ ( "movq %%rsp, %0" : "=r"(rsp) : : "memory");
 
 #ifdef NAUT_CONFIG_ENABLE_STACK_CHECK
-    // now check again after update to see if we didn't overrun/underrun the stack in the parent... 
+    // now check again after update to see if we didn't overrun/underrun the stack in the parent...
     if ((uint64_t)rsp <= (uint64_t)parent->stack ||
-   (uint64_t)rsp >= (uint64_t)(parent->stack + parent->stack_size)) { 
+   (uint64_t)rsp >= (uint64_t)(parent->stack + parent->stack_size)) {
    THREAD_ERROR("Parent's top of stack (%p) exceeds boundaries of stack (%p-%p)\n",
             rsp, parent->stack, parent->stack+parent->stack_size);
    panic("Detected stack out of bounds in parent during fork\n");
@@ -1817,13 +1824,13 @@ __thread_fork (void)
     // we're being called with a stack not as deep as STACK_CLONE_DEPTH...
     // fail back to a single frame...
     if ((uint64_t)rbp_tos <= (uint64_t)parent->stack ||
-   (uint64_t)rbp_tos >= (uint64_t)(parent->stack + parent->stack_size)) { 
+   (uint64_t)rbp_tos >= (uint64_t)(parent->stack + parent->stack_size)) {
         THREAD_DEBUG("Cannot resolve %lu stack frames on fork, using just one\n", STACK_CLONE_DEPTH);
 
         rbp_tos = rbp1;
     }
 
-    // from last byte of tos_rbp to the last byte of the stack on return from this function 
+    // from last byte of tos_rbp to the last byte of the stack on return from this function
     // (return address of wrapper)
     // the "launch pad" is added so that in the case where there is no stack frame above the caller
     // we still have the space to fake one.
@@ -1834,7 +1841,7 @@ __thread_fork (void)
     rbp1_offset_from_ret0_addr = rbp1 - ret0_addr;
 
     alloc_size = parent->stack_size;
- 
+
     if (nk_thread_create(NULL,        // no function pointer, we'll set rip explicity in just a sec...
                          NULL,        // no input args, it's not a function
                          NULL,        // no output args
@@ -1884,7 +1891,7 @@ __thread_fork (void)
 #ifdef NAUT_CONFIG_ENABLE_STACK_CHECK
     // now check the child before we attempt to run it
     if ((uint64_t)t->rsp <= (uint64_t)t->stack ||
-   (uint64_t)t->rsp >= (uint64_t)(t->stack + t->stack_size)) { 
+   (uint64_t)t->rsp >= (uint64_t)(t->stack + t->stack_size)) {
    THREAD_ERROR("Child's rsp (%p) exceeds boundaries of stack (%p-%p)\n",
             t->rsp, t->stack, t->stack+t->stack_size);
    panic("Detected stack out of bounds in child during fork\n");
