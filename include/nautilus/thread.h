@@ -170,7 +170,7 @@ typedef struct nk_queue nk_thread_queue_t;
 struct nk_thread {
     uint64_t rsp;               /* +0   SHOULD NOT CHANGE POSITION */
     void * stack;               /* +8   SHOULD NOT CHANGE POSITION */
-    uint16_t fpu_state_offset;  /* +26  SHOULD NOT CHANGE POSITION */
+    uint16_t fpu_state_offset;  /* +16  SHOULD NOT CHANGE POSITION */
 
     nk_stack_size_t stack_size;
     unsigned long tid;
@@ -232,7 +232,7 @@ nk_thread_queue_t * nk_thread_queue_create (void);
 void nk_thread_queue_destroy(nk_thread_queue_t * q);
 
 void nk_thread_queue_sleep(nk_thread_queue_t * q);
-void nk_thread_queue_sleep_extend(nk_thread_queue_t * q, int (*cond_check)(void *state), void *state);
+void nk_thread_queue_sleep_extended(nk_thread_queue_t * q, int (*cond_check)(void *state), void *state);
 //Parallel thread project
 int nk_thread_queue_sleep_count(nk_thread_queue_t * q, int* count);
 //Parallel thread project

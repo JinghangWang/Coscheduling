@@ -418,7 +418,7 @@ init (unsigned long mbd,
 
 
     //testing
-    group_test(5);
+    // group_test(5);
 
     /* we don't come back from this */
     idle(NULL, NULL);

@@ -797,7 +797,7 @@ group_change_constraint(struct nk_thread_group *group, int tid) {
     }
     //go to sleep
     GROUP("t%d go to sleep\n", tid);
-    nk_thread_queue_sleep_count(group->change_cons_wait_q, &group->sleep_count);
+    // nk_thread_queue_sleep_count(group->change_cons_wait_q, &group->sleep_count);
   }
 
   int res = 0;
@@ -1362,7 +1362,6 @@ nk_join (nk_thread_id_t t, void ** retval)
         *retval = thethread->output;
     }
 
-out:
     thread_detach(thethread);
 
     THREAD_DEBUG("Join completed for thread %lu \"%s\"\n", thethread->tid, thethread->name);
@@ -1521,27 +1520,27 @@ void nk_thread_queue_sleep(nk_thread_queue_t *wq)
  * @q: the thread queue to sleep on
  *
  */
-int
-nk_thread_queue_sleep_count (nk_thread_queue_t * q, int *count)
-{
-    nk_thread_t * t = get_cur_thread();
+// int
+// nk_thread_queue_sleep_count (nk_thread_queue_t * q, int *count)
+// {
+//     nk_thread_t * t = get_cur_thread();
 
-    THREAD_DEBUG("SLEEP ON WAIT QUEUE\n");
+//     THREAD_DEBUG("SLEEP ON WAIT QUEUE\n");
 
-    enqueue_thread_on_waitq(t, q);
+//     enqueue_thread_on_waitq(t, q);
 
-    atomic_inc(*count);
+//     atomic_inc(*count);
 
-    GROUP("sleep count = %d\n", *count);
+//     GROUP("sleep count = %d\n", *count);
 
-    __asm__ __volatile__ ("" : : : "memory");
+//     __asm__ __volatile__ ("" : : : "memory");
 
-    nk_sched_sleep();
+//     nk_sched_sleep();
 
-    THREAD_DEBUG("WAKE UP FROM WAIT QUEUE\n");
+//     THREAD_DEBUG("WAKE UP FROM WAIT QUEUE\n");
 
-    return 0;
-}
+//     return 0;
+// }
 //Parallel thread project
 
 /*

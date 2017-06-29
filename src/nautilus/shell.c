@@ -33,8 +33,9 @@
 #include <nautilus/cpuid.h>
 #include <nautilus/msr.h>
 #include <nautilus/backtrace.h>
+#include <nautilus/thread.h>
 #include <test/ipi.h>
-#include <test/threads.h>
+// #include <test/threads.h>
 
 #include <nautilus/burner.h>
 
