@@ -42,13 +42,6 @@ extern "C" {
 #define TSTACK_1MB     0x100000
 #define TSTACK_2MB     0x200000
 
-
-
-//Parallel thread concept------------------------------------------------
-int group_test(int num_members);
-//Parallel thread concept------------------------------------------------
-
-
 /******** EXTERNAL INTERFACE **********/
 
 // opaque pointer given to users
@@ -227,15 +220,11 @@ _nk_thread_init (nk_thread_t * t,
 
 
 /* thread queues */
-
 nk_thread_queue_t * nk_thread_queue_create (void);
 void nk_thread_queue_destroy(nk_thread_queue_t * q);
 
 void nk_thread_queue_sleep(nk_thread_queue_t * q);
 void nk_thread_queue_sleep_extended(nk_thread_queue_t * q, int (*cond_check)(void *state), void *state);
-//Parallel thread project
-void nk_thread_queue_sleep_count(nk_thread_queue_t *wq, int *count);
-//Parallel thread project
 void nk_thread_queue_wake_one(nk_thread_queue_t * q);
 void nk_thread_queue_wake_all(nk_thread_queue_t * q);
 

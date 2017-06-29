@@ -1,17 +1,17 @@
-/* 
+/*
  * This file is part of the Nautilus AeroKernel developed
- * by the Hobbes and V3VEE Projects with funding from the 
- * United States National  Science Foundation and the Department of Energy.  
+ * by the Hobbes and V3VEE Projects with funding from the
+ * United States National  Science Foundation and the Department of Energy.
  *
  * The V3VEE Project is a joint project between Northwestern University
  * and the University of New Mexico.  The Hobbes Project is a collaboration
- * led by Sandia National Laboratories that includes several national 
+ * led by Sandia National Laboratories that includes several national
  * laboratories and universities. You can find out more at:
  * http://www.v3vee.org  and
  * http://xtack.sandia.gov/hobbes
  *
  * Copyright (c) 2015, Kyle C. Hale <kh@u.northwestern.edu>
- * Copyright (c) 2015, The V3VEE Project  <http://www.v3vee.org> 
+ * Copyright (c) 2015, The V3VEE Project  <http://www.v3vee.org>
  *                     The Hobbes Project <http://xstack.sandia.gov/hobbes>
  * All rights reserved.
  *
@@ -25,10 +25,10 @@
 
 #include <nautilus/naut_types.h>
 
-#ifdef __cplusplus 
+#ifdef __cplusplus
 extern "C" {
 #endif
-    
+
 #define APIC_SPUR_INT_VEC      0xff
 #define APIC_TIMER_INT_VEC     0xf0
 #define APIC_ERROR_INT_VEC     0xf1
@@ -37,9 +37,7 @@ extern "C" {
 #define APIC_CMCR_INT_VEC      0xf4
 #define APIC_EXT_LVT_DUMMY_VEC 0xf5
 #define APIC_NULL_KICK_VEC     0xfc
-//Parallel thread concept------------------------------------------------
-#define APIC_GROUP_JOIN_VEC    0xf6
-//Parallel thread concept------------------------------------------------
+//0xf6 reserved for APIC_GROUP_JOIN_VEC
 
 #define APIC_TIMER_DIV 16
 
@@ -53,16 +51,16 @@ extern "C" {
 #define APIC_TIMER_DIV_128 0xa
 
 #define APIC_TIMER_DIVCODE APIC_TIMER_DIV_16
-    
+
 #define APIC_BASE_MSR        0x0000001b
-    
-#define IA32_APIC_BASE_MSR_BSP    0x100 
+
+#define IA32_APIC_BASE_MSR_BSP    0x100
 #define IA32_APIC_BASE_MSR_ENABLE 0x800
-    
+
 #define APIC_BASE_ADDR_MASK 0xfffffffffffff000ULL
 #define APIC_IS_BSP(x)      ((x) & (1 << 8))
 #define APIC_VERSION(x)     ((x) & 0xffu)
-    
+
 #define APIC_IPI_SELF          0x40000
 #define APIC_IPI_ALL           0x80000
 #define APIC_IPI_OTHERS        0xC0000
@@ -71,20 +69,20 @@ extern "C" {
 #define APIC_SPIV_VEC_MASK     0xffu
 #define APIC_SPIV_CORE_FOCUS  (1u << 9)
 #define APIC_SPIC_EOI_BROADCAST_DISABLE (1u << 12)
-    
+
 #define ICR_DEL_MODE_LOWEST  (1 << 8)
 #define ICR_DEL_MODE_SMI     (2 << 8)
 #define ICR_DEL_MODE_NMI     (4 << 8)
 #define ICR_DEL_MODE_INIT    (5 << 8)
 #define ICR_DEL_MODE_STARTUP (6 << 8)
-    
+
 #define ICR_DST_MODE_LOG      (1 << 11)
 #define ICR_SEND_PENDING      (1 << 12)
 #define ICR_LEVEL_ASSERT      (1 << 14)
 #define ICR_TRIG_MODE_LEVEL   (1 << 15)
-    
-    
-    
+
+
+
 #ifdef NAUT_CONFIG_XEON_PHI
 #define APIC_ID_SHIFT 16
 #define APIC_ICR2_DST_SHIFT 16
@@ -93,7 +91,7 @@ extern "C" {
 #define APIC_ICR2_DST_SHIFT 24
 #endif
 
-    
+
 #define APIC_REG_ID       0x20
 #define   APIC_GET_ID(x) (((x) >> 24) & 0xffu)
 #define APIC_REG_LVR      0x30
@@ -144,7 +142,7 @@ extern "C" {
 /* Extended LVT entries */
 #define APIC_REG_EXTLVT(n) (0x500 + 0x10*(n))
 
-/* X2APIC support 
+/* X2APIC support
      - This is an Intel thing
      - CPUID 0x1, ECX.21 tells you if X2APIC is supported
      - APIC_BASE_MSR.11 is APIC/XAPIC enable, .12 is X2APIC enable
@@ -152,7 +150,7 @@ extern "C" {
      - X2APIC regs are accessed via MSR
      - the MSR base is 0x800
      - Generally, an MMIO register at 0xA0 appears
-       at 0x800 + 0xA 
+       at 0x800 + 0xA
      - All 32 bits of ID are now the ID (not just 8 bits)
      - ICR is now a single 64 bit register at 0x30
      - DFR is not available/supported
@@ -180,11 +178,11 @@ extern "C" {
 #define APIC_GET_DEL_MODE(x) (((x) >> 8) & 0x7)
 #define APIC_LVT_VEC_MASK    0xffu
 #define APIC_LVT_DISABLED 0x10000
-    
+
 
 #define APIC_DFR_FLAT     0xfffffffful
 #define APIC_DFR_CLUSTER  0x0ffffffful
-    
+
 #ifdef NAUT_CONFIG_XEON_PHI
 #define APIC_LDR_MASK       (0xffu<<16)
 #else
@@ -246,7 +244,7 @@ struct apic_dev {
 };
 
 // included here for performance (all inlined)
-static inline void _apic_msr_write(uint32_t msr, 
+static inline void _apic_msr_write(uint32_t msr,
 				   uint64_t data)
 {
     uint32_t lo = data;
@@ -264,7 +262,7 @@ static inline uint64_t _apic_msr_read(uint32_t msr)
 static inline void
 apic_write (struct apic_dev * apic, uint_t reg, uint32_t val)
 {
-    if (apic->mode==APIC_X2APIC) { 
+    if (apic->mode==APIC_X2APIC) {
 	_apic_msr_write(X2APIC_MMIO_REG_OFFSET_TO_MSR(reg), (uint64_t)val);
     } else {
 	*((volatile uint32_t *)(apic->base_addr + reg)) = val;
@@ -274,7 +272,7 @@ apic_write (struct apic_dev * apic, uint_t reg, uint32_t val)
 static inline uint32_t
 apic_read (struct apic_dev * apic, uint_t reg)
 {
-    if (apic->mode==APIC_X2APIC) { 
+    if (apic->mode==APIC_X2APIC) {
 	return (uint32_t) _apic_msr_read(X2APIC_MMIO_REG_OFFSET_TO_MSR(reg));
     } else {
 	return *((volatile uint32_t *)(apic->base_addr + reg));
@@ -284,7 +282,7 @@ apic_read (struct apic_dev * apic, uint_t reg)
 static inline void
 apic_write64 (struct apic_dev * apic, uint_t reg, uint64_t val)
 {
-    if (apic->mode==APIC_X2APIC) { 
+    if (apic->mode==APIC_X2APIC) {
 	_apic_msr_write(X2APIC_MMIO_REG_OFFSET_TO_MSR(reg), val);
     } else {
 	void panic(const char *fmt, ...);
@@ -295,7 +293,7 @@ apic_write64 (struct apic_dev * apic, uint_t reg, uint64_t val)
 static inline uint32_t
 apic_read64 (struct apic_dev * apic, uint_t reg)
 {
-    if (apic->mode==APIC_X2APIC) { 
+    if (apic->mode==APIC_X2APIC) {
 	return _apic_msr_read(X2APIC_MMIO_REG_OFFSET_TO_MSR(reg));
     } else {
 	void panic(const char *fmt, ...);
@@ -323,17 +321,17 @@ struct naut_info;
 uint32_t apic_get_id(struct apic_dev * apic);
 void apic_do_eoi(void);
 
-static inline void 
-apic_ipi (struct apic_dev * apic, 
+static inline void
+apic_ipi (struct apic_dev * apic,
           uint_t remote_id,
-          uint_t vector) 
+          uint_t vector)
 {
     apic_write_icr(apic,
 		   remote_id,
 		   APIC_DEL_MODE_FIXED | vector);
 }
 
-static inline void 
+static inline void
 apic_bcast_ipi (struct apic_dev * apic, uint_t vector)
 {
     apic_write_icr(apic,
@@ -368,18 +366,18 @@ uint64_t apic_cycles_to_realtime(struct apic_dev *apic, uint64_t cycles);
 
 void     apic_set_oneshot_timer(struct apic_dev *apic, uint32_t ticks);
 
-// updating the timer 
-// also resets the "in_timer_interrupt flag so it should be done 
+// updating the timer
+// also resets the "in_timer_interrupt flag so it should be done
 // only once in interrupt context
 // the intent is that it is once of the last things the scheduler
 // invokes on any reschedule path
 typedef enum {UNCOND, IF_EARLIER, IF_LATER} nk_timer_condition_t;
-void     apic_update_oneshot_timer(struct apic_dev *apic,  uint32_t ticks, 
+void     apic_update_oneshot_timer(struct apic_dev *apic,  uint32_t ticks,
 				   nk_timer_condition_t cond);
-			       
 
 
-#ifdef __cplusplus 
+
+#ifdef __cplusplus
 }
 #endif
 

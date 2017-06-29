@@ -1,17 +1,17 @@
-/* 
+/*
  * This file is part of the Nautilus AeroKernel developed
- * by the Hobbes and V3VEE Projects with funding from the 
- * United States National  Science Foundation and the Department of Energy.  
+ * by the Hobbes and V3VEE Projects with funding from the
+ * United States National  Science Foundation and the Department of Energy.
  *
  * The V3VEE Project is a joint project between Northwestern University
  * and the University of New Mexico.  The Hobbes Project is a collaboration
- * led by Sandia National Laboratories that includes several national 
+ * led by Sandia National Laboratories that includes several national
  * laboratories and universities. You can find out more at:
  * http://www.v3vee.org  and
  * http://xtack.sandia.gov/hobbes
  *
  * Copyright (c) 2015, Kyle C. Hale <kh@u.northwestern.edu>
- * Copyright (c) 2015, The V3VEE Project  <http://www.v3vee.org> 
+ * Copyright (c) 2015, The V3VEE Project  <http://www.v3vee.org>
  *                     The Hobbes Project <http://xstack.sandia.gov/hobbes>
  * All rights reserved.
  *
@@ -47,14 +47,14 @@ bspin_unlock (volatile int * lock)
         __sync_lock_release(lock);
 }
 
-/* 
- * this is where cores will come in 
+/*
+ * this is where cores will come in
  * to arrive at a barrier. We're in interrupt
  * context here, but that's fine since we
  * wan't interrupts off in the wait anyhow
  */
 static void
-barrier_xcall_handler (void * arg) 
+barrier_xcall_handler (void * arg)
 {
     nk_core_barrier_arrive();
 }
@@ -63,7 +63,7 @@ barrier_xcall_handler (void * arg)
 /*
  * nk_barrier_init
  *
- * initialize a thread barrier. This 
+ * initialize a thread barrier. This
  * version is more or less a POSIX barrier
  *
  * @barrier: the barrier to initialize
@@ -72,8 +72,8 @@ barrier_xcall_handler (void * arg)
  * returns 0 on succes, -EINVAL on error
  *
  */
-int 
-nk_barrier_init (nk_barrier_t * barrier, uint32_t count) 
+int
+nk_barrier_init (nk_barrier_t * barrier, uint32_t count)
 {
     int ret = 0;
     memset(barrier, 0, sizeof(nk_barrier_t));
@@ -103,7 +103,7 @@ nk_barrier_init (nk_barrier_t * barrier, uint32_t count)
  * returns 0 on succes, -EINVAL on error
  *
  */
-int 
+int
 nk_barrier_destroy (nk_barrier_t * barrier)
 {
     int res;
@@ -115,7 +115,7 @@ nk_barrier_destroy (nk_barrier_t * barrier)
     DEBUG_PRINT("Destroying barrier (%p)\n", (void*)barrier);
 
     bspin_lock(&barrier->lock);
-    
+
     if (likely(barrier->remaining == barrier->init_count)) {
         res = 0;
     } else {
@@ -138,12 +138,12 @@ nk_barrier_destroy (nk_barrier_t * barrier)
  *
  * returns 0 to all threads but the last. The last thread
  * out of the barrier will return NK_BARRIER_LAST. This
- * is useful for having one thread in charge of cleaning 
+ * is useful for having one thread in charge of cleaning
  * the barrier up. Again, similar to POSIX
  *
  */
-int 
-nk_barrier_wait (nk_barrier_t * barrier) 
+int
+nk_barrier_wait (nk_barrier_t * barrier)
 {
     int res = 0;
 
@@ -160,112 +160,20 @@ nk_barrier_wait (nk_barrier_t * barrier)
     }
 
     DEBUG_PRINT("Thread (%p) exiting barrier (%p)\n", (void*)get_cur_thread(), (void*)barrier);
-    
+
     register unsigned init_count = barrier->init_count;
 
     if (atomic_inc_val(barrier->remaining) == init_count) {
         bspin_unlock(&barrier->lock);
     }
-    
-    return res;
-}
-
-//Parallel thread concept------------------------------------------------
-int 
-group_barrier_init (nk_barrier_t * barrier) 
-{
-    DEBUG_PRINT("Initializing group barrier, group barrier at %p, count=%u\n", (void*)barrier, 0);
-
-    memset(barrier, 0, sizeof(nk_barrier_t));
-    barrier->lock = 0;
-    barrier->notify = 1;
-    barrier->init_count = 0;
-    barrier->remaining  = 0;
-
-    return 0;
-}
-
-int 
-group_barrier_wait (nk_barrier_t * barrier) 
-{
-    int res = 0;
-
-    bspin_lock(&barrier->lock);
-    DEBUG_PRINT("Thread (%p) entering barrier (%p)\n", (void*)get_cur_thread(), (void*)barrier);
-    
-    if (--barrier->remaining == 0) {
-        res = NK_BARRIER_LAST;
-        barrier->remaining = barrier->init_count;
-        atomic_cmpswap(barrier->notify, 0, 1); //last thread mark the barrier not in use
-        bspin_unlock(&barrier->lock);
-    } else {
-        atomic_cmpswap(barrier->notify, 1, 0); //first thread mark the barrie in use
-        DEBUG_PRINT("remaining count = %d\n", barrier->remaining);
-        bspin_unlock(&barrier->lock);
-        BARRIER_WHILE(barrier->notify != 1);
-    }
-
-    DEBUG_PRINT("Thread (%p) exiting barrier (%p)\n", (void*)get_cur_thread(), (void*)barrier);
-        
-    return res;
-}
-
-int
-group_barrier_join (nk_barrier_t * barrier)
-{
-    int res = 0;
-
-    bspin_lock(&barrier->lock);
-    DEBUG_PRINT("Thread (%p) joining barrier \n", (void*)get_cur_thread());
-
-    if (barrier->notify) {
-        //Not in use
-        barrier->init_count += 1;
-        barrier->remaining += 1;
-    } else {
-        //In use
-        barrier->init_count += 1;
-    }
-
-    DEBUG_PRINT("Thread (%p) joining barrier done, barrier size = %d \n", (void*)get_cur_thread(), barrier->init_count);
-    bspin_unlock(&barrier->lock);
-    return res;
-}
-
-int
-group_barrier_leave (nk_barrier_t * barrier)
-{
-    int res = 0;
-
-    DEBUG_PRINT("Thread (%p) leaving barrier (%p)\n", (void*)get_cur_thread(), (void*)barrier);
-
-    bspin_lock(&barrier->lock);
-
-
-    if (barrier->notify) {
-        //Not in use
-        barrier->init_count -= 1;
-    } else {
-        //In use
-        barrier->init_count -= 1;
-
-        if (--barrier->remaining == 0) {
-            //I'm the last one
-            res = NK_BARRIER_LAST;
-            barrier->remaining = barrier->init_count;
-            atomic_cmpswap(barrier->notify, 0, 1);
-        }
-    }
-
-    bspin_unlock(&barrier->lock);
 
     return res;
 }
-//Parallel thread concept------------------------------------------------
 
-/* 
- * The below functions are for CORES. *NOT* 
- * threads. The behavior is undefined if 
+
+/*
+ * The below functions are for CORES. *NOT*
+ * threads. The behavior is undefined if
  * You use these on two threads running on the same core!
  * DO NOT DO IT
  *
@@ -275,22 +183,22 @@ group_barrier_leave (nk_barrier_t * barrier)
 /*
  * nk_core_barrier_raise
  *
- * Raises a barrier for all other 
+ * Raises a barrier for all other
  * cores in the system. The model here is the core calling
  * this function will *not* wait at the barrier (unless it's
- * already been rasised) and is instead expected to 
- * wait() on the other cores to arrive, do some things, 
+ * already been rasised) and is instead expected to
+ * wait() on the other cores to arrive, do some things,
  * then lower() the barrier. This core (or some core not
  * waiting at the barrier) must call barier_lower(). The
  * cores will *not* automatically be released when they all
- * arrive at the barrier. This is the main difference 
+ * arrive at the barrier. This is the main difference
  * from the thread barrier above.
  *
  * returns 0 on success, -EINVAL on error
  *
  */
-int 
-nk_core_barrier_raise (void) 
+int
+nk_core_barrier_raise (void)
 {
     nk_barrier_t * barrier = per_cpu_get(system)->core_barrier;
     uint8_t iownit = 0;
@@ -378,7 +286,7 @@ nk_core_barrier_lower (void)
 }
 
 
-/* 
+/*
  * nk_core_barrier_wait
  *
  * wait for all other cores to arrive
@@ -410,15 +318,15 @@ nk_core_barrier_wait (void)
  * nk_core_barrier_arrive
  *
  *
- * waits at the core barrier. similar to nk_barrier_wait 
- * but we don't spin, we yield. We will only 
+ * waits at the core barrier. similar to nk_barrier_wait
+ * but we don't spin, we yield. We will only
  * be released when an external agent notifies all
  * the cores
  *
  * returns 0 on success, -EINVAL on error
  *
  */
-int 
+int
 nk_core_barrier_arrive (void)
 {
     nk_barrier_t * barrier = per_cpu_get(system)->core_barrier;
@@ -461,9 +369,9 @@ barrier_func2 (void * in, void ** out)
 }
 
 
-/* 
+/*
  *
- * NOTE: this test assumes that there are at least 3 CPUs on 
+ * NOTE: this test assumes that there are at least 3 CPUs on
  * the machine
  *
  */
@@ -486,4 +394,3 @@ void nk_barrier_test(void)
     nk_barrier_destroy(b);
     free(b);
 }
-

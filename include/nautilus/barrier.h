@@ -1,17 +1,17 @@
-/* 
+/*
  * This file is part of the Nautilus AeroKernel developed
- * by the Hobbes and V3VEE Projects with funding from the 
- * United States National  Science Foundation and the Department of Energy.  
+ * by the Hobbes and V3VEE Projects with funding from the
+ * United States National  Science Foundation and the Department of Energy.
  *
  * The V3VEE Project is a joint project between Northwestern University
  * and the University of New Mexico.  The Hobbes Project is a collaboration
- * led by Sandia National Laboratories that includes several national 
+ * led by Sandia National Laboratories that includes several national
  * laboratories and universities. You can find out more at:
  * http://www.v3vee.org  and
  * http://xtack.sandia.gov/hobbes
  *
  * Copyright (c) 2015, Kyle C. Hale <kh@u.northwestern.edu>
- * Copyright (c) 2015, The V3VEE Project  <http://www.v3vee.org> 
+ * Copyright (c) 2015, The V3VEE Project  <http://www.v3vee.org>
  *                     The Hobbes Project <http://xstack.sandia.gov/hobbes>
  * All rights reserved.
  *
@@ -35,7 +35,7 @@ typedef struct nk_barrier nk_barrier_t;
 
 struct nk_barrier {
     spinlock_t lock; /* SLOW */
-    
+
     unsigned remaining;
     unsigned init_count;
 
@@ -51,16 +51,6 @@ int nk_barrier_init (nk_barrier_t * barrier, uint32_t count);
 int nk_barrier_destroy (nk_barrier_t * barrier);
 int nk_barrier_wait (nk_barrier_t * barrier);
 void nk_barrier_test(void);
-
-//Parallel thread concept------------------------------------------------
-int group_barrier_init (nk_barrier_t * barrier);
-
-int group_barrier_wait (nk_barrier_t * barrier);
-
-int group_barrier_join (nk_barrier_t * barrier);
-
-int group_barrier_leave (nk_barrier_t * barrier);
-//Parallel thread concept------------------------------------------------
 
 /* CORE barriers */
 int nk_core_barrier_raise(void);
