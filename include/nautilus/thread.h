@@ -81,10 +81,10 @@ nk_thread_start (nk_thread_fun_t fun,
                  nk_thread_id_t * tid,
                  int bound_cpu); // -1 => not bound
 
-// fork the current thread 
+// fork the current thread
 //   - parent is returned the tid of child
 //   - child is returned zero
-//   - child runs until it returns from the 
+//   - child runs until it returns from the
 //     current function, which returns into
 //     the thread cleanup logic instead of to
 //     the caller
@@ -234,7 +234,7 @@ void nk_thread_queue_destroy(nk_thread_queue_t * q);
 void nk_thread_queue_sleep(nk_thread_queue_t * q);
 void nk_thread_queue_sleep_extended(nk_thread_queue_t * q, int (*cond_check)(void *state), void *state);
 //Parallel thread project
-int nk_thread_queue_sleep_count(nk_thread_queue_t * q, int* count);
+void nk_thread_queue_sleep_count(nk_thread_queue_t *wq, int *count);
 //Parallel thread project
 void nk_thread_queue_wake_one(nk_thread_queue_t * q);
 void nk_thread_queue_wake_all(nk_thread_queue_t * q);

@@ -797,7 +797,7 @@ group_change_constraint(struct nk_thread_group *group, int tid) {
     }
     //go to sleep
     //GROUP("t%d go to sleep\n", tid);
-    // nk_thread_queue_sleep_count(group->change_cons_wait_q, &group->sleep_count);
+    nk_thread_queue_sleep_count(group->change_cons_wait_q, &group->sleep_count);
   }
 
   int res = 0;
@@ -1515,37 +1515,71 @@ void nk_thread_queue_sleep(nk_thread_queue_t *wq)
     return nk_thread_queue_sleep_extended(wq,0,0);
 }
 
-
 //Parallel thread project
 /*
- * nk_thread_queue_sleep_count
+ * nk_thread_queue_sleep_extended
  *
- * Goes to sleep on the given queue and inc the count
+ * Goes to sleep on the given queue, checking a condition as it does so
  *
  * @q: the thread queue to sleep on
+ * @cond_check - condition to check (return nonzero if true) atomically with queuing
+ * @state - state for cond_check
  *
  */
-// int
-// nk_thread_queue_sleep_count (nk_thread_queue_t * q, int *count)
-// {
-//     nk_thread_t * t = get_cur_thread();
 
-//     THREAD_DEBUG("SLEEP ON WAIT QUEUE\n");
+void nk_thread_queue_sleep_count(nk_thread_queue_t *wq, int *count)
+{
+    nk_thread_t * t = get_cur_thread();
+    uint8_t flags;
 
-//     enqueue_thread_on_waitq(t, q);
+    THREAD_DEBUG("Thread %lu (%s) going to sleep on queue %p\n", t->tid, t->name, (void*)wq);
 
-//     atomic_inc(*count);
+    // grab control over the the wait queue
+    flags = spin_lock_irq_save(&wq->lock);
 
-//     GROUP("sleep count = %d\n", *count);
+    // at this point, any waker is either about to start on the
+    // queue or has just finished  It's possible that
+    // we have raced with with it and it has just finished
+    // we therefore need to double check the condition now
 
-//     __asm__ __volatile__ ("" : : : "memory");
+   // the condition still is not signalled
+   // or the condition is not important, therefore
+   // while still holding the lock, put ourselves on the
+   // wait queue
 
-//     nk_sched_sleep();
+   THREAD_DEBUG("Thread %lu (%s) is queueing itself on queue %p\n", t->tid, t->name, (void*)wq);
 
-//     THREAD_DEBUG("WAKE UP FROM WAIT QUEUE\n");
+   t->status = NK_THR_WAITING;
+   nk_enqueue_entry(wq, &(t->wait_node));
+   atomic_inc(*count);
+   // force arch and compiler to do above writes
+   __asm__ __volatile__ ("mfence" : : : "memory");
 
-//     return 0;
-// }
+   // disallow the scheduler from context switching this core
+   // until we (in particular nk_sched_sleep()) decide otherwise
+   preempt_disable();
+
+   // reenable local interrupts - the scheduler is still blocked
+   // because we have preemption off
+   // any waker at this point will still get stuck on the wait queue lock
+   // it will be a short spin, hopefully
+   irq_enable_restore(flags);
+
+   THREAD_DEBUG("Thread %lu (%s) is having the scheduler put itself to sleep on queue %p\n", t->tid, t->name, (void*)wq);
+
+   // We now get the scheduler to do a context switch
+   // and just after it completes its scheduling pass,
+   // it will release the wait queue lock for us
+   // it will also reenable preemption on its context switch out
+   nk_sched_sleep(&wq->lock);
+
+   THREAD_DEBUG("Thread %lu (%s) has slow wakeup on queue %p\n", t->tid, t->name, (void*)wq);
+
+   // note no spin_unlock here since nk_sched_sleep will have
+   // done it for us
+
+   return;
+}
 //Parallel thread project
 
 /*
