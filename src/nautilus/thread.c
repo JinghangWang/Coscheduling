@@ -885,9 +885,7 @@ static void group_tester(void *in, void **out){
   nk_thread_group_leave(dst);
   nk_thread_group_delete(dst);
 
-  while(1){
-
-  }
+  //while(1) {}
   /*
   char *msg_0;
   char *msg_1;
