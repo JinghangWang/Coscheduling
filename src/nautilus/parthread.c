@@ -84,13 +84,27 @@ typedef struct parallel_thread_group_list
 
 static parallel_thread_group_list_t parallel_thread_group_list; //Malloc at init
 
-static int        group_list_enqueue(nk_thread_group* g);
+
+
+//helper functions
+
+//group list
+static int              group_list_enqueue(nk_thread_group* g);
 static nk_thread_group* group_list_remove(nk_thread_group* g);
-// static void       rt_list_map(rt_list *l, void (*func)(rt_thread *t, void *priv), void *priv);
-static int        group_list_empty(void);
-static group_node* group_node_init(nk_thread_group *g);
-static void group_node_deinit(group_node *n);
-static uint64_t get_next_groupid(void);
+static int              group_list_empty(void);
+static group_node*      group_node_init(nk_thread_group *g);
+static void             group_node_deinit(group_node *n);
+static uint64_t         get_next_groupid(void);
+
+//group barrier
+static int              group_barrier_init(nk_barrier_t * barrier);
+static int              group_barrier_join(nk_barrier_t * barrier);
+static int              group_barrier_leave(nk_barrier_t * barrier);
+static int              group_barrier_wait(nk_barrier_t * barrier);
+
+
+//sleep with a counter
+static void             nk_thread_queue_sleep_count(nk_thread_queue_t *wq, int *count);
 
 
 int nk_thread_group_init(void) {

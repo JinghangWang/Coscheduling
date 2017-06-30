@@ -1,3 +1,6 @@
+*.d
+*.DS_Store
+*.out
 *.patch
 *.o
 *.cmd
