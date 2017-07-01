@@ -180,6 +180,10 @@ static int serial_do_write(void *state, uint8_t *src)
 
     int rc = -1;
     int flags;
+
+    serial_putchar(*src);
+
+    return 1;
  
     flags = spin_lock_irq_save(&s->output_lock);
 
@@ -690,7 +694,7 @@ static void serial_putchar_early (uchar_t c)
 
 void serial_putchar(uchar_t c)
 {
-    if (early_dev) { 
+    if (0 && early_dev) { //patch, forch to use putchar_early
 	if (c=='\n') { 
 	    serial_do_write(early_dev,"\r");
 	}
