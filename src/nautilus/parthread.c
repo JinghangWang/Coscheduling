@@ -84,10 +84,7 @@ typedef struct parallel_thread_group_list
     group_node *tail;
 } parallel_thread_group_list_t;
 
-
 static parallel_thread_group_list_t parallel_thread_group_list; //Malloc at init
-
-
 
 //helper functions
 
@@ -105,7 +102,6 @@ static int              group_barrier_join(nk_barrier_t * barrier);
 static int              group_barrier_leave(nk_barrier_t * barrier);
 static int              group_barrier_wait(nk_barrier_t * barrier);
 
-
 //sleep with a counter
 static void             nk_thread_queue_sleep_count(nk_thread_queue_t *wq, int *count);
 
@@ -114,7 +110,7 @@ static void             group_dur_dump(nk_thread_group* g);
 
 static void group_dur_dump(nk_thread_group* group) {
   for(int i = 0; i < TESTER_NUM; i++) {
-    nk_vc_printf("For tester %d:\njoin dur = %d\nelection dur = %d\nchange_cons dur = %d\nbarrier dur = %d\n",
+    nk_vc_printf("--For tester %d:\njoin dur = %d\nelection dur = %d\nchange_cons dur = %d\nbarrier dur = %d\n\n",
                   i, group->dur_dump[i][0], group->dur_dump[i][1], group->dur_dump[i][2], group->dur_dump[i][3]);
   }
 }
@@ -575,15 +571,11 @@ static void group_tester(void *in, void **out){
       return;
   }
 
-  start = nk_sched_get_realtime();
+  start = rdtsc();
   int tid = nk_thread_group_join(dst, dur);
-  end = nk_sched_get_realtime();
+  end = rdtsc();
 
   dur[0] = end - start;
-
-  if(tid == 0) {
-    GROUP("dur[0] = %d, %d\n", dur[0], end - start);
-  }
 
   if (tid < 0) {
       GROUP("group join failed\n");
@@ -608,49 +600,42 @@ static void group_tester(void *in, void **out){
     GROUP("All joined!\n");
   }
 
-  start = nk_sched_get_realtime();
+  start = rdtsc();
   int leader = nk_thread_group_election(dst, tid);
-  end = nk_sched_get_realtime();
+  end = rdtsc();
   dur[1] = end - start;
 
-  if(tid == 0) {
-    GROUP("dur[1] = %d, %d\n", dur[1], end - start);
-  }
-
-  //GROUP("t%d says leader is t%d\n", tid, leader);
   if (leader == tid) {
-    //GROUP("t%d set constraints\n", tid);
-    //group_set_constraint(dst);
-    dst->group_constraints->type = PERIODIC;
+    /*
+    dst->group_constraints->type = APERIODIC;
     dst->group_constraints->interrupt_priority_class = 0x1;
     dst->group_constraints->periodic.phase = 0;
     dst->group_constraints->periodic.period = 10000000000;
     dst->group_constraints->periodic.slice = 100000000;
+    */
+    dst->group_constraints->type = APERIODIC;
+    dst->group_constraints->interrupt_priority_class = 0x1;
   }
 
-  start = nk_sched_get_realtime();
+  start = rdtsc();
   if(group_change_constraint(dst, tid)) {
-    end = nk_sched_get_realtime();
+    end = rdtsc();
     GROUP("t%d change constraint failed\n", tid);
   } else {
-    end = nk_sched_get_realtime();
+    end = rdtsc();
     //GROUP("t%d change constraint succeeded#\n", tid);
     GROUP("t%d #\n", tid);
   }
 
   dur[2] = end - start;
 
-  if(tid == 0) {
-    GROUP("dur[2] = %d, %d\n", dur[2], end - start);
-  }
-
   //barrier test
   int ret;
   #define NUM_LOOP    1
   for (i = 0; i< NUM_LOOP; ++i){
-      start = nk_sched_get_realtime();
+      start = rdtsc();
       ret = nk_thread_group_barrier(dst);
-      end = nk_sched_get_realtime();
+      end = rdtsc();
       if (ret){
           //GROUP("last member quits\n");
       }
@@ -658,26 +643,19 @@ static void group_tester(void *in, void **out){
 
   dur[3] = end - start;
 
-  if(tid == 0) {
-    GROUP("dur[3] = %d, %d\n", dur[3], end - start);
-  }
-
-  //GROUP("t%d is here\n", tid);
-
-  //nk_thread_group_barrier(dst);
+  nk_thread_group_barrier(dst);
   if(tid == 0) {
     udelay(10000);
     group_dur_dump(dst);
   }
 
-  while(1) {
-
-  }
-  //nk_thread_group_barrier(dst);
+  nk_thread_group_barrier(dst);
 
   nk_thread_group_leave(dst);
 
   nk_thread_group_delete(dst);
+
+  return;
 
   /*
   char *msg_0;
@@ -706,17 +684,17 @@ static void group_tester(void *in, void **out){
 }
 
 
-static int launch_tester(char * group_name) {
+static int launch_tester(char * group_name, int cpuid) {
     nk_thread_id_t tid;
 
-    if (nk_thread_start(group_tester, (void*)group_name , NULL, 1, PAGE_SIZE_4KB, &tid, -1)) {
+    if (nk_thread_start(group_tester, (void*)group_name , NULL, 1, PAGE_SIZE_4KB, &tid, cpuid)) {
         return -1;
     } else {
         return 0;
     }
 }
 
-int group_test(int num_members){
+int group_test(){
     nk_thread_group_init();
     char group_name[20];
     sprintf(group_name, "helloworld!");
@@ -735,8 +713,8 @@ int group_test(int num_members){
     // launch a few aperiodic threads (testers), i.e. regular threads
     // each join the group
     int i;
-    for (i = 0; i < num_members; ++i){
-        if (launch_tester(group_name)){
+    for (i = 0; i < TESTER_NUM; ++i){
+        if (launch_tester(group_name, i + 1)){
             GROUP("starting tester failed\n");
         }
     }

@@ -825,10 +825,10 @@ static int handle_cmd(char *buf, int n)
       return 0;
   }
 //Parallel thread concept------------------------------------------------
-  if (!strncasecmp(buf,"group_test",9)) {
+  if (!strncasecmp(buf,"group_test",10)) {
     nk_vc_printf("Starting group test\n");
-    extern int group_test(int num_members);
-    group_test(5);
+    extern int group_test();
+    group_test();
     return 0;
   }
 //Parallel thread concept------------------------------------------------
