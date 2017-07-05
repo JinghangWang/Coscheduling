@@ -66,7 +66,7 @@
 
 
 /* This state supports early output */
-
+/* the lock is reused for late output to serialize lines / chars */
 static spinlock_t serial_lock; /* for SMP */
 static uint8_t serial_device_ready = 0;
 static uint16_t serial_io_addr = 0;
@@ -201,6 +201,12 @@ static int serial_do_write(void *state, uint8_t *src)
     spin_unlock_irq_restore(&s->output_lock, flags);
     return rc;
 }
+
+static void serial_do_write_wait(void *state, uint8_t *src)
+{
+    while (serial_do_write(state,src)==0) {}
+}
+
 
 static struct nk_char_dev_int chardevops = {
     .get_characteristics = serial_do_get_characteristics,
@@ -697,16 +703,19 @@ static void serial_putchar_early (uchar_t c)
 
 void serial_putchar(uchar_t c)
 {
-  if (0 && early_dev) { // patch
-  // if (early_dev){
-  	if (c=='\n') { 
-  	    serial_do_write(early_dev,"\r");
-  	}
-  	serial_do_write(early_dev,&c);
-  } else {
-  	serial_putchar_early(c);
-  }
-	
+
+    if (early_dev) {
+      int flags = spin_lock_irq_save(&serial_lock);
+      if (c=='\n') { 
+         serial_do_write_wait(early_dev,"\r");
+      }
+
+      serial_do_write_wait(early_dev,&c);
+      spin_unlock_irq_restore(&serial_lock,flags);
+    } else {
+      serial_putchar_early(c);
+    }
+
 }
 
 
@@ -714,11 +723,25 @@ void serial_putchar(uchar_t c)
 void 
 serial_write (const char *buf) 
 {
-  while (*buf) {
-      serial_putchar(*buf);
-      ++buf;
-  }
+    if (early_dev) {
+	char c;
+	int flags = spin_lock_irq_save(&serial_lock);
+	while ((c=*buf)) { 
+	    if (c=='\n') { 
+		serial_do_write_wait(early_dev,"\r");
+	    }
+	    serial_do_write_wait(early_dev,&c);
+	    buf++;
+	}
+	spin_unlock_irq_restore(&serial_lock,flags);
+    } else {
+	while (*buf) {
+	    serial_putchar(*buf);
+	    ++buf;
+	}
+    }
 }
+
 
 void 
 serial_puts( const char *buf)
