@@ -13,7 +13,7 @@ struct nk_thread_group *nk_thread_group_create(char *name);
 struct nk_thread_group *nk_thread_group_find(char *name);
 
 // current thread joins a group
-int                     nk_thread_group_join(struct nk_thread_group *group);
+int                     nk_thread_group_join(struct nk_thread_group *group, uint64_t* dur);
 
 // current thread leaves a group
 int                     nk_thread_group_leave(struct nk_thread_group *group);

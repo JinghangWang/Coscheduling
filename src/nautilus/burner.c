@@ -8,14 +8,14 @@ static void burner(void *in, void **out)
 
     nk_thread_name(get_cur_thread(),a->name);
 
-    if (nk_bind_vc(get_cur_thread(), a->vc)) { 
+    if (nk_bind_vc(get_cur_thread(), a->vc)) {
 	ERROR_PRINT("Cannot bind virtual console for burner %s\n",a->name);
 	return;
     }
 
     //nk_vc_printf("%s (tid %llu) attempting to promote itself\n", a->name, get_cur_thread()->tid);
 #if 1
-    if (nk_sched_thread_change_constraints(&a->constraints)) { 
+    if (nk_sched_thread_change_constraints(&a->constraints)) {
 	nk_vc_printf("%s (tid %llu) rejected - exiting\n", a->name, get_cur_thread()->tid);
   free(in);
 	return;
@@ -30,13 +30,13 @@ static void burner(void *in, void **out)
     	dur = end - start;
       //total += dur;
     	//nk_vc_printf("%s (tid %llu) start=%llu, end=%llu left=%llu\n",a->name,get_cur_thread()->tid, start, end,a->size_ns);
-    	if (dur >= a->size_ns) { 
+    	if (dur >= a->size_ns) {
     	    //nk_vc_printf("%s (tid %llu) done - exiting, total runtime = %llu\n",a->name,get_cur_thread()->tid, total);
 
           struct rt_stats* stats = malloc(sizeof(struct rt_stats));
           nk_sched_rt_stats(stats);
     	    nk_vc_printf("%s (tid %llu) exiting period %llu ns, slice %llu ns ", a->name, get_cur_thread()->tid, stats->period, stats->slice);
-          nk_vc_printf("arrival count %llu, resched count %llu, switchin count %llu, miss count %llu, total miss time %llu ns\n", 
+          nk_vc_printf("arrival count %llu, resched count %llu, switchin count %llu, miss count %llu, total miss time %llu ns\n",
                       stats->arrival_num, stats->resched_num, stats->switchin_num, stats->miss_num, stats->miss_time);
           free(stats);
           free(in);
@@ -56,10 +56,10 @@ int launch_aperiodic_burner(char *name, uint64_t size_ns, uint32_t tpr, uint64_t
     struct burner_args *a;
 
     a = malloc(sizeof(struct burner_args));
-    if (!a) { 
+    if (!a) {
 	return -1;
     }
-    
+
     strncpy(a->name,name,MAX_CMD); a->name[MAX_CMD-1]=0;
     a->vc = get_cur_thread()->vc;
     a->size_ns = size_ns;
@@ -67,7 +67,7 @@ int launch_aperiodic_burner(char *name, uint64_t size_ns, uint32_t tpr, uint64_t
     a->constraints.interrupt_priority_class = (uint8_t) tpr;
     a->constraints.aperiodic.priority=priority;
 
-    if (nk_thread_start(burner, (void*)a , NULL, 1, PAGE_SIZE_4KB, &tid, -1)) { 
+    if (nk_thread_start(burner, (void*)a , NULL, 1, PAGE_SIZE_4KB, &tid, -1)) {
 	free(a);
 	return -1;
     } else {
@@ -81,10 +81,10 @@ int launch_sporadic_burner(char *name, uint64_t size_ns, uint32_t tpr, uint64_t 
     struct burner_args *a;
 
     a = malloc(sizeof(struct burner_args));
-    if (!a) { 
+    if (!a) {
 	return -1;
     }
-    
+
     strncpy(a->name,name,MAX_CMD); a->name[MAX_CMD-1]=0;
     a->vc = get_cur_thread()->vc;
     a->size_ns = size_ns;
@@ -109,10 +109,10 @@ int launch_periodic_burner(char *name, uint64_t size_ns, uint32_t tpr, uint64_t 
     struct burner_args *a;
 
     a = malloc(sizeof(struct burner_args));
-    if (!a) { 
+    if (!a) {
 	return -1;
     }
-    
+
     strncpy(a->name,name,MAX_CMD); a->name[MAX_CMD-1]=0;
     a->vc = get_cur_thread()->vc;
     a->size_ns = size_ns;
