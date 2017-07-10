@@ -110,8 +110,8 @@ static void             group_dur_dump(nk_thread_group* g);
 
 static void group_dur_dump(nk_thread_group* group) {
   for(int i = 0; i < TESTER_NUM; i++) {
-    nk_vc_printf("--For tester %d:\njoin dur = %d\nelection dur = %d\nchange_cons dur = %d\nbarrier dur = %d\n\n",
-                  i, group->dur_dump[i][0], group->dur_dump[i][1], group->dur_dump[i][2], group->dur_dump[i][3]);
+    nk_vc_printf("--For tester %d:\njoin dur = %d\nelection dur = %d\ngroup_change_cons dur = %d\nchange_cons dur = %d\nbarrier dur = %d\n\n",
+                  i, group->dur_dump[i][0], group->dur_dump[i][1], group->dur_dump[i][2], group->dur_dump[i][3], group->dur_dump[i][4]);
   }
 }
 
@@ -482,6 +482,41 @@ group_set_constraint(struct nk_thread_group *group, struct nk_sched_constraints 
   return 0;
 }
 
+void change_cons_profile() {
+  uint64_t start, end;
+  int integer;
+
+  start = rdtsc();
+  uint64_t test = rdtsc();
+  end = rdtsc();
+  GROUP("Overhead = %d\n", end - start);
+
+  start = rdtsc();
+  struct nk_thread *t = get_cur_thread();
+  end = rdtsc();
+  GROUP("Overhead = %d\n", end - start);
+
+  start = rdtsc();
+  struct nk_sched_constraints *old = get_rt_constraint(t); //needed for retry, implement retry later
+  end = rdtsc();
+  GROUP("Overhead = %d\n", end - start);
+
+  start = rdtsc();
+  atomic_cmpswap(integer, 0, 1);
+  end = rdtsc();
+  GROUP("Overhead = %d\n", end - start);
+
+  start = rdtsc();
+  integer = atomic_inc_val(integer);
+  end = rdtsc();
+  GROUP("Overhead = %d\n", end - start);
+
+  start = rdtsc();
+  integer = atomic_dec_val(integer);
+  end = rdtsc();
+  GROUP("Overhead = %d\n", end - start);
+}
+
 int
 group_change_constraint(struct nk_thread_group *group, int tid) {
   nk_thread_group_barrier(group);
@@ -497,39 +532,26 @@ group_change_constraint(struct nk_thread_group *group, int tid) {
   if(atomic_inc_val(group->changing_count) == group->group_size) {
     //check if there is failure, if so, don't do local change constraint
     if (group->changing_fail == 0) {
-      //GROUP("t%d change cons\n", tid);
       if (nk_sched_thread_change_constraints(group->group_constraints) != 0) {
         //if fail, set the failure flag
         atomic_cmpswap(group->changing_fail, 0, 1);
       }
     }
-    int i = 0;
-    //wait until all others are in the queue, then wake them up
-    //GROUP("t%d go to wake up\n", tid);
-    while(atomic_add(group->sleep_count, 0) != (group->group_size - 1)) {
-      i += 1;
-      if(i == 0xffffff) {
-        GROUP("sleep_count = %d\n", atomic_add(group->sleep_count, 0));
-        i = 0;
-      }
-    }
-    nk_thread_queue_wake_all(group->change_cons_wait_q);
+    nk_thread_group_barrier(group);
   } else {
     //check if there is failure, if so, don't do local change constraint
     if (group->changing_fail == 0) {
-      //GROUP("t%d change cons\n", tid);
       if (nk_sched_thread_change_constraints(group->group_constraints) != 0) {
         //if fail, set the failure flag
         atomic_cmpswap(group->changing_fail, 0, 1);
       }
     }
-    //go to sleep
-    //GROUP("t%d go to sleep\n", tid);
-    nk_thread_queue_sleep_count(group->change_cons_wait_q, &group->sleep_count);
+
+    nk_thread_group_barrier(group);
   }
 
   int res = 0;
-  //wake up, check if there is failure, of so roll back
+  //check if there is failure, of so roll back
   if (group->changing_fail) {
     if(group_roll_back_constraint() != 0) {
       panic("roll back should not fail!\n");
@@ -562,7 +584,7 @@ group_roll_back_constraint() {
 //testing
 static void group_tester(void *in, void **out){
   uint64_t start, end;
-  uint64_t dur[4] = {0, 0, 0, 0};
+  uint64_t dur[5] = {0, 0, 0, 0, 0};
   // GROUP("group name in tester is : %s\n", (char*)in);
   nk_thread_group *dst = nk_thread_group_find((char*) in);
   if (!dst){
@@ -628,10 +650,17 @@ static void group_tester(void *in, void **out){
 
   dur[2] = end - start;
 
+  //change_constraint measure
+  start = rdtsc();
+  nk_sched_thread_change_constraints(dst->group_constraints);
+  end = rdtsc();
+
+  dur[3] = end - start;
+
   //barrier test
   int ret;
   static int succ_count = 0;
-  #define NUM_LOOP 1000
+  #define NUM_LOOP 1
   for (i = 0; i< NUM_LOOP; ++i){
       start = rdtsc();
       ret = nk_thread_group_barrier(dst);
@@ -648,7 +677,7 @@ static void group_tester(void *in, void **out){
     GROUP("succ_count = %d\n", succ_count);
   }
 
-  dur[3] = end - start;
+  dur[4] = end - start;
 
   nk_thread_group_barrier(dst);
   if(tid == 0) {
@@ -720,7 +749,7 @@ int group_test(){
     // each join the group
     int i;
     for (i = 0; i < TESTER_NUM; ++i){
-        if (launch_tester(group_name, i)){
+        if (launch_tester(group_name, i + 1)){
             GROUP("starting tester failed\n");
         }
     }

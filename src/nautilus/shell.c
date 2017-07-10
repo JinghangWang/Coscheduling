@@ -831,6 +831,13 @@ static int handle_cmd(char *buf, int n)
     group_test();
     return 0;
   }
+
+  if (!strncasecmp(buf,"change_profile",14)) {
+    nk_vc_printf("change_cons_profile test\n");
+    extern void change_cons_profile();
+    change_cons_profile();
+    return 0;
+  }
 //Parallel thread concept------------------------------------------------
 
   if (sscanf(buf,"burn a %s %llu %u %llu", name, &size_ns, &tpr, &priority)==4) {
