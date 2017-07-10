@@ -826,7 +826,7 @@ static int handle_cmd(char *buf, int n)
   }
 //Parallel thread concept------------------------------------------------
   if (!strncasecmp(buf,"group_test",10)) {
-    nk_vc_printf("Starting group test\n");
+    //nk_vc_printf("Starting group test\n");
     extern int group_test();
     group_test();
     return 0;

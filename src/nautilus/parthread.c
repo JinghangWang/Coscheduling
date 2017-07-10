@@ -19,7 +19,7 @@
 // List implementation for use in scheduler
 // Avoids changing thread structures
 //
-#define TESTER_NUM 5
+#define TESTER_NUM 2
 
 #if SANITY_CHECKS
 #define PAD 0
@@ -30,7 +30,11 @@
 #define FREE(x) free(x)
 #endif // sanity checks
 
+#ifdef NAUT_CONFIG_DEBUG_GROUP
 #define GROUP(fmt, args...)     nk_vc_printf_wrap("CPU %d: " fmt, my_cpu_id(), ##args)
+#else
+#define GROUP(fmt, args...)
+#endif
 
 #define MAX_CPU_NUM     100
 
@@ -313,10 +317,10 @@ nk_thread_group_find(char *name){
     parallel_thread_group_list_t * l = &parallel_thread_group_list;;
 
     spin_lock(&l->group_list_lock);
-        // GROUP("In group_find\n");
+        GROUP("In group_find\n");
     group_node *n = l->head;
     while (n != NULL) {
-            //GROUP("%s\n", n->group->group_name);
+            GROUP("%s\n", n->group->group_name);
         if (! (strcmp(n->group->group_name, name) ))  {
             spin_unlock(&l->group_list_lock);
             return n->group;
@@ -342,7 +346,7 @@ nk_thread_group_join(struct nk_thread_group *group, uint64_t *dur){
     new_thread_unit->prev = NULL;
 
     thread_unit_list_enqueue(group, new_thread_unit);
-    //GROUP("group_size = %d\n", group->group_size);
+    GROUP("group_size = %d\n", group->group_size);
     spin_unlock(&group->group_lock);
 
     group->dur_dump[id] = dur;
@@ -366,7 +370,7 @@ nk_thread_group_leave(struct nk_thread_group *group){
 // all threads in the group call to synchronize
 int
 nk_thread_group_barrier(struct  nk_thread_group *group) {
-    //GROUP("nk_thread_group_barrier\n");
+    GROUP("nk_thread_group_barrier\n");
     return group_barrier_wait(group->group_barrier);
 }
 
@@ -392,10 +396,10 @@ nk_thread_group_broadcast(struct nk_thread_group *group, void *message, uint64_t
     int ret = atomic_inc_val(group->msg_count);
     GROUP("msg_count = %d\n", group->msg_count);
     while (group->msg_flag == 0) {
-      //GROUP("t%d is waiting\n", tid);
+      GROUP("t%d is waiting\n", tid);
     }
     message = group->message;
-    //GROUP("recv: %s", (char *)message);
+    GROUP("recv: %s", (char *)message);
     if (atomic_dec_val(group->msg_count) == 0) {
       group->message = NULL;
       group->msg_flag = 0;
@@ -405,12 +409,12 @@ nk_thread_group_broadcast(struct nk_thread_group *group, void *message, uint64_t
   } else {
     //sender
     while(group->msg_flag == 1) {
-      //GROUP("t%d is sending\n", tid);
+      GROUP("t%d is sending\n", tid);
     }
     group->message = message;
     group->msg_flag = 1;
     GROUP("Msg sent\n");
-    //GROUP("send: %s", (char *)message);
+    GROUP("send: %s", (char *)message);
   }
 
   return 0;
@@ -465,11 +469,11 @@ nk_thread_group_create(char *name) {
 int
 nk_thread_group_delete(struct nk_thread_group *group) {
     if (group == group_list_remove(group)){
-        //GROUP("delete group node succeeded!\n");
+        GROUP("delete group node succeeded!\n");
         FREE(group);
         return 0;
     } else {
-        //GROUP("delete group node failed!\n");
+        GROUP("delete group node failed!\n");
         return -1;
     }
 }
@@ -585,7 +589,7 @@ group_roll_back_constraint() {
 static void group_tester(void *in, void **out){
   uint64_t start, end;
   uint64_t dur[5] = {0, 0, 0, 0, 0};
-  // GROUP("group name in tester is : %s\n", (char*)in);
+  GROUP("group name in tester is : %s\n", (char*)in);
   nk_thread_group *dst = nk_thread_group_find((char*) in);
   if (!dst){
       GROUP("group_find failed\n");
@@ -602,7 +606,7 @@ static void group_tester(void *in, void **out){
       GROUP("group join failed\n");
       return;
   } else {
-      //GROUP("group_join ok, tid is %d\n", tid);
+      GROUP("group_join ok, tid is %d\n", tid);
   }
   char name[20];
   sprintf(name, "tester %d", tid);
@@ -610,16 +614,20 @@ static void group_tester(void *in, void **out){
 
   int i = 0;
   while(atomic_add(dst->group_size, 0) != TESTER_NUM) {
-    i += 1;
-    if(i == 0xffffff) {
-      GROUP("group_size = %d\n", atomic_add(dst->group_size, 0));
-      i = 0;
-    }
+#ifdef NAUT_CONFIG_DEBUG_THREADS
+    // i += 1;
+    // if(i == 0xffffff) {
+    //   GROUP("group_size = %d\n", atomic_add(dst->group_size, 0));
+    //   i = 0;
+    // }
+#endif
   }
 
+#ifdef NAUT_CONFIG_DEBUG_THREADS
   if(tid == 0) {
     GROUP("All joined!\n");
   }
+#endif
 
   start = rdtsc();
   int leader = nk_thread_group_election(dst, tid);
@@ -644,7 +652,7 @@ static void group_tester(void *in, void **out){
     GROUP("t%d change constraint failed\n", tid);
   } else {
     end = rdtsc();
-    //GROUP("t%d change constraint succeeded#\n", tid);
+    // GROUP("t%d change constraint succeeded#\n", tid);
     GROUP("t%d #\n", tid);
   }
 
@@ -667,16 +675,17 @@ static void group_tester(void *in, void **out){
       end = rdtsc();
       if (ret){
           atomic_inc(succ_count);
-          //GROUP("&\n");
+          GROUP("&\n");
       }
   }
 
   nk_thread_group_barrier(dst);
 
+#ifdef NAUT_CONFIG_DEBUG_THREADS
   if(tid == 0) {
     GROUP("succ_count = %d\n", succ_count);
   }
-
+#endif
   dur[4] = end - start;
 
   nk_thread_group_barrier(dst);
@@ -749,7 +758,7 @@ int group_test(){
     // each join the group
     int i;
     for (i = 0; i < TESTER_NUM; ++i){
-        if (launch_tester(group_name, i + 1)){
+        if (launch_tester(group_name, i)){
             GROUP("starting tester failed\n");
         }
     }

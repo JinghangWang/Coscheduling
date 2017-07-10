@@ -12,7 +12,7 @@ menu "Platform/Arch Options"
 
         config XEON_PHI
             bool "Intel Xeon Phi Accelerator"
-    
+
         config HVM_HRT
             bool "Hybrid Runtime AeroKernel (HRT)"
 
@@ -22,8 +22,8 @@ menu "Platform/Arch Options"
         int "Maximum Number of CPUs"
         range 1 2048
         default "256"
-        help 
-          Specifies the maximum number of hardware CPUs supported by Nautilus 
+        help
+          Specifies the maximum number of hardware CPUs supported by Nautilus
           For uniprocessor environments, set this to 1
 
     config MAX_IOAPICS
@@ -65,17 +65,17 @@ menu "Platform/Arch Options"
           Sets the interrupt vector to use for communication between
           the VMM and the HRT
 
-    choice 
+    choice
         prompt "HRT Page Size Request"
         depends on HVM_HRT
         default HRT_PS_2M
         help
-            Requests a given page size to map the initial page tables 
+            Requests a given page size to map the initial page tables
             from the VMM
 
         config HRT_PS_512G
           bool "512GB Pages"
-          
+
         config HRT_PS_1G
           bool "1GB Pages"
 
@@ -86,8 +86,8 @@ menu "Platform/Arch Options"
           bool "4KB Pages"
 
     endchoice
-            
-        
+
+
     config PALACIOS
     	bool "Support for creating VMs using Palacios"
         depends on X86_64_HOST
@@ -113,7 +113,7 @@ menu "Platform/Arch Options"
     	bool "Launch embedded VM at boot as Management VM"
         depends on PALACIOS
         default 0
-        
+
 endmenu
 
 menu "Nautilus AeroKernel Build Config"
@@ -135,7 +135,7 @@ menu "Nautilus AeroKernel Build Config"
 
     config TOOLCHAIN_ROOT
       string "Toolchain Root"
-      help 
+      help
        Directory where the intended GCC toolchain, binutils, libraries, grub, etc are installed.
 
 
@@ -188,7 +188,7 @@ config VIRTUAL_CONSOLE_SERIAL_MIRROR
     bool "Mirror virtual console log output to serial"
     default n
     help
-	Writes any log output 
+	Writes any log output
         traffic to serial port in addition to its
         target virtual console
 
@@ -221,8 +221,8 @@ config VIRTUAL_CONSOLE_SERIAL_MIRROR_ALL
     help
        The percentage utilization the scheduler will dedicate
        to sporadic threads and tasks on each core.  Sporadic
-       tasks that exceed this are not admitted, even if 
-       there is time available. 
+       tasks that exceed this are not admitted, even if
+       there is time available.
 
     config APERIODIC_RESERVATION
     int "Aperiodic reservation (%)"
@@ -232,7 +232,7 @@ config VIRTUAL_CONSOLE_SERIAL_MIRROR_ALL
        The percentage utilization the scheduler will dedicate
        to aperiodic threads on each core.   Aperiodic threads
        can exceed this - they also soak up any time not being
-       used by RT threads. 
+       used by RT threads.
 
     config HZ
        int "Timer Interrupt Frequency"
@@ -240,7 +240,7 @@ config VIRTUAL_CONSOLE_SERIAL_MIRROR_ALL
        default "10"
        help
         Specifies the tick rate for timers and aperiodic
-        scheduling.  The reciprical of this number is 
+        scheduling.  The reciprical of this number is
         the scheduling quantum for aperiodic (but not RT)
         threads.
 
@@ -250,7 +250,7 @@ config VIRTUAL_CONSOLE_SERIAL_MIRROR_ALL
        help
         Should core zero periodically reap the global
         thread list of dead detached threads?  Only core 0
-        does this. 
+        does this.
 
     config AUTO_REAP_PERIOD_MS
        depends on AUTO_REAP
@@ -259,14 +259,14 @@ config VIRTUAL_CONSOLE_SERIAL_MIRROR_ALL
        default "1000"
        help
         The target period between reaping the global
-        thread list of dead detached threads. 
+        thread list of dead detached threads.
 
     config WORK_STEALING
        bool "Work stealing"
        default n
        help
         If enabled an idle cpu will attempt to steal
-        runnable threads from other cpus.  
+        runnable threads from other cpus.
 
     config WORK_STEALING_INTERVAL_MS
        depends on WORK_STEALING
@@ -275,7 +275,7 @@ config VIRTUAL_CONSOLE_SERIAL_MIRROR_ALL
        default "10"
        help
         The target period between work-stealing attempts
-	by the idle thread.  This is in terms of 
+	by the idle thread.  This is in terms of
         the amount of time the idle thread itself executes
 	not the real-
 
@@ -292,27 +292,27 @@ config VIRTUAL_CONSOLE_SERIAL_MIRROR_ALL
     config INTERRUPT_THREAD
        bool "Restrict interrupts to special real-time interrupt thread"
        default false
-       help 
+       help
           When enabled, all interrupts, except scheduling-related
           interrupts, are ignored except when a special, per-core
           interrupt thread is running.  The interrupt thread is a
           periodic real-time thread.  This forces interrupt handlers
-          to start only at well-constrained points in time.   
-          If interrupt handlers are of bounded, known duration, they 
-          also then finish before well-contrained points in time 
+          to start only at well-constrained points in time.
+          If interrupt handlers are of bounded, known duration, they
+          also then finish before well-contrained points in time
           (max: end of slice + interrupt duration).   The downside
-          of this mechanism is that interrupts are delayed until 
+          of this mechanism is that interrupts are delayed until
           the interrupt thread is run, increasing interrupt latency.
           Note that threads can insulate themselves from interrupts
           outside of this mechanism, using the interrupt_priority_class
-          mechanism. 
+          mechanism.
 
     config INTERRUPT_THREAD_PERIOD_US
        depends on INTERRUPT_THREAD
        int "Period for the interrupt thread (us)"
        range 500 10000
        default 1000
-       help 
+       help
           The interrupt thread will run this often
 
     config INTERRUPT_THREAD_SLICE_US
@@ -320,14 +320,14 @@ config VIRTUAL_CONSOLE_SERIAL_MIRROR_ALL
        int "Slice for the interrupt thread (us)"
        range 100 5000
        default 100
-       help 
+       help
           The interrupt thread will execute for this long when it runs
 
     config INTERRUPT_THREAD_ALLOW_IDLE
        depends on INTERRUPT_THREAD
        bool "Also allow interrupts when running idle thread"
        default false
-       help 
+       help
           Enable interrupts while running the idle thread
 
     choice
@@ -336,29 +336,29 @@ config VIRTUAL_CONSOLE_SERIAL_MIRROR_ALL
 
         config APERIODIC_DYNAMIC_QUANTUM
             bool "Dynamic, Quantum-based Priority"
-            help 
-               Aperiodic threads have dynamic priority based on a 
-               fixed priority and their runtime within a scheduling quantum.  
+            help
+               Aperiodic threads have dynamic priority based on a
+               fixed priority and their runtime within a scheduling quantum.
                Longer runtime means lower priority.
 
         config APERIODIC_DYNAMIC_LIFETIME
             bool "Dynamic, Lifetime-based Priority"
-            help  
-               Aperiodic threads have dynamic priority based on a 
-               fixed priority and their total runtime.  
+            help
+               Aperiodic threads have dynamic priority based on a
+               fixed priority and their total runtime.
                Longer runtime means lower priority.
 
         config APERIODIC_LOTTERY
             bool "Lottery scheduling"
-            help 
-               Aperiodic threads are given a random priority based on 
+            help
+               Aperiodic threads are given a random priority based on
                the fixed priorities of all aperiodic threads on the core.
- 
-        config APERIODIC_ROUND_ROBIN 
+
+        config APERIODIC_ROUND_ROBIN
             bool "Round-robin scheduling"
-            help 
+            help
                Aperiodic threads are scheduled round-robbin
-      
+
 
     endchoice
   endmenu
@@ -403,7 +403,7 @@ config DEBUG_ISOCORE
    help
       Adds debugging output for isolated core execution
       The low-level code does not have debugging output
-   
+
 endmenu
 
 menu "AeroKernel Performance Optimizations"
@@ -412,10 +412,10 @@ menu "AeroKernel Performance Optimizations"
       bool "Save FPU state on all context switches"
       default y
       help
-        Compiles the kernel to save FPU state on every context switch. 
-        This is not strictly necessary if processors are not virtualized 
+        Compiles the kernel to save FPU state on every context switch.
+        This is not strictly necessary if processors are not virtualized
         (by the HRT).
-    
+
     config KICK_SCHEDULE
         bool "Kick cores with IPIs on scheduling events"
         default n
@@ -431,7 +431,7 @@ menu "AeroKernel Performance Optimizations"
         help
             This will cause the CPU to go into a halt in an idle thread when
             there is nothing else important to run. Can potentially reduce
-            memory traffic do to yields(), especially on platforms like the 
+            memory traffic do to yields(), especially on platforms like the
             Xeon Phi.
 
     config THREAD_OPTIMIZE
@@ -445,14 +445,14 @@ menu "AeroKernel Performance Optimizations"
         bool "Start idle threads on all cores"
         default n
         help
-            Enables idle threads to start in addition to the main boot threads. 
+            Enables idle threads to start in addition to the main boot threads.
             Usually not needed.
 
 
 endmenu
 
-      
-    
+
+
 
 menu Debugging
 
@@ -486,8 +486,8 @@ menu Debugging
       bool "Silence Errors for Undefined Functions"
       default n
       help
-        Mutes error prints related to undefined 
-        libc compatibility functions. Useful when 
+        Mutes error prints related to undefined
+        libc compatibility functions. Useful when
         porting applications to HRT model.
 
     config ENABLE_STACK_CHECK
@@ -495,8 +495,15 @@ menu Debugging
     default n
     help
       This checks the stack pointer on every thread switch to
-      make sure that a thread hasn't overrun its allocated 
+      make sure that a thread hasn't overrun its allocated
       stack
+
+    config DEBUG_GROUP
+      bool "Debug Group"
+      depends on DEBUG_PRINTS
+      default n
+      help
+        Turn on debug prints for group scheduling
 
     config DEBUG_PAGING
       bool "Debug Paging"
@@ -552,7 +559,7 @@ menu Debugging
       bool "Debug SFI"
       depends on DEBUG_PRINTS
       default n
-      help 
+      help
         Turn on debug prints for SFI platform firmware code
 
     config DEBUG_CXX
@@ -655,18 +662,18 @@ endmenu
 
 menu "Parallel Runtime Integration"
 
-    choice 
+    choice
         prompt "Selection of Parallel Runtime"
         default NO_RT
 
         config LEGION_RT
           bool "Legion RT"
           depends on CXX_SUPPORT
-          
+
         config LEGION_RT_ROOT
             string "Legion RT Root"
             depends on LEGION_RT
-            help 
+            help
               Directory where the intended Legion runtime is installed
 
         config LEGION_RT_DEBUG
@@ -683,13 +690,13 @@ menu "Parallel Runtime Integration"
         config NDPC_RT_ROOT
             string "NDPC RT Root"
             depends on NDPC_RT
-            help 
+            help
               Directory where the intended NDPC runtime is installed
 
         config NDPC_RT_TEST_OBJ
             string "NDPC RT Test Object File"
             depends on NDPC_RT
-            help 
+            help
               File that contains a function test_ndpc()
 
         config NESL_RT
@@ -698,20 +705,20 @@ menu "Parallel Runtime Integration"
         config NESL_RT_ROOT
             string "NESL RT Root"
             depends on NESL_RT
-            help 
+            help
               Directory where the intended NESL runtime is installed
 
         config NESL_NDPC_RT_ROOT
             string "NESL NDPC RT Root"
             depends on NESL_RT
-            help 
+            help
               Directory where the intended NDPC runtime is installed
 
         config NO_RT
           bool "No parallel runtime"
-          
+
      endchoice
-        
+
 
 endmenu
 
@@ -721,5 +728,3 @@ endmenu
 source "src/dev/Kconfig"
 
 source "src/fs/Kconfig"
-
-
