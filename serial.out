@@ -23,14 +23,14 @@ BOOTMEM: Memory map[5] - [0xfffc0000 - 0x100000000] <reserved>
 BOOTMEM: Detected 2146.958336 MB of usable System RAM
 CPU ? (): DEBUG: Multiboot info size 392B
 CPU ? (): DEBUG: Cmd line: 
-CPU ? (): DEBUG: Boot loader: GRUB 2.02~beta2-36ubuntu3.7
+CPU ? (): DEBUG: Boot loader: GRUB 2.02~beta2-36ubuntu3.11
 CPU ? (): DEBUG: Unhandled tag type (0xa)
 CPU ? (): DEBUG: Multiboot2 memory map detected
-CPU ? (): DEBUG: ELF size=20, num=0, entsize=0, shndx=0, sechdr=0x00316e41
+CPU ? (): DEBUG: ELF size=20, num=0, entsize=0, shndx=0, sechdr=0x00316c41
 CPU ? (): DEBUG: Multiboot2 basic meminfo detected
 CPU ? (): DEBUG: Boot device: (biosdev=0xe0,slice=4294967295,part=4294967295)
 CPU ? (): DEBUG: fb addr: 0x000b8000, fb_width: 80, fb_height: 25
-CPU ? (): DEBUG: Old ACPI: rsdp=0x003b61d8
+CPU ? (): DEBUG: Old ACPI: rsdp=0x003b71d8
 ACPI: Parsing ACPI root table (at 0x000f63f0)
 ACPI: RSDP 00000000000f63f0 00014 (v00 BOCHS )
 ACPI: RSDT 000000007ffe1737 00034 (v01 BOCHS  BXPCRSDT 00000001 BXPC 00000001)
@@ -79,106 +79,22 @@ CPU 0 (P 1 "*unnamed*"): dev: Added device with name vga, type 0, flags 0x0
 CPU 0 (P 1 "*unnamed*"): dev: Added device with name serial-boot, type 0, flags 0x0
 CPU 0 (P 1 "*unnamed*"): chardev: register device serial0
 CPU 0 (P 1 "*unnamed*"): dev: Added device with name serial0, type 4, flags 0x0
+CPU 0 (P 1 "*unnamed*"): chardev: register device serial1
+CPU 0 (P 1 "*unnamed*"): dev: Added device with name serial1, type 4, flags 0x0
 CPU 0 (P 1 "*unnamed*"): vc: init
-List of VCs (space to regenerate)
-
-a : default
-b : system-log
-c : vc-list
 CPU 0 (P 1 "*unnamed*"): vc: List launched
 CPU 0 (P 1 "*unnamed*"): fs: inited
 CPU 0 (P 1 "*unnamed*"): Shell root-shell launched on cpu 0 as 000000007fa04000
 Nautilus boot thread yielding (indefinitely)
-root-shell> group_test
-CPU 0 (P 4 "root-shell"): DEBUG: Initializing group barrier, group barrier at 000000007fa01a00, count=0
-CPU 0: group_create succeeded
-CPU 0: In group_find
-CPU 0: helloworld!
-root-shell> CPU 0: group name in tester is : helloworld!
-CPU C1PU 0: In: group name in tester i group_find
-CPU 0: helloworld!
-s : helloworld!
-CPU 1: In group_find
-CPU 1: helloworld!
-CPU 0 (P 5 "*unnamed*"): DEBUG: Thread (0000000000112000) joining barrier 
-CPU 0: group_size = 1
-CPU 0: group_join ok, tid is 0
-CPU 1 (P 6 "*unnamed*"): DEBUG: Thread (0000000000116000) joining barrier 
-CPU 1: group_size = 2
-CPU 1: group_join ok, tid is 1
-CPU 1: nk_thread_group_barrier
-CPU 1 (P 6 "tester 1"): DEBUG: Thread (0000000000116000) entering barrier (000000007fa01a00)
-CPU 1 (P 6 "tester 1"): DEBUG: Thread (0000000000116000): remaining count = 1
-CPU 0: nk_thread_group_barrier
-CPU 0 (P 5 "tester 0"): DEBUG: Thread (0000000000112000) entering barrier (000000007fa01a00)
-CPU 0 (P 5 "tester 0"): DEBUG: Thread (0000000000112000): notify
-CPU 0 (P 5 "tester 0"): DEBUG: Thread (0000000000112000) exiting barrier (000000007fa01a00)
-CPU 1 (P 6 "tester 1"): DEBUG: Thread (0000000000116000): reset notify
-CPU 1 (P 6 "tester 1"): DEBUG: Thread (0000000000116000) exiting barrier (000000007fa01a00)
-CCPU 0: nk_thread_group_bPU 1: nk_thread_group_barrier
-arrier
-CPU 1 (P 6 "tester 1"): DEBUG: Thread (0000000000116000) entering barrier (000000007fa01a00)
-CPU 1 (P 6 "tester 1"): DEBUG: Thread (0000000000116000): remaining count = 1
-CPU 0 (P 5 "tester 0"): DEBUG: Thread (0000000000112000) entering barrier (000000007fa01a00)
-CPU 0 (P 5 "tester 0"): DEBUG: Thread (0000000000112000): notify
-CPU 0 (P 5 "tester 0"): DEBUG: Thread (0000000000112000) exiting barrier (000000007fa01a00)
-CPU 0: t0 #
-CPU 0: nk_thread_group_barrier
-CPU 1 (P 6 "tester 1"): DEBUG: Thread (0000000000116000): reset notify
-CPU 1 (P 6 "tester 1"): DEBUG: Thread (0000000000116000) exiting barrier (000000007fa01a00)
-CPU 1: t1 #
-CPU 1: nk_thCPU 0 (P 5 "tester 0"): DEBUG: Thread (0000000000112000) entering barrier (000000007fa01a00)
-CPU 0 (P 5 "tester 0"): DEBUG: Thread (0000000000112000): remaining count = 1
-read_group_barrier
-CPU 1 (P 6 "tester 1"): DEBUG: Thread (0000000000116000) entering barrier (000000007fa01a00)
-CPU 1 (P 6 "tester 1"): DEBUG: Thread (0000000000116000): notify
-CPU 1 (P 6 "tester 1"): DEBUG: Thread (0000000000116000) exiting barrier (000000007fa01a00)
-CPU 0 (P 5 "tester 0"): DEBUG: Thread (0000000000112000): reset notify
-CPU 0 (P 5 "tester 0"): DEBUG: Thread (0000000000112000) exiting barrier (000000007fa01a00)
-CPU 1: CPU 0: nk_thread_group_barrier
-CPU 0 (P 5 "tester 0"): DEBUG: Thread (0000000000112000) entering barrier (000000007fa01a00)
-CPU 0 (P 5 "tester 0"): DEBUG: Thread (0000000000112000): remaining count = 1
-&
-CPU 1: nk_thread_group_barrier
-CPU 1 (P 6 "tester 1"): DEBUG: Thread (0000000000116000) entering barrier (000000007fa01a00)
-CPU 1 (P 6 "tester 1"): DEBUG: Thread (0000000000116000): notify
-CPU 1 (P 6 "tester 1"): DEBUG: Thread (0000000000116000) exiting barrier (000000007fa01a00)
-CPU 1: nk_thread_group_barrier
-CPU 0 (P 5 "tester 0"): DEBUG: Thread (0000000000112000): reset notify
-CPU 0 (P 5 "tester 0"): DEBUG: Thread (0000000000112000) exiting barrier (000000007fa01a00)
-CPU 0: nk_thread_group_barrier
-CPU 0 (P 5 "tester 0"): DEBUG: Thread (0000000000112000) entering barrier (000000007fa01a00)
-CPU 0 (P 5 "tester 0"): DEBUG: Thread (0000000000112000): remaining count = 1
-CPU 1 (P 6 "tester 1"): DEBUG: Thread (0000000000116000) entering barrier (000000007fa01a00)
-CPU 1 (P 6 "tester 1"): DEBUG: Thread (0000000000116000): notify
-CPU 1 (P 6 "tester 1"): DEBUG: Thread (0000000000116000) exiting barrier (000000007fa01a00)
-CPU 1: nk_thread_group_barrier
-CPU 0 (P 5 "tester 0"): DEBUG: Thread (0000000000112000): reset notify
-CPU 0 (P 5 "tester 0"): DEBUG: Thread (0000000000112000) exiting barrier (000000007fa01a00)
---For tester 0:
-join dur = 4418119
-election dur = 894
-group_change_cons dur = 83371385
-change_cons dur = 144783
-barrier dur = 978608598
+List of VCs (space to regenerate)
 
---For tester 1:
-join dur = -186144514
-election dur = 498
-group_change_cons dur = 175512059
-change_cons dur = 50823
-barrier dur = 974606339
-
-CPU 0: nk_thread_group_barrier
-CPU 0 (P 5 "tester 0"): DEBUG: Thread (0000000000112000) entering barrier (000000007fa01a00)
-CPU 0 (P 5 "tester 0"): DEBUG: Thread (0000000000112000): remaining count = 1
-CPU 1 (P 6 "tester 1"): DEBUG: Thread (0000000000116000) entering barrier (000000007fa01a00)
-CPU 1 (P 6 "tester 1"): DEBUG: Thread (0000000000116000): notify
-CPU 1 (P 6 "tester 1"): DEBUG: Thread (0000000000116000) exiting barrier (000000007fa01a00)
-CPU 1 (P 6 "tester 1"): DEBUG: Thread (0000000000116000) leaving barrier (000000007fa01a00)
-CPU 0 (P 5 "tester 0"): DEBUG: Thread (0000000000112000): reset notify
-CPU 0 (P 5 "tester 0"): DEBUG: Thread (0000000000112000) exiting barrier (000000007fa01a00)
-CPU 0 (P 5 "tester 0"): DEBUG: Thread (0000000000112000) leaving barrier (000000007fa01a00)
-CPU 0: delete group node succeeded!
-CPU 1 (P 6 "tester 1"): DEBUG: Thread (0000000000116000): notify
-CPU 1: delete group node failed!
+ra : default
+b : system-log
+c : vc-list
+d : root-shell
+oot-shell> test thread
+Create-join test of 10 passes with 512 threads each: PASS
+Fork-join test of 10 passes with 512 threads each: PASS
+Recursive create-join test of 10 passes with depth 8 (512 threads): PASS
+Recursive fork-join test of 10 passes with depth 8 (512 threads): PASS
+root-shell> 

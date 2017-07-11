@@ -141,7 +141,6 @@ nk_condvar_signal (nk_condvar_t * c)
 
         nk_thread_queue_wake_one(c->wait_queue);
 
-
     }
 
     NK_UNLOCK(&c->lock);
@@ -168,7 +167,6 @@ nk_condvar_bcast (nk_condvar_t * c)
 
         DEBUG_PRINT("Condvar broadcasting on (%p) (core=%u)\n", (void*)c, my_cpu_id());
         nk_thread_queue_wake_all(c->wait_queue);
-
         return 0;
 
     }

@@ -34,6 +34,7 @@
 #include <nautilus/chardev.h>
 #include <dev/serial.h>
 
+
 /*
   The serial driver provides two stages of functionality
   
@@ -178,6 +179,10 @@ static int serial_do_write(void *state, uint8_t *src)
 {
     struct serial_state *s = (struct serial_state *)state;
 
+    serial_putchar(*src); //pathces
+
+    return 1;
+
     int rc = -1;
     int flags;
 
@@ -224,13 +229,13 @@ static void serial_write_reg(struct serial_state *s, uint8_t offset, uint8_t val
 static uint8_t serial_read_reg(struct serial_state *s, uint8_t offset)
 {
     if (s) { 
-	if (s->mmio) { 
-	    return *(volatile uint8_t *)(s->addr + offset);
-	} else {
-	    return inb((uint16_t) (s->addr + offset));
-	}
+      	if (s->mmio) { 
+      	    return *(volatile uint8_t *)(s->addr + offset);
+    	  } else {
+    	      return inb((uint16_t) (s->addr + offset));
+    	  }
     } else {
-	return inb(serial_io_addr + offset);
+	      return inb(serial_io_addr + offset);
     }
 }
 
@@ -338,22 +343,22 @@ static void kick_output(struct serial_state *s)
     uint64_t count=0;
 
     while (!serial_output_empty(s)) { 
-	uint8_t ls =  serial_read_reg(s,LSR);
-	if (ls & 0x20) { 
-	    // transmit holding register is empty
-	    // drive a byte to the device
-	    uint8_t data = serial_output_pull(s);
-	    serial_write_reg(s,THR,data);
-	    count++;
-	} else {
-	    // chip is full, stop sending to it
-	    // but since we have more data, have it
-	    // interrupt us when it has room
-	    uint8_t ier = serial_read_reg(s,IER);
-	    ier |= 0x2;
-	    serial_write_reg(s,IER,ier);
-	    goto out;
-	}
+    	uint8_t ls =  serial_read_reg(s,LSR);
+    	if (ls & 0x20) { 
+    	    // transmit holding register is empty
+    	    // drive a byte to the device
+    	    uint8_t data = serial_output_pull(s);
+    	    serial_write_reg(s,THR,data);
+    	    count++;
+    	} else {
+    	    // chip is full, stop sending to it
+    	    // but since we have more data, have it
+    	    // interrupt us when it has room
+    	    uint8_t ier = serial_read_reg(s,IER);
+    	    ier |= 0x2;
+    	    serial_write_reg(s,IER,ier);
+    	    goto out;
+    	}
     }
     
     // the chip has room, but we have no data for it, so
@@ -361,9 +366,10 @@ static void kick_output(struct serial_state *s)
     uint8_t ier = serial_read_reg(s,IER);
     ier &= ~0x2;
     serial_write_reg(s,IER,ier);
+ 
  out:
-    if (count>0) { 
-	nk_dev_signal((struct nk_dev*)(s->dev));
+    if (count>0) {
+      nk_dev_signal((struct nk_dev*)(s->dev));
     }
     return;
 }
@@ -548,39 +554,40 @@ static int serial_irq_handler_late(struct serial_state *s,excp_entry_t * excp,ex
     int done = 0;
     
     do {
-	iir = serial_read_reg(s,IIR);
+    	iir = serial_read_reg(s,IIR);
 
-	switch (iir & 0xf)  {
-	case 0: // modem status reset + ignore
-	    (void)serial_read_reg(s,MSR);
-	    break;
-	case 2: // THR empty (can send more data)
-	    spin_lock(&s->output_lock);
-	    kick_output(s);
-	    spin_unlock(&s->output_lock);
-	    break;
-	case 4:  // received data available 
-	case 12: // received data available (FIFO timeout)
-	    spin_lock(&s->input_lock);
-	    kick_input(s);
-	    spin_unlock(&s->input_lock);
-	    break;
-	case 6: // line status reset + ignore
-	    (void)serial_read_reg(s,LSR);
-	    break;
-	case 1:   // done
-	    spin_lock(&s->output_lock);
-	    kick_output(s);
-	    spin_unlock(&s->output_lock);
-	    spin_lock(&s->input_lock);
-	    kick_input(s);
-	    spin_unlock(&s->input_lock);
-	    break;
-	default:  // wtf
-	    break;
-	}
+    	switch (iir & 0xf)  {
+    	case 0: // modem status reset + ignore
+    	    (void)serial_read_reg(s,MSR);
+    	    break;
+    	case 2: // THR empty (can send more data)
+    	    spin_lock(&s->output_lock);
+    	    kick_output(s);
+    	    spin_unlock(&s->output_lock);
+    	    break;
+    	case 4:  // received data available 
+    	case 12: // received data available (FIFO timeout)
+    	    spin_lock(&s->input_lock);
+    	    kick_input(s);
+          //kick_outputs(s); 
+    	    spin_unlock(&s->input_lock);
+    	    break;
+    	case 6: // line status reset + ignore
+    	    (void)serial_read_reg(s,LSR);
+    	    break;
+    	case 1:   // done
+    	    spin_lock(&s->output_lock);
+    	    kick_output(s);
+    	    spin_unlock(&s->output_lock);
+    	    spin_lock(&s->input_lock);
+    	    kick_input(s);
+    	    spin_unlock(&s->input_lock);
+    	    break;
+    	default:  // wtf
+    	    break;
+    	}
 
-    } while ((iir & 0xf) != 1);
+    } while ((iir & 0xf) != 1); //try comment out this do while loop
     
     return 0;
 }
@@ -596,7 +603,7 @@ serial_irq_handler(excp_entry_t * excp,
     int rc=0;
 
 #ifdef NAUT_CONFIG_SERIAL_REDIRECT 
-    if (!early_dev) { 
+  if (!early_dev) { 
 	// use the old handler until we have full functionality
 	return serial_irq_handler_early(excp,vec,state);
     } 
@@ -694,14 +701,15 @@ static void serial_putchar_early (uchar_t c)
 
 void serial_putchar(uchar_t c)
 {
-    if (0 && early_dev) { //patch, forch to use putchar_early
-	if (c=='\n') { 
-	    serial_do_write(early_dev,"\r");
-	}
-	serial_do_write(early_dev,&c);
-    } else {
-	serial_putchar_early(c);
-    }
+  if (0 && early_dev) { // patch
+  // if (early_dev){
+  	if (c=='\n') { 
+  	    serial_do_write(early_dev,"\r");
+  	}
+  	serial_do_write(early_dev,&c);
+  } else {
+  	serial_putchar_early(c);
+  }
 	
 }
 

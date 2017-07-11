@@ -262,19 +262,19 @@ ENTRY(nk_interrupt_like_trampoline)
 
 
 /*
-   Allow C-code to do FP saves/restores
+	Allow C-code to do FP saves/restores
 
-   nk_fp_save(destptr)
-   mk_fp_restore(srcptr)
-   
+	nk_fp_save(destptr)
+	mk_fp_restore(srcptr)
+	
 */
 ENTRY(nk_fp_save)
-   fxsave (%rdi)
-   ret
+	fxsave (%rdi)
+	ret
 
 ENTRY(nk_fp_restore)
-   fxrstor (%rdi)
-   ret
-
+	fxrstor (%rdi)
+	ret
+	
 panic_str:
 .ascii "Stack corruption detected\12\0"

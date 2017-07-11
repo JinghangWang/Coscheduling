@@ -72,10 +72,10 @@ static inline void preempt_reset()
 {
     void *base = __cpu_state_get_cpu();
     if (base) {
-   // per-cpu functional
-   __sync_fetch_and_and((uint16_t *)(base+10),0);
+	// per-cpu functional
+	__sync_fetch_and_and((uint16_t *)(base+10),0);
     } else {
-   // per-cpu is not running, so we are not going to get preempted anyway
+	// per-cpu is not running, so we are not going to get preempted anyway
     }
 }
 

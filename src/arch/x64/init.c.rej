@@ -1,0 +1,15 @@
+diff a/src/arch/x64/init.c b/src/arch/x64/init.c	(rejected hunks)
+@@ -371,10 +371,12 @@ init (unsigned long mbd,
+     vga_init();
+     serial_init();
+ 
++    nk_sched_start();
+ 
+-    /* interrupts on */
+     sti();
+ 
++    /* interrupts are now on */
++
+     nk_vc_init();
+ 
+ #ifdef NAUT_CONFIG_VIRTUAL_CONSOLE_CHARDEV_CONSOLE

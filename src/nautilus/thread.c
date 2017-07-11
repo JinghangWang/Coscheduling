@@ -109,14 +109,15 @@ thread_detach (nk_thread_t * t)
     --t->refcount;
 
     // conditional reaping is done by the scheduler when threads are created
-    // this makes the join+exit path much faster in the common case and
+
+    // this makes the join+exit path much faster in the common case and 
     // bulks reaping events together
     // the user can also explictly reap when needed
-    // plus the autoreaper thread can be enabled
+    // plus the autoreaper thread can be enabled 
     // the following code can be enabled if you want to reap immediately once
     // a thread's refcount drops to zero
-    //
-    //if (t->refcount==0) {
+    // 
+    //if (t->refcount==0) { 
     //   nk_thread_destroy(t);
     //}
 
@@ -420,10 +421,11 @@ int nk_thread_run(nk_thread_id_t t)
   THREAD_DEBUG("RUN: Current_CPU: %llu\n", newthread->current_cpu);
 
   thread_setup_init_stack(newthread, newthread->fun, newthread->input);
+  
 
   THREAD_DEBUG("Run thread initialized: %p (tid=%lu) stack=%p size=%lu rsp=%p\n",newthread,newthread->tid,newthread->stack,newthread->stack_size,newthread->rsp);
 
-  if (nk_sched_make_runnable(newthread, newthread->current_cpu,1)) {
+  if (nk_sched_make_runnable(newthread, newthread->current_cpu,1)) { 
       THREAD_ERROR("Scheduler failed to run thread (%p, tid=%u) on cpu %u\n",
 		  newthread, newthread->tid, newthread->current_cpu);
       return -1;
@@ -489,7 +491,7 @@ static void _thread_queue_wake_all (nk_thread_queue_t * q, int have_lock)
 
     ASSERT(q);
 
-    if (!have_lock) {
+    if (!have_lock) { 
 	flags = spin_lock_irq_save(&q->lock);
     }
 
@@ -503,7 +505,7 @@ static void _thread_queue_wake_all (nk_thread_queue_t * q, int have_lock)
         ASSERT(t);
 	ASSERT(t->status == NK_THR_WAITING);
 
-	if (nk_sched_awaken(t, t->current_cpu)) {
+	if (nk_sched_awaken(t, t->current_cpu)) { 
 	    THREAD_ERROR("Failed to awaken thread\n");
 	    goto out;
 	}
@@ -533,7 +535,8 @@ static void _thread_queue_wake_all (nk_thread_queue_t * q, int have_lock)
  * any destructors for thread local storage
  *
  */
-void nk_thread_exit (void * retval)
+
+void nk_thread_exit (void * retval) 
 {
     nk_thread_t * me = get_cur_thread();
     nk_thread_queue_t * wq = me->waitq;
@@ -567,7 +570,8 @@ void nk_thread_exit (void * retval)
     me->status      = NK_THR_EXITED;
 
     // force arch and compiler to do above writes now
-    __asm__ __volatile__ ("mfence" : : : "memory");
+
+    __asm__ __volatile__ ("mfence" : : : "memory"); 
 
     THREAD_DEBUG("State update complete\n");
 
@@ -617,7 +621,7 @@ nk_thread_destroy (nk_thread_id_t t)
     nk_sched_thread_state_deinit(thethread);
     free(thethread->stack);
     free(thethread);
-
+    
     preempt_enable();
 }
 
@@ -625,11 +629,11 @@ nk_thread_destroy (nk_thread_id_t t)
 static int exit_check(void *state)
 {
     volatile nk_thread_t *thethread = (nk_thread_t *)state;
-
+    
     THREAD_DEBUG("exit_check: thread (%lu %s) status is %u\n",thethread->tid,thethread->name,thethread->status);
     return thethread->status==NK_THR_EXITED;
 }
-
+    
 
 /*
  * nk_join
@@ -668,6 +672,9 @@ nk_join (nk_thread_id_t t, void ** retval)
 
     return 0;
 }
+    
+
+
 
 
 /*
@@ -738,9 +745,8 @@ nk_set_thread_fork_output (void * result)
  * @q: the thread queue to sleep on
  * @cond_check - condition to check (return nonzero if true) atomically with queuing
  * @state - state for cond_check
- *
+ *  
  */
-
 void nk_thread_queue_sleep_extended(nk_thread_queue_t *wq, int (*cond_check)(void *state), void *state)
 {
     nk_thread_t * t = get_cur_thread();
@@ -756,54 +762,55 @@ void nk_thread_queue_sleep_extended(nk_thread_queue_t *wq, int (*cond_check)(voi
     // we have raced with with it and it has just finished
     // we therefore need to double check the condition now
 
-    if (cond_check && cond_check(state)) {
-   // The condition we are waiting on has been achieved
-   // already.  The waker is either done waking up
-   // threads or has not yet started.  In either case
-   // we do not want to queue ourselves
-   spin_unlock_irq_restore(&wq->lock, flags);
-   THREAD_DEBUG("Thread %lu (%s) has fast wakeup on queue %p - condition already met\n", t->tid, t->name, (void*)wq);
-   return;
+    if (cond_check && cond_check(state)) { 
+	// The condition we are waiting on has been achieved
+	// already.  The waker is either done waking up
+	// threads or has not yet started.  In either case
+	// we do not want to queue ourselves
+	spin_unlock_irq_restore(&wq->lock, flags);
+	THREAD_DEBUG("Thread %lu (%s) has fast wakeup on queue %p - condition already met\n", t->tid, t->name, (void*)wq);
+	return;
     } else {
-   // the condition still is not signalled
-   // or the condition is not important, therefore
-   // while still holding the lock, put ourselves on the
-   // wait queue
+	// the condition still is not signalled 
+	// or the condition is not important, therefore
+	// while still holding the lock, put ourselves on the 
+	// wait queue
 
-   THREAD_DEBUG("Thread %lu (%s) is queueing itself on queue %p\n", t->tid, t->name, (void*)wq);
+	THREAD_DEBUG("Thread %lu (%s) is queueing itself on queue %p\n", t->tid, t->name, (void*)wq);
+	
+	t->status = NK_THR_WAITING;
+	nk_enqueue_entry(wq, &(t->wait_node));
 
-   t->status = NK_THR_WAITING;
-   nk_enqueue_entry(wq, &(t->wait_node));
+	// force arch and compiler to do above writes
+	__asm__ __volatile__ ("mfence" : : : "memory"); 
 
-   // force arch and compiler to do above writes
-   __asm__ __volatile__ ("mfence" : : : "memory");
+	// disallow the scheduler from context switching this core
+	// until we (in particular nk_sched_sleep()) decide otherwise
+	preempt_disable(); 
 
-   // disallow the scheduler from context switching this core
-   // until we (in particular nk_sched_sleep()) decide otherwise
-   preempt_disable();
+	// reenable local interrupts - the scheduler is still blocked
+	// because we have preemption off
+	// any waker at this point will still get stuck on the wait queue lock
+	// it will be a short spin, hopefully
+	irq_enable_restore(flags);
+	
+	THREAD_DEBUG("Thread %lu (%s) is having the scheduler put itself to sleep on queue %p\n", t->tid, t->name, (void*)wq);
 
-   // reenable local interrupts - the scheduler is still blocked
-   // because we have preemption off
-   // any waker at this point will still get stuck on the wait queue lock
-   // it will be a short spin, hopefully
-   irq_enable_restore(flags);
+	// We now get the scheduler to do a context switch
+	// and just after it completes its scheduling pass, 
+	// it will release the wait queue lock for us
+	// it will also reenable preemption on its context switch out
+	nk_sched_sleep(&wq->lock);
+	
+	THREAD_DEBUG("Thread %lu (%s) has slow wakeup on queue %p\n", t->tid, t->name, (void*)wq);
 
-   THREAD_DEBUG("Thread %lu (%s) is having the scheduler put itself to sleep on queue %p\n", t->tid, t->name, (void*)wq);
+	// note no spin_unlock here since nk_sched_sleep will have 
+	// done it for us
 
-   // We now get the scheduler to do a context switch
-   // and just after it completes its scheduling pass,
-   // it will release the wait queue lock for us
-   // it will also reenable preemption on its context switch out
-   nk_sched_sleep(&wq->lock);
-
-   THREAD_DEBUG("Thread %lu (%s) has slow wakeup on queue %p\n", t->tid, t->name, (void*)wq);
-
-   // note no spin_unlock here since nk_sched_sleep will have
-   // done it for us
-
-   return;
+	return;
     }
 }
+
 
 void nk_thread_queue_sleep(nk_thread_queue_t *wq)
 {
@@ -825,9 +832,9 @@ void nk_thread_queue_wake_one (nk_thread_queue_t * q)
     uint8_t flags = irq_disable_save();
 
     if (in_interrupt_context()) {
-        THREAD_DEBUG("[Interrupt Context] Thread %lu (%s) is waking one waiter on thread queue (q=%p)\n", get_cur_thread()->tid, get_cur_thread()->name, (void*)q);
+	THREAD_DEBUG("[Interrupt Context] Thread %lu (%s) is waking one waiter on thread queue (q=%p)\n", get_cur_thread()->tid, get_cur_thread()->name, (void*)q);
     } else {
-        THREAD_DEBUG("Thread %lu (%s) is waking one waiter on thread queue (q=%p)\n", get_cur_thread()->tid, get_cur_thread()->name, (void*)q);
+	THREAD_DEBUG("Thread %lu (%s) is waking one waiter on thread queue (q=%p)\n", get_cur_thread()->tid, get_cur_thread()->name, (void*)q);
     }
 
     ASSERT(q);
@@ -862,7 +869,7 @@ out:
 
 
 
-/*
+/* 
  * nk_thread_queue_wake_all
  *
  * wake all threads waiting on this queue
@@ -877,8 +884,7 @@ void nk_thread_queue_wake_all (nk_thread_queue_t * q)
     _thread_queue_wake_all(q,0);
 }
 
-
-/*
+/* 
  * nk_tls_key_create
  *
  * create thread local storage
@@ -1061,6 +1067,20 @@ __thread_fork (void)
     __asm__ __volatile__ ( "movq %%rsp, %0" : "=r"(rsp) : : "memory");
 
 #ifdef NAUT_CONFIG_ENABLE_STACK_CHECK
+    // now check again after update to see if we didn't overrun/underrun the stack in the parent... 
+    if ((uint64_t)rsp <= (uint64_t)parent->stack ||
+	(uint64_t)rsp >= (uint64_t)(parent->stack + parent->stack_size)) { 
+	THREAD_ERROR("Parent's top of stack (%p) exceeds boundaries of stack (%p-%p)\n",
+		     rsp, parent->stack, parent->stack+parent->stack_size);
+	panic("Detected stack out of bounds in parent during fork\n");
+    }
+#endif
+
+    THREAD_DEBUG("Forking thread from parent=%p tid=%lu stack=%p-%p rsp=%p\n", parent, parent->tid,parent->stack,parent->stack+parent->stack_size,rsp);
+
+    __asm__ __volatile__ ( "movq %%rsp, %0" : "=r"(rsp) : : "memory");
+
+#ifdef NAUT_CONFIG_ENABLE_STACK_CHECK
     // now check again after update to see if we didn't overrun/underrun the stack in the parent...
     if ((uint64_t)rsp <= (uint64_t)parent->stack ||
    (uint64_t)rsp >= (uint64_t)(parent->stack + parent->stack_size)) {
@@ -1084,17 +1104,19 @@ __thread_fork (void)
     // we're being called with a stack not as deep as STACK_CLONE_DEPTH...
     // fail back to a single frame...
     if ((uint64_t)rbp_tos <= (uint64_t)parent->stack ||
-   (uint64_t)rbp_tos >= (uint64_t)(parent->stack + parent->stack_size)) {
-        THREAD_DEBUG("Cannot resolve %lu stack frames on fork, using just one\n", STACK_CLONE_DEPTH);
-
+	(uint64_t)rbp_tos >= (uint64_t)(parent->stack + parent->stack_size)) { 
+	THREAD_DEBUG("Cannot resolve %lu stack frames on fork, using just one\n", STACK_CLONE_DEPTH);
         rbp_tos = rbp1;
     }
 
-    // from last byte of tos_rbp to the last byte of the stack on return from this function
+
+    // from last byte of tos_rbp to the last byte of the stack on return from this function 
     // (return address of wrapper)
     // the "launch pad" is added so that in the case where there is no stack frame above the caller
     // we still have the space to fake one.
     size = (rbp_tos + 8) - ret0_addr + LAUNCHPAD;
+
+    //THREAD_DEBUG("rbp0=%p rbp1=%p rbp_tos=%p, ret0_addr=%p\n", rbp0, rbp1, rbp_tos, ret0_addr);
 
     //THREAD_DEBUG("rbp0=%p rbp1=%p rbp_tos=%p, ret0_addr=%p\n", rbp0, rbp1, rbp_tos, ret0_addr);
 
@@ -1159,13 +1181,26 @@ __thread_fork (void)
     }
 #endif
 
+    THREAD_DEBUG("Forked thread initialized: %p (tid=%lu) stack=%p size=%lu rsp=%p\n",t,t->tid,t->stack,t->stack_size,t->rsp);
+
+#ifdef NAUT_CONFIG_ENABLE_STACK_CHECK
+    // now check the child before we attempt to run it
+    if ((uint64_t)t->rsp <= (uint64_t)t->stack ||
+	(uint64_t)t->rsp >= (uint64_t)(t->stack + t->stack_size)) { 
+	THREAD_ERROR("Child's rsp (%p) exceeds boundaries of stack (%p-%p)\n",
+		     t->rsp, t->stack, t->stack+t->stack_size);
+	panic("Detected stack out of bounds in child during fork\n");
+	return 0;
+    }
+#endif
+
 #ifdef NAUT_CONFIG_FPU_SAVE
     // clone the floating point state
     extern void nk_fp_save(void *dest);
     nk_fp_save(t->fpu_state);
 #endif
 
-    if (nk_sched_make_runnable(t,t->current_cpu,1)) {
+    if (nk_sched_make_runnable(t,t->current_cpu,1)) { 
 	THREAD_ERROR("Scheduler failed to run thread (%p, tid=%u) on cpu %u\n",
 		    t, t->tid, t->current_cpu);
 	return 0;

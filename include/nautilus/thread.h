@@ -50,7 +50,7 @@ typedef void (*nk_thread_fun_t)(void * input, void ** output);
 typedef uint64_t nk_stack_size_t;
 
 
-// Create thread but do not launch it
+// Create thread but do not launch it 
 int
 nk_thread_create (nk_thread_fun_t fun,
 		  void * input,
@@ -74,10 +74,10 @@ nk_thread_start (nk_thread_fun_t fun,
                  nk_thread_id_t * tid,
                  int bound_cpu); // -1 => not bound
 
-// fork the current thread
+// fork the current thread 
 //   - parent is returned the tid of child
 //   - child is returned zero
-//   - child runs until it returns from the
+//   - child runs until it returns from the 
 //     current function, which returns into
 //     the thread cleanup logic instead of to
 //     the caller
@@ -151,9 +151,9 @@ int nk_tls_set(nk_tls_key_t key, const void * val);
 /* thread status */
 typedef enum {
     NK_THR_INIT=0,
-    NK_THR_RUNNING,
+    NK_THR_RUNNING, 
     NK_THR_WAITING,
-    NK_THR_SUSPENDED,
+    NK_THR_SUSPENDED, 
     NK_THR_EXITED,
 } nk_thread_status_t;
 
@@ -161,10 +161,9 @@ typedef enum {
 typedef struct nk_queue nk_thread_queue_t;
 
 struct nk_thread {
-    uint64_t rsp;               /* +0   SHOULD NOT CHANGE POSITION */
-    void * stack;               /* +8   SHOULD NOT CHANGE POSITION */
-    uint16_t fpu_state_offset;  /* +16  SHOULD NOT CHANGE POSITION */
-
+    uint64_t rsp;              /* +0  SHOULD NOT CHANGE POSITION */
+    void * stack;              /* +8  SHOULD NOT CHANGE POSITION */
+    uint16_t fpu_state_offset; /* +16 SHOULD NOT CHANGE POSITION */
     nk_stack_size_t stack_size;
     unsigned long tid;
 
@@ -224,6 +223,7 @@ nk_thread_queue_t * nk_thread_queue_create (void);
 void nk_thread_queue_destroy(nk_thread_queue_t * q);
 
 void nk_thread_queue_sleep(nk_thread_queue_t * q);
+//  cond_check is condition (if any) to check atomically with enqueueing
 void nk_thread_queue_sleep_extended(nk_thread_queue_t * q, int (*cond_check)(void *state), void *state);
 void nk_thread_queue_wake_one(nk_thread_queue_t * q);
 void nk_thread_queue_wake_all(nk_thread_queue_t * q);
