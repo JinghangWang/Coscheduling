@@ -1,5 +1,5 @@
 *.d
-*.DS_Store
+.DS_Store
 *.out
 *.patch
 *.o
