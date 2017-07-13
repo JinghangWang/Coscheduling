@@ -1,7 +1,7 @@
 /*
  * Automatically generated C config: don't edit
  * Nautilus version: 
- * Tue Jul 11 16:35:25 2017
+ * Thu Jul 13 10:25:16 2017
  */
 #define AUTOCONF_INCLUDED
 
@@ -103,7 +103,7 @@
  * Device options
  */
 #define NAUT_CONFIG_SERIAL_REDIRECT 1
-#define NAUT_CONFIG_SERIAL_REDIRECT_PORT 2
+#define NAUT_CONFIG_SERIAL_REDIRECT_PORT 1
 #undef NAUT_CONFIG_APIC_FORCE_XAPIC_MODE
 #undef NAUT_CONFIG_APIC_TIMER_CALIBRATE_INDEPENDENTLY
 #undef NAUT_CONFIG_DEBUG_APIC

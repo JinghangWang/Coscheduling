@@ -23,7 +23,7 @@ BOOTMEM: Memory map[5] - [0xfffc0000 - 0x100000000] <reserved>
 BOOTMEM: Detected 2146.958336 MB of usable System RAM
 CPU ? (): DEBUG: Multiboot info size 392B
 CPU ? (): DEBUG: Cmd line: 
-CPU ? (): DEBUG: Boot loader: GRUB 2.02~beta2-36ubuntu3.11
+CPU ? (): DEBUG: Boot loader: GRUB 2.02~beta2-36ubuntu3.7
 CPU ? (): DEBUG: Unhandled tag type (0xa)
 CPU ? (): DEBUG: Multiboot2 memory map detected
 CPU ? (): DEBUG: ELF size=20, num=0, entsize=0, shndx=0, sechdr=0x00316c41
@@ -79,22 +79,112 @@ CPU 0 (P 1 "*unnamed*"): dev: Added device with name vga, type 0, flags 0x0
 CPU 0 (P 1 "*unnamed*"): dev: Added device with name serial-boot, type 0, flags 0x0
 CPU 0 (P 1 "*unnamed*"): chardev: register device serial0
 CPU 0 (P 1 "*unnamed*"): dev: Added device with name serial0, type 4, flags 0x0
-CPU 0 (P 1 "*unnamed*"): chardev: register device serial1
-CPU 0 (P 1 "*unnamed*"): dev: Added device with name serial1, type 4, flags 0x0
 CPU 0 (P 1 "*unnamed*"): vc: init
+List of VCs (space to regenerate)
+
 CPU 0 (P 1 "*unnamed*"): vc: List launched
 CPU 0 (P 1 "*unnamed*"): fs: inited
 CPU 0 (P 1 "*unnamed*"): Shell root-shell launched on cpu 0 as 000000007fa04000
 Nautilus boot thread yielding (indefinitely)
-List of VCs (space to regenerate)
-
-ra : default
+a : default
 b : system-log
 c : vc-list
-d : root-shell
-oot-shell> test thread
-Create-join test of 10 passes with 512 threads each: PASS
-Fork-join test of 10 passes with 512 threads each: PASS
-Recursive create-join test of 10 passes with depth 8 (512 threads): PASS
-Recursive fork-join test of 10 passes with depth 8 (512 threads): PASS
-root-shell> 
+root-shell> group-test
+Don't understand "group-test"
+root-shell> group_test
+CPU 0: Initializing group barrier, group barrier at 0000000000113044, count=0
+CPU 0: group_create succeeded
+CPU 0: cur_group->group_name: helloworld!
+CPU 0: group name in tester is : helloworld!
+CPU 0: cur_group->group_name: helloworld!
+CPU 0: Thread (0000000000114000) joining barrier 
+CPU 0: group_join ok, tid is 0
+root-shell> CPU 1: group name in tester is : helloworld!
+CPU 1: cur_group->group_name: helloworld!
+CPU 1: Thread (0000000000116000) joining barrier 
+CPU 1: group_join ok, tid is 1
+CPU 1: Thread (0000000000116000) entering barrier (0000000000113044)
+CPU 1: Thread (0000000000116000): remaining count = 1
+CPU 0: All joined!
+CPU 0: Thread (0000000000114000) entering barrier (0000000000113044)
+CPU 0: Thread (0000000000114000): notify
+CPU 0: Thread (0000000000114000) exiting barrier (0000000000113044)
+CPU 1: Thread (0000000000116000): reset notify
+CPU 1: Thread (0000000000116000) exiting barrier (0000000000113044)
+CPU 1: Thread (0000000000116000) entering barrier (0000000000113044)
+CPU 1: Thread (0000000000116000): remaining count = 1
+CPU 0: Thread (0000000000114000) entering barrier (0000000000113044)
+CPU 0: Thread (0000000000114000): notify
+CPU 0: Thread (0000000000114000) exiting barrier (0000000000113044)
+CPU 0: t0 #
+CPU 1: Thread (0000000000116000): reset notify
+CPU 1: Thread (0000000000116000) exiting barrier (0000000000113044)
+CPU 1: t1 #
+CPU 1: Thread (0000000000116000) entering barrier (0000000000113044)
+CPU 1: Thread (0000000000116000): remaining count = 1
+CPU 0: Thread (0000000000114000) entering barrier (0000000000113044)
+CPU 0: Thread (0000000000114000): notify
+CPU 0: Thread (0000000000114000) exiting barrier (0000000000113044)
+CPU 0: &
+CPU 1: Thread (0000000000116000): reset notify
+CPU 1: Thread (0000000000116000) exiting barrier (0000000000113044)
+CPU 1: Thread (0000000000116000) entering barrier (0000000000113044)
+CPU 1: Thread (0000000000116000): remaining count = 1
+CPU 0: Thread (0000000000114000) entering barrier (0000000000113044)
+CPU 0: Thread (0000000000114000): notify
+CPU 0: Thread (0000000000114000) exiting barrier (0000000000113044)
+CPU 0: succ_count = 1
+CPU 1: Thread (0000000000116000): reset notify
+CPU 1: Thread (0000000000116000) exiting barrier (000000000011304CPU 0: Thread (0000000000114000) entering barrier (0000000000113044)
+CPU 0: Thread (0000000000114000): remaining count = 1
+4)
+CPU 1: Thread (0000000000116000) entering barrier (0000000000113044)
+CPU 1: Thread (0000000000116000): notify
+CPU 1: Thread (0000000000116000) exiting barrier (0000000000113044)
+CPU 0: Thread (0000000000114000): reset notify
+CPU 0: Thread (0000000000114000) exiting barrier (0000000000113044)
+CPU 1: Thread (0000000000116000) entering barrier (0000000000113044)
+CPU 1: Thread (0000000000116000): remaining count = 1
+--For tester 0:
+join dur = 1470384
+election dur = 1848
+group_change_cons dur = 10387315
+change_cons dur = 76083
+barrier dur = 10451964
+
+--For tester 1:
+join dur = 953087
+election dur = 2046
+group_change_cons dur = 22740461
+change_cons dur = 33309
+barrier dur = 14767892
+
+CPU 0: Thread (0000000000114000) entering barrier (0000000000113044)
+CPU 0: Thread (0000000000114000): nCPU 1: Thread (0000000000116000) exiting barrier (0000000000113044)
+CPU 1: t1 says here 0
+CPU 1: Member foundotify
+CPU 0: Thread (0000000000114000): reset notify
+CPU 0: Thread (0000000000114000) exiting barrier (0000000000113044)
+ in group leave!
+CPCPU 0: t0 says here 0
+
++++ UNHANDLED EXCEPTION +++
+[General Protection Fault] (0xd) error=0x0 <#GP>
+    RIP=0x00378866      (core=0, thread=5)
+Current Thread=0x5 (0x00114000) "tester 0"
+[-------------- Register Contents --------------]
+RIP: 0008:0000000000378866
+RSP: 0010:000000007fa07ef8 RFLAGS: 00000246 Vector: 0000000d Error: 00000000
+RAX: 0000000000113044 RBX: f000000000100100 RCX: f000000000200200
+RDX: 0000000000000000 RDI: f000000000200200 RSI: f000000000100100
+RBP: 000000007fa07f38 R08: 0000000000000018 R09: 000000000000000a
+R10: 000000007fa07a60 R11: 0000000000000002 R12: 0000000000114000
+R13: 00000000003094a0 R14: 0000000000112000 R15: 0000000000000002
+FS: 0000000000000000(0010) GS: 0000000000602000(0000) knlGS: 0000000000000000
+CS: 0008 DS: 0010 ES: 0010 CR0: 0000000080000033
+CR2: 0000000000000000 CR3: 0000000000603000 CR4: 0000000000000620
+[-----------------------------------------------]
+[----------------- Call Trace ------------------]
+PANIC at src/nautilus/idt.c(117): +++ HALTING +++
+U 1: Thread (0000000000116000) leaving barrier (0000000000113044)
+CPU 1: t1 says here 1

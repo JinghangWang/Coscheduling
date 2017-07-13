@@ -44,7 +44,7 @@
 // List implementation for use in scheduler
 // Avoids changing thread structures
 //
-#define TESTER_NUM 4
+#define TESTER_NUM 2
 #define MAX_GROUP_NAME 32
 #define MAX_CPU_NUM NAUT_CONFIG_MAX_CPUS
 
@@ -212,8 +212,9 @@ nk_thread_group_create(char *name) {
     new_group->changing_fail = 0;
     new_group->changing_count = 0;
 
-    INIT_LIST_HEAD(&new_group->thread_group_node);
-    list_add(&new_group->thread_group_node, &parallel_thread_group_list.group_list_node);
+    INIT_LIST_HEAD(&(new_group->thread_group_node));
+
+    list_add(&(new_group->thread_group_node), &(parallel_thread_group_list.group_list_node));
 
     spinlock_init(&new_group->group_lock);
 
@@ -225,9 +226,7 @@ nk_thread_group_create(char *name) {
       return NULL;
     }
 
-     list_add(&new_group->thread_group_node, &parallel_thread_group_list.group_list_node);  //Can it fail?
-
-     group_barrier_init(&new_group->group_barrier);
+    group_barrier_init(&new_group->group_barrier);
 
     return new_group;
 }
@@ -240,7 +239,9 @@ nk_thread_group_delete(nk_thread_group_t *group) {
       return -1;
     }
 
+    GROUP("list_del 0\n");
     list_del(&group->thread_group_node);
+    GROUP("list_del 1\n");
 
     //The group members have been freed.
     //Free dur dump should be a function call
@@ -296,14 +297,14 @@ struct nk_thread_group *
 nk_thread_group_find(char *name){
     struct list_head *cur = NULL;
     nk_thread_group_t *cur_group = NULL;
-
     parallel_thread_group_list_t * l = &parallel_thread_group_list;
 
     spin_lock(&l->group_list_lock);
 
-    list_for_each(cur, &(parallel_thread_group_list.group_list_node)) {
-      list_entry(cur, nk_thread_group_t, thread_group_node);
+    list_for_each(cur, (struct list_head *)&parallel_thread_group_list.group_list_node) {
+      cur_group = list_entry(cur, nk_thread_group_t, thread_group_node);
       if (! (strcmp(cur_group->group_name, name) ))  {
+            GROUP("cur_group->group_name: %s\n", cur_group->group_name);
             spin_unlock(&l->group_list_lock);
             return cur_group;
         }
@@ -345,10 +346,11 @@ nk_thread_group_leave(nk_thread_group_t *group){
     spin_lock(&group->group_lock);
     group->group_size--;
     //remove from thread list
-
     group_member_t *leaving_member;
     struct nk_thread *cur_thread = get_cur_thread();
     struct list_head *cur;
+
+    list_del(&leaving_member->group_member_node);
 
     list_for_each(cur, &group->group_member_array[my_cpu_id()]) {
       leaving_member = list_entry(cur, group_member_t, group_member_node);
@@ -357,7 +359,6 @@ nk_thread_group_leave(nk_thread_group_t *group){
       }
     }
 
-    list_del(&leaving_member->group_member_node);
     FREE(&leaving_member);
 
     spin_unlock(&group->group_lock);
@@ -510,16 +511,16 @@ static void group_tester(void *in, void **out){
 
   int i = 0;
   while(atomic_add(dst->group_size, 0) != TESTER_NUM) {
-#ifdef NAUT_CONFIG_DEBUG_THREADS
-    // i += 1;
-    // if(i == 0xffffff) {
-    //   GROUP("group_size = %d\n", atomic_add(dst->group_size, 0));
-    //   i = 0;
-    // }
+#ifdef NAUT_CONFIG_DEBUG_GROUP
+    i += 1;
+    if(i == 0xffffff) {
+      GROUP("group_size = %d\n", atomic_add(dst->group_size, 0));
+      i = 0;
+    }
 #endif
   }
 
-#ifdef NAUT_CONFIG_DEBUG_THREADS
+#ifdef NAUT_CONFIG_DEBUG_GROUP
   if(tid == 0) {
     GROUP("All joined!\n");
   }
@@ -577,7 +578,7 @@ static void group_tester(void *in, void **out){
 
   nk_thread_group_barrier(dst);
 
-#ifdef NAUT_CONFIG_DEBUG_THREADS
+#ifdef NAUT_CONFIG_DEBUG_GROUP
   if(tid == 0) {
     GROUP("succ_count = %d\n", succ_count);
   }
@@ -591,9 +592,19 @@ static void group_tester(void *in, void **out){
 
   nk_thread_group_barrier(dst);
 
+  GROUP("t%d says here 0\n", tid);
+
   nk_thread_group_leave(dst);
 
+  GROUP("t%d says here 1\n", tid);
+
+  while(1) {
+
+  }
+
   nk_thread_group_delete(dst);
+
+  GROUP("t%d says here 2\n", tid);
 
   return;
 
@@ -654,16 +665,12 @@ int group_test(){
     // each join the group
     int i;
     for (i = 0; i < TESTER_NUM; ++i){
-        if (launch_tester(group_name, i + 4)){
+        if (launch_tester(group_name, i)){
             GROUP("starting tester failed\n");
         }
     }
 
-    if(thread_group_list_deinit() == 0) {
-      return 0;
-    } else {
-      return -1;
-    }
+    return 0;
 }
 
 void
