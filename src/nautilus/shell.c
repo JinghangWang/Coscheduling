@@ -334,12 +334,12 @@ static int handle_blktest(char * buf)
 static int handle_test(char *buf)
 {
     char what[80];
-    
-    if (sscanf(buf,"test %s",what)!=1) { 
+
+    if (sscanf(buf,"test %s",what)!=1) {
 	goto dunno;
     }
-    
-    if (!strncasecmp(what,"thread",6)) { 
+
+    if (!strncasecmp(what,"thread",6)) {
 	return test_threads();
     }
 
@@ -424,23 +424,23 @@ static int handle_meminfo(char *buf)
     uint64_t num = kmem_num_pools();
 
     // nk_vc_printf("Number of pools=%lu\n",num);
-    
+
     struct kmem_stats *s = malloc(sizeof(struct kmem_stats)+num*sizeof(struct buddy_pool_stats));
 
-    if (!s) { 
+    if (!s) {
 	nk_vc_printf("Failed to allocate space for mem info\n");
 	return 0;
     }
 
     s->max_pools = num;
-    
+
     kmem_stats(s);
 
-    
+
     uint64_t i;
 
-    for (i=0;i<s->num_pools;i++) { 
-	nk_vc_printf("pool %lu %p-%p %lu blks free %lu bytes free\n  %lu bytes min %lu bytes max\n", 
+    for (i=0;i<s->num_pools;i++) {
+	nk_vc_printf("pool %lu %p-%p %lu blks free %lu bytes free\n  %lu bytes min %lu bytes max\n",
 		     i,
 		     s->pool_stats[i].start_addr,
 		     s->pool_stats[i].end_addr,
@@ -460,28 +460,28 @@ static int handle_meminfo(char *buf)
 int handle_run(char *buf)
 {
     char path[80];
- 
-    if (sscanf(buf,"run %s", path)!=1) { 
+
+    if (sscanf(buf,"run %s", path)!=1) {
 	nk_vc_printf("Can't determine what to run\n");
 	return 0;
     }
 
     struct nk_exec *e = nk_load_exec(path);
 
-    if (!e) { 
+    if (!e) {
 	nk_vc_printf("Can't load %s\n", path);
 	return 0;
     }
 
     nk_vc_printf("Loaded executable, now running\n");
-    
-    if (nk_start_exec(e,0,0)) { 
+
+    if (nk_start_exec(e,0,0)) {
 	nk_vc_printf("Failed to run %s\n", path);
     }
 
     nk_vc_printf("Unloading executable\n");
-    
-    if (nk_unload_exec(e)) { 
+
+    if (nk_unload_exec(e)) {
 	nk_vc_printf("Failed to unload %s\n",path);
     }
 
@@ -603,7 +603,7 @@ static int handle_cmd(char *buf, int n)
     return 0;
   }
 
-  if (!strncasecmp(buf,"reap",4)) { 
+  if (!strncasecmp(buf,"reap",4)) {
       nk_sched_reap(1); // unconditional reap
     return 0;
   }
@@ -820,10 +820,22 @@ static int handle_cmd(char *buf, int n)
       return 0;
   }
 //Parallel thread concept------------------------------------------------
+  extern int group_test();
+  extern int group_test_0();
+  extern int double_group_test();
+
   if (!strncasecmp(buf,"group_test",10)) {
-    //nk_vc_printf("Starting group test\n");
-    extern int group_test();
     group_test();
+    return 0;
+  }
+
+  if (!strncasecmp(buf,"single_group_test",17)) {
+    group_test_0();
+    return 0;
+  }
+
+  if (!strncasecmp(buf,"double_group_test",17)) {
+    double_group_test();
     return 0;
   }
 
@@ -970,7 +982,7 @@ static int handle_cmd(char *buf, int n)
     return 0;
   }
 
-  if (!strncasecmp(buf,"threads",7)) { 
+  if (!strncasecmp(buf,"threads",7)) {
     if (sscanf(buf,"threads %d",&cpu)!=1) {
       cpu=-1;
     }
@@ -1026,15 +1038,15 @@ static void shell(void *in, void **out)
   }
 
   nk_switch_to_vc(vc);
-  
-#define PROMPT 0xcf 
+
+#define PROMPT 0xcf
 #define INPUT  0x3f
 #define OUTPUT 0x9f
 
   nk_vc_clear(OUTPUT);
   nk_vc_setattr(OUTPUT);
-   
-  while (1) {  
+
+  while (1) {
     nk_vc_setattr(PROMPT);
     nk_vc_printf("%s> ", (char*)in);
     nk_vc_setattr(INPUT);
