@@ -610,6 +610,7 @@ static void group_tester(void *in, void **out){
 
   if(tid == leader) {
     nk_thread_group_delete(dst);
+    free(in);
   }
 
   GROUP("t%d says here 2\n", tid);
@@ -654,7 +655,12 @@ static int launch_tester(char * group_name, int cpuid) {
 }
 
 int group_test(){
-    char group_name[32];
+    char* group_name = malloc(32);
+    if (!group_name){
+        GROUP("malloc group name faield");
+        return -1;
+    }
+
     sprintf(group_name, "helloworld!");
     nk_thread_group_t * new_group = nk_thread_group_create(group_name);
     if (new_group != NULL) {
