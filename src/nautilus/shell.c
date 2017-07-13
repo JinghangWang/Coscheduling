@@ -895,6 +895,15 @@ static int handle_cmd(char *buf, int n)
     return 0;
   }
     uint64_t bound_cpu;
+  if (sscanf(buf,"burn p %s %llu %u %llu %llu %llu %llu", name, &size_ns, &tpr, &phase, &period, &slice, &bound_cpu)==7) {
+    nk_vc_printf("Starting periodic burner %s with size %llu ms tpr %u phase %llu from now period %llu ms slice %llu ms on cpu %llu\n",name,size_ns,tpr,phase,period,slice, bound_cpu);
+    size_ns *= 1000000;
+    phase   *= 1000000;
+    period  *= 1000000;
+    slice   *= 1000000;
+    launch_periodic_burner(name,size_ns,tpr,phase,period,slice, bound_cpu);
+    return 0;
+  }
   if (sscanf(buf,"burn_test %llu", &bound_cpu) == 1) {
     //one thread, sweep period and slice
     //two thread, etc

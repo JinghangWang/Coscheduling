@@ -2206,7 +2206,10 @@ int nk_sched_thread_change_constraints(struct nk_sched_constraints *constraints)
     	DUMP_RT_PENDING(scheduler,"pending before handle special switch");
     	DUMP_APERIODIC(scheduler,"aperiodic before handle special switch");
 
+    //werid bug on phi, sometimes it never returns from handle_special_switch;
+    preempt_disable();
 	handle_special_switch(CHANGING,1,_local_flags,0);
+    preempt_enable();
 
     	// we now have released lock and interrupts are back to prior
 
