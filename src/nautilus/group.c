@@ -65,6 +65,12 @@
 #define GROUP(fmt, args...)
 #endif
 
+#ifdef NAUT_CONFIG_DEBUG_GROUP_BARRIER
+#define GROUP_BARRIER(fmt, args...)     nk_vc_printf_wrap("CPU %d: " fmt, my_cpu_id(), ##args)
+#else
+#define GROUP_BARRIER(fmt, args...)
+#endif
+
 typedef struct group_member {
     int tid;  //This is the id in the group
     nk_thread_t *thread;
@@ -305,6 +311,7 @@ nk_thread_group_find(char *name){
       cur_group = list_entry(cur, nk_thread_group_t, thread_group_node);
       if (! (strcmp(cur_group->group_name, name) ))  {
             GROUP("cur_group->group_name: %s\n", cur_group->group_name);
+            GROUP("name: %s\n", name);
             spin_unlock(&l->group_list_lock);
             return cur_group;
         }
@@ -350,15 +357,18 @@ nk_thread_group_leave(nk_thread_group_t *group){
     struct nk_thread *cur_thread = get_cur_thread();
     struct list_head *cur;
 
-    list_del(&leaving_member->group_member_node);
-
     list_for_each(cur, &group->group_member_array[my_cpu_id()]) {
       leaving_member = list_entry(cur, group_member_t, group_member_node);
       if(cur_thread == leaving_member->thread) {
-        GROUP("Member found in group leave!\n");
+        break;
       }
     }
 
+    if(cur == &group->group_member_array[my_cpu_id()]) {
+      ERROR_PRINT("Fail to find leaving member\n");
+    }
+
+    list_del(&leaving_member->group_member_node);
     FREE(&leaving_member);
 
     spin_unlock(&group->group_lock);
@@ -598,11 +608,9 @@ static void group_tester(void *in, void **out){
 
   GROUP("t%d says here 1\n", tid);
 
-  while(1) {
-
+  if(tid == leader) {
+    nk_thread_group_delete(dst);
   }
-
-  nk_thread_group_delete(dst);
 
   GROUP("t%d says here 2\n", tid);
 
@@ -646,8 +654,7 @@ static int launch_tester(char * group_name, int cpuid) {
 }
 
 int group_test(){
-    thread_group_list_init();
-    char group_name[20];
+    char group_name[32];
     sprintf(group_name, "helloworld!");
     nk_thread_group_t * new_group = nk_thread_group_create(group_name);
     if (new_group != NULL) {
@@ -676,7 +683,7 @@ int group_test(){
 void
 group_barrier_init (nk_barrier_t * barrier)
 {
-    GROUP("Initializing group barrier, group barrier at %p, count=%u\n", (void*)barrier, 0);
+    GROUP_BARRIER("Initializing group barrier, group barrier at %p, count=%u\n", (void*)barrier, 0);
 
     memset(barrier, 0, sizeof(nk_barrier_t));
     barrier->lock = 0;
@@ -691,25 +698,25 @@ group_barrier_wait (nk_barrier_t * barrier)
     int res = 0;
 
     bspin_lock(&barrier->lock);
-    GROUP("Thread (%p) entering barrier (%p)\n", (void*)get_cur_thread(), (void*)barrier);
+    GROUP_BARRIER("Thread (%p) entering barrier (%p)\n", (void*)get_cur_thread(), (void*)barrier);
 
     if (--barrier->remaining == 0) {
         res = NK_BARRIER_LAST;
         atomic_cmpswap(barrier->notify, 0, 1); //last thread set notify
-        GROUP("Thread (%p): notify\n", (void*)get_cur_thread());
+        GROUP_BARRIER("Thread (%p): notify\n", (void*)get_cur_thread());
     } else {
-        GROUP("Thread (%p): remaining count = %d\n", (void*)get_cur_thread(), barrier->remaining);
+        GROUP_BARRIER("Thread (%p): remaining count = %d\n", (void*)get_cur_thread(), barrier->remaining);
         bspin_unlock(&barrier->lock);
         BARRIER_WHILE(barrier->notify != 1);
     }
 
     if (atomic_inc_val(barrier->remaining) == barrier->init_count) {
       atomic_cmpswap(barrier->notify, 1, 0); //last thread reset notify
-      GROUP("Thread (%p): reset notify\n", (void*)get_cur_thread());
+      GROUP_BARRIER("Thread (%p): reset notify\n", (void*)get_cur_thread());
       bspin_unlock(&barrier->lock);
     }
 
-    GROUP("Thread (%p) exiting barrier (%p)\n", (void*)get_cur_thread(), (void*)barrier);
+    GROUP_BARRIER("Thread (%p) exiting barrier (%p)\n", (void*)get_cur_thread(), (void*)barrier);
 
     return res;
 }
@@ -718,7 +725,7 @@ void
 group_barrier_join (nk_barrier_t * barrier)
 {
     bspin_lock(&barrier->lock);
-    GROUP("Thread (%p) joining barrier \n", (void*)get_cur_thread());
+    GROUP_BARRIER("Thread (%p) joining barrier \n", (void*)get_cur_thread());
     atomic_inc(barrier->init_count);
     atomic_inc(barrier->remaining);
     bspin_unlock(&barrier->lock);
@@ -729,7 +736,7 @@ group_barrier_leave (nk_barrier_t * barrier)
 {
     int res = 0;
 
-    GROUP("Thread (%p) leaving barrier (%p)\n", (void*)get_cur_thread(), (void*)barrier);
+    GROUP_BARRIER("Thread (%p) leaving barrier (%p)\n", (void*)get_cur_thread(), (void*)barrier);
 
     bspin_lock(&barrier->lock);
 
@@ -738,7 +745,7 @@ group_barrier_leave (nk_barrier_t * barrier)
     if (--barrier->remaining == 0) {
         res = NK_BARRIER_LAST;
         atomic_cmpswap(barrier->notify, 0, 1); //last thread set notify
-        GROUP("Thread (%p): notify\n", (void*)get_cur_thread());
+        GROUP_BARRIER("Thread (%p): notify\n", (void*)get_cur_thread());
     }
 
     bspin_unlock(&barrier->lock);

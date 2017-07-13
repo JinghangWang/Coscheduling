@@ -267,7 +267,7 @@ init (unsigned long mbd,
     nk_net_dev_init();
 
     nk_vc_print(NAUT_WELCOME);
- 
+
     detect_cpu();
 
     /* setup the temporary boot-time allocator */
@@ -371,12 +371,12 @@ init (unsigned long mbd,
     nk_sched_start();
 
     sti();
- 
+
     /* interrupts are now on */
 
     nk_vc_init();
 
-    
+
 #ifdef NAUT_CONFIG_VIRTUAL_CONSOLE_CHARDEV_CONSOLE
     nk_vc_start_chardev_console(NAUT_CONFIG_VIRTUAL_CONSOLE_CHARDEV_CONSOLE_NAME);
 #endif
@@ -419,8 +419,10 @@ init (unsigned long mbd,
     printk("Nautilus boot thread yielding (indefinitely)\n");
 
 
-    //testing
-    // group_test(5);
+    //parallel thread project
+    extern void thread_group_list_init();
+    thread_group_list_init();
+
 
     /* we don't come back from this */
     idle(NULL, NULL);

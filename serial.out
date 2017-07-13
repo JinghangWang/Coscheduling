@@ -80,111 +80,326 @@ CPU 0 (P 1 "*unnamed*"): dev: Added device with name serial-boot, type 0, flags 
 CPU 0 (P 1 "*unnamed*"): chardev: register device serial0
 CPU 0 (P 1 "*unnamed*"): dev: Added device with name serial0, type 4, flags 0x0
 CPU 0 (P 1 "*unnamed*"): vc: init
-List of VCs (space to regenerate)
-
 CPU 0 (P 1 "*unnamed*"): vc: List launched
 CPU 0 (P 1 "*unnamed*"): fs: inited
 CPU 0 (P 1 "*unnamed*"): Shell root-shell launched on cpu 0 as 000000007fa04000
 Nautilus boot thread yielding (indefinitely)
+List of VCs (space to regenerate)
+
 a : default
 b : system-log
 c : vc-list
-root-shell> group-test
-Don't understand "group-test"
+d : root-shell
 root-shell> group_test
-CPU 0: Initializing group barrier, group barrier at 0000000000113044, count=0
 CPU 0: group_create succeeded
 CPU 0: cur_group->group_name: helloworld!
-CPU 0: group name in tester is : helloworld!
+CPU 0: name: helloworld!
+rCPU 1:C groooup naPUme it-shell>  0: group name in tester is : helloworld!
 CPU 0: cur_group->group_name: helloworld!
-CPU 0: Thread (0000000000114000) joining barrier 
-CPU 0: group_join ok, tid is 0
-root-shell> CPU 1: group name in tester is : helloworld!
+CPU 0: name: helloworld!
+CPU 0: group_join ok, tidn i tses 0ter 
+is : helloworld!
 CPU 1: cur_group->group_name: helloworld!
-CPU 1: Thread (0000000000116000) joining barrier 
-CPU 1: group_join ok, tid is 1
-CPU 1: Thread (0000000000116000) entering barrier (0000000000113044)
-CPU 1: Thread (0000000000116000): remaining count = 1
-CPU 0: All joined!
-CPU 0: Thread (0000000000114000) entering barrier (0000000000113044)
-CPU 0: Thread (0000000000114000): notify
-CPU 0: Thread (0000000000114000) exiting barrier (0000000000113044)
-CPU 1: Thread (0000000000116000): reset notify
-CPU 1: Thread (0000000000116000) exiting barrier (0000000000113044)
-CPU 1: Thread (0000000000116000) entering barrier (0000000000113044)
-CPU 1: Thread (0000000000116000): remaining count = 1
-CPU 0: Thread (0000000000114000) entering barrier (0000000000113044)
-CPU 0: Thread (0000000000114000): notify
-CPU 0: Thread (0000000000114000) exiting barrier (0000000000113044)
-CPU 0: t0 #
-CPU 1: Thread (0000000000116000): reset notify
-CPU 1: Thread (0000000000116000) exiting barrier (0000000000113044)
-CPU 1: t1 #
-CPU 1: Thread (0000000000116000) entering barrier (0000000000113044)
-CPU 1: Thread (0000000000116000): remaining count = 1
-CPU 0: Thread (0000000000114000) entering barrier (0000000000113044)
-CPU 0: Thread (0000000000114000): notify
-CPU 0: Thread (0000000000114000) exiting barrier (0000000000113044)
+CPU 1: name: helloworld!
+CCPU 0: All joPined!
+U 1: group_join ok, tid is 1
+CPU 1: tCPU 0: t01 #
+ #
 CPU 0: &
-CPU 1: Thread (0000000000116000): reset notify
-CPU 1: Thread (0000000000116000) exiting barrier (0000000000113044)
-CPU 1: Thread (0000000000116000) entering barrier (0000000000113044)
-CPU 1: Thread (0000000000116000): remaining count = 1
-CPU 0: Thread (0000000000114000) entering barrier (0000000000113044)
-CPU 0: Thread (0000000000114000): notify
-CPU 0: Thread (0000000000114000) exiting barrier (0000000000113044)
 CPU 0: succ_count = 1
-CPU 1: Thread (0000000000116000): reset notify
-CPU 1: Thread (0000000000116000) exiting barrier (000000000011304CPU 0: Thread (0000000000114000) entering barrier (0000000000113044)
-CPU 0: Thread (0000000000114000): remaining count = 1
-4)
-CPU 1: Thread (0000000000116000) entering barrier (0000000000113044)
-CPU 1: Thread (0000000000116000): notify
-CPU 1: Thread (0000000000116000) exiting barrier (0000000000113044)
-CPU 0: Thread (0000000000114000): reset notify
-CPU 0: Thread (0000000000114000) exiting barrier (0000000000113044)
-CPU 1: Thread (0000000000116000) entering barrier (0000000000113044)
-CPU 1: Thread (0000000000116000): remaining count = 1
 --For tester 0:
-join dur = 1470384
-election dur = 1848
-group_change_cons dur = 10387315
-change_cons dur = 76083
-barrier dur = 10451964
+join dur = 411516
+election dur = 795
+group_change_cons dur = 54403714
+change_cons dur = 1818018
+barrier dur = 49893
 
 --For tester 1:
-join dur = 953087
-election dur = 2046
-group_change_cons dur = 22740461
-change_cons dur = 33309
-barrier dur = 14767892
+join dur = 20445
+election dur = 780
+group_change_cons dur = 3148884
+change_cons dur = 65157
+barrier dur = 5387019
 
-CPU 0: Thread (0000000000114000) entering barrier (0000000000113044)
-CPU 0: Thread (0000000000114000): nCPU 1: Thread (0000000000116000) exiting barrier (0000000000113044)
-CPU 1: t1 says here 0
-CPU 1: Member foundotify
-CPU 0: Thread (0000000000114000): reset notify
-CPU 0: Thread (0000000000114000) exiting barrier (0000000000113044)
- in group leave!
-CPCPU 0: t0 says here 0
-
-+++ UNHANDLED EXCEPTION +++
-[General Protection Fault] (0xd) error=0x0 <#GP>
-    RIP=0x00378866      (core=0, thread=5)
-Current Thread=0x5 (0x00114000) "tester 0"
-[-------------- Register Contents --------------]
-RIP: 0008:0000000000378866
-RSP: 0010:000000007fa07ef8 RFLAGS: 00000246 Vector: 0000000d Error: 00000000
-RAX: 0000000000113044 RBX: f000000000100100 RCX: f000000000200200
-RDX: 0000000000000000 RDI: f000000000200200 RSI: f000000000100100
-RBP: 000000007fa07f38 R08: 0000000000000018 R09: 000000000000000a
-R10: 000000007fa07a60 R11: 0000000000000002 R12: 0000000000114000
-R13: 00000000003094a0 R14: 0000000000112000 R15: 0000000000000002
-FS: 0000000000000000(0010) GS: 0000000000602000(0000) knlGS: 0000000000000000
-CS: 0008 DS: 0010 ES: 0010 CR0: 0000000080000033
-CR2: 0000000000000000 CR3: 0000000000603000 CR4: 0000000000000620
-[-----------------------------------------------]
-[----------------- Call Trace ------------------]
-PANIC at src/nautilus/idt.c(117): +++ HALTING +++
-U 1: Thread (0000000000116000) leaving barrier (0000000000113044)
+CPU 0: t0 says here 0CPU 1: t1 says here 0
 CPU 1: t1 says here 1
+CPU 1: t1 sa
+CPU 0: t0 says here 1
+CPU 0: list_del 0
+CPU 0: list_del 1
+CPU 0: t0 says here 2
+ys here 2
+
+CPU 0: group_create succeeded
+CPU 0: cur_group->group_name: helloworld!
+CPU 0: name: helloworld!
+CPU 1: group name root-shell> CPU 0in tester is : hellow: group name orld!
+CPU 1: cur_gin tester is : hroup->groelup_nameloworld!
+: helloworld!
+CPU 1: name: helloworld!
+CCPU 0: cur_PU 1: grougroup-p_join >group_name:ok, tid is 0 helloworld!
+
+CPU 0: name: helloworld!
+CPU CPU 1: 0: groupAll joined!
+_join ok, tid is 1
+CPU 0: t1 #CP
+U 1: t0 #
+CPU 1: &
+CPU 1: succ_count = 2
+--For tester 0:
+join dur = 27471
+election dur = 372
+group_change_cons dur = 10975379
+change_cons dur = 313425
+barrier dur = 1956
+
+--For tester 1:
+join dur = 30270
+election dur = 204
+group_change_cons dur = 7149730
+change_cons dur = 43683
+barrier dur = 7244509
+
+CPU 1: t0 says here 0
+CPU 0: t1 says here 0
+CPU 1: t0 says here 1
+CPU 1: Unable to delete thread group!
+CPU 1: t0 says here 2
+CPU 0: t1 says here 1
+CPU 0: t1 says here 2
+
+CPU 0: group_create succeeded
+CPU 0: cur_group->group_name: helloworld!
+CPU 0: name: helloworld!
+root-shell> CPU 0: group name in tester is : helloworld!
+CPU 0: cur_group->group_name: helloworld!
+CPU 0: name: helloworld!
+CPU 0: group_join ok, tid is 0
+CPU 1: group name in tester is : helloworld!
+CPU 1: cur_group->group_name: helloworld!
+CPU 1: name: helloworld!
+CPU 1: group_join ok, tid is 1
+CPU 0: All joined!
+CPU 0: t0 #
+CPU 1: t1 #
+CPU 0: &
+CPU 0: succ_count = 3
+--For tester 0:
+join dur = 12951
+election dur = 309
+group_change_cons dur = 7377596
+change_cons dur = 17778
+barrier dur = 1625784
+
+--For tester 1:
+join dur = 21096
+election dur = 141
+group_change_cons dur = 13655644
+change_cons dur = 13506
+barrier dur = 1629228
+
+CPU 0: t0 says here 0
+CPU 1: t1 says here 0
+CPU 0: t0 says here 1
+CPU 0: t0 says here 2
+CPU 1: t1 says here 1
+CPU 1: list_del 0
+CPU 1: list_del 1
+CPU 1: t1 says here 2
+
+CPU 0: group_create succeeded
+CPU 0: cur_group->group_name: helloworld!
+CPU 0: name: helloworld!
+root-shell> CPU 0: group name in tester is : helloworld!
+CPU 0: cur_group->group_name: helloworld!
+CPU 0: name: helloworld!
+CPU 0: group_join ok, tid is 0
+CPU 1: group name in tester is : helloworld!
+CPU 1: cur_group->group_name: helloworld!
+CPU 1: name: helloworld!
+CPU 1: group_join ok, tid is 1
+CPU 0: All joined!
+CPU 0: t0 #
+CPU 1: t1 #
+CPU 1: &
+CPU 0: succ_count = 4
+--For tester 0:
+join dur = 16584
+election dur = 441
+group_change_cons dur = 8069687
+change_cons dur = 20862
+barrier dur = 15305878
+
+--For tester 1:
+join dur = 28218
+election dur = 294
+group_change_cons dur = 23733470
+change_cons dur = 93435
+barrier dur = 6207
+
+CPU 0: t0 says here 0
+CPU 0: t0 says here 1
+CPU 0: t0 says here 2
+CPU 1: t1 says here 0
+CPU 1: t1 says here 1
+CPU 1: list_del 0
+CPU 1: list_del 1
+CPU 1: t1 says here 2
+
+CPU 0: group_create succeeded
+CPU 0: cur_group->group_name: helloworld!
+CPU 0: name: helloworld!
+root-shell> CPU 0: group name in tester is : helloworld!
+CPU 0: cur_group->group_name: helloworld!
+CPU 0: name: helloworld!
+CPU 0: group_join ok, tid is 0
+CPU 1: group name in tester is : helloworld!
+CPU 1: cur_group->group_name: helloworld!
+CPU 1: name: helloworld!
+CPU 1: group_join ok, tid is 1
+CPU 0: All joined!
+CPU 0: t0 #
+CPU 1: t1 #
+CPU 0: &
+CPU 0: succ_count = 5
+--For tester 0:
+join dur = 14646
+election dur = 489
+group_change_cons dur = 4766264
+change_cons dur = 18522
+barrier dur = 6296730
+
+--For tester 1:
+join dur = 77904
+election dur = 882
+group_change_cons dur = 20946015
+change_cons dur = 20307
+barrier dur = 1791960
+
+CPU 1: t1 says here 0
+CPU 0: t0 says here 0
+CPU 1: t1 says here 1
+CPU 1: Unable to delete thread group!
+CPU 1: t1 says here 2
+CPU 0: t0 says here 1
+CPU 0: t0 says here 2
+
+CPU 0: group_create succeeded
+CPU 0: cur_group->group_name: helloworld!
+CPU 0: name: helloworld!
+root-shell> CPU 0: group name in tester is : helloworld!
+CPU 0: cur_group->group_name: helloworld!
+CPU 0: name: helloworld!
+CPU 0: group_join ok, tid is 0
+CPU 1: group name in tester is : helloworld!
+CPU 1: cur_group->group_name: helloworld!
+CPU 1: name: helloworld!
+CPU 1: groupCPU 0: All joined!
+_join ok, tid is 1
+CPU 1: t1 #
+CPU 0: t0 #
+CPU 1: &
+CPU 0: succ_count = 6
+--For tester 0:
+join dur = 67662
+election dur = 426
+group_change_cons dur = 6857562
+change_cons dur = 19362
+barrier dur = 2365311
+
+--For tester 1:
+join dur = 23505
+election dur = 138
+group_change_cons dur = 3148287
+change_cons dur = 20469
+barrier dur = 2220537
+
+CPU 0: t0 says here 0
+CCPU 0: t0 says here 1
+CPU 0: Unable to delete thread group!
+CPU 0: t0 says here 2
+PU 1: t1 says here 0
+CPU 1: t1 says here 1
+CPU 1: t1 says here 2
+
+CPU 0: group_create succeeded
+CPU 0: cur_group->group_name: helloworld!
+CPU 0: name: helloworld!
+CPUroot 1: group nameCPU 0: group in teste name in r is : htester iselloworld!
+ : helloworlCPU 1: curd!
+-shell> _group->group_name: helloworld!
+CPU 1: name: helloworld!
+CPU 1: groCPU 0up: cur_gr_join ooup->grk, tid oup_nis 0
+ame: helloworld!
+CPU 0: name: helloworld!
+CPUCPU 1: All j 0: group_oined!
+join ok, tid is 1
+CPCPU 1:U 0: t1 #
+ t0 #
+CPU 1: &
+CPU 1: succ_count = 7
+--For tester 0:
+join dur = 31842
+election dur = 555
+group_change_cons dur = 23346756
+change_cons dur = 35118
+barrier dur = 3579
+
+--For tester 1:
+join dur = 32100
+election dur = 807
+group_change_cons dur = 3699729
+change_cons dur = 44211
+barrier dur = 4125681
+
+CPU 1: t0 says here 0
+CPU 1: t0 says here 1
+CPU 1: Unable to delete thread group!
+CPU 1: t0 says here 2
+CPU 0: t1 says here 0
+CPU 0: t1 says here 1
+CPU 0: t1 says here 2
+
+CPU 0: group_create succeeded
+CPU 0: cur_group->group_name: helloworld!
+CPU 0: name: helloworld!
+CPU 0: group name in tester is : helloworld!
+CPU 0: cur_group->group_name: helloworld!
+CPU 0: name: helloworld!
+CPU 0: group_join ok, tid is 0
+CPU 0: group_size = 1
+CPU 1: CPU 0: group_size = 1
+gCPU 0: group_size = 1
+CPU 0: group_size = 1
+roup name in tester is : helloworld!
+CPU 1: cur_group->group_name: helloworld!
+CPU 1: name: helloworld!
+CPU 1: group_join ok, tid is 1
+CPU 0: All joined!
+CPU 0: t0 #
+CPU 1: t1 #
+CPU 0: &
+CPU 0: succ_count = 8
+--For tester 0:
+join dur = 19269
+election dur = 678
+group_change_cons dur = 1891218
+change_cons dur = 1832043
+barrier dur = 1833
+
+--For tester 1:
+join dur = 24633
+election dur = 174
+group_change_cons dur = 2980026
+change_cons dur = 27156
+barrier dur = 82662068
+
+CPU 0: t0 says here 0
+CPU 0: t0 says here 1
+CPU CPU 1: t1 says here 0
+CPU 1: t1 says here 1
+CPU 1: list_del 0
+CPU 1: list_del 1
+0: t0 says here 2
+CPU 1: t1 says here 2
+root-shell> 
