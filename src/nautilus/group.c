@@ -793,7 +793,7 @@ group_test_lanucher() {
   // launch a few aperiodic threads (testers), i.e. regular threads
   // each join the group
   for(i = 0; i < tester_num; i++) {
-    if (nk_thread_start(group_tester, (void*)group_name , NULL, 1, PAGE_SIZE_4KB, &tids[i], i)) {
+    if (nk_thread_start(group_tester, (void*)group_name , NULL, 1, PAGE_SIZE_4KB, &tids[i], i + 1)) {
       GROUP("Fail to start group_tester %d\n", i);
     }
   }
@@ -811,16 +811,16 @@ group_test_lanucher() {
 
 int
 group_test() {
-  nk_vc_printf("*****Warm up*****\n");
-  tester_num = 256;
+  nk_vc_printf("Warm Up\n");
+  tester_num = 255;
   group_test_lanucher();
 
-  for(int i = 1; i < 257; i++) {
-    nk_vc_printf("*****Tester Num: %d*****\n", i);
+  for(int i = 1; i < 256; i++) {
+    nk_vc_printf("Round: %d\n", i);
     tester_num = i;
     group_test_lanucher();
   }
-  nk_vc_printf("*****Test Finished*****\n");
+  nk_vc_printf("Test Finished\n");
 
   return 0;
 }
@@ -923,7 +923,7 @@ void nk_thread_queue_sleep_count(nk_thread_queue_t *wq, int *count)
 
 static void group_dur_dump(nk_thread_group_t* group) {
   for(int i = 0; i < tester_num; i++) {
-    nk_vc_printf("--For tester %d:\njoin dur = %d\nelection dur = %d\ngroup_change_cons dur = %d\nchange_cons dur = %d\nbarrier dur = %d\n\n",
+    nk_vc_printf("%d,%d,%d,%d,%d,%d\n",
                   i, group->dur_dump[i][0], group->dur_dump[i][1], group->dur_dump[i][2], group->dur_dump[i][3], group->dur_dump[i][4]);
   }
 }
