@@ -50,7 +50,7 @@ typedef void (*nk_thread_fun_t)(void * input, void ** output);
 typedef uint64_t nk_stack_size_t;
 
 
-// Create thread but do not launch it 
+// Create thread but do not launch it
 int
 nk_thread_create (nk_thread_fun_t fun,
 		  void * input,
@@ -74,10 +74,10 @@ nk_thread_start (nk_thread_fun_t fun,
                  nk_thread_id_t * tid,
                  int bound_cpu); // -1 => not bound
 
-// fork the current thread 
+// fork the current thread
 //   - parent is returned the tid of child
 //   - child is returned zero
-//   - child runs until it returns from the 
+//   - child runs until it returns from the
 //     current function, which returns into
 //     the thread cleanup logic instead of to
 //     the caller
@@ -151,9 +151,9 @@ int nk_tls_set(nk_tls_key_t key, const void * val);
 /* thread status */
 typedef enum {
     NK_THR_INIT=0,
-    NK_THR_RUNNING, 
+    NK_THR_RUNNING,
     NK_THR_WAITING,
-    NK_THR_SUSPENDED, 
+    NK_THR_SUSPENDED,
     NK_THR_EXITED,
 } nk_thread_status_t;
 

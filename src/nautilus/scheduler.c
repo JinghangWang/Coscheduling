@@ -71,7 +71,7 @@
 #if DUMP_THREAD_RT_STATE
 #define DEBUG_DUMP(rt,pre) rt_thread_dump(rt,pre)
 #else
-#define DEBUG_DUMP(rt,pre) 
+#define DEBUG_DUMP(rt,pre)
 #endif
 #endif
 
@@ -290,10 +290,10 @@ typedef struct nk_sched_percpu_state {
 	     WHAT->resched_slow_noswitch_num>0 ? ((WHAT->resched_slow_noswitch_sum2)-(WHAT->resched_slow_noswitch_sum*WHAT->resched_slow_noswitch_sum)/WHAT->resched_slow_noswitch_num)/WHAT->resched_slow_noswitch_num : 0, \
 	     WHAT->resched_slow_noswitch_min,				\
 	     WHAT->resched_slow_noswitch_max);				\
-    
+
 #else
-#define INST_SCHED_IN(s) 
-#define INST_SCHED_OUT(s)						
+#define INST_SCHED_IN(s)
+#define INST_SCHED_OUT(s)
 #define INST_DUMP(s,b,n)
 #endif
 
@@ -319,10 +319,10 @@ typedef struct nk_sched_percpu_state {
 #if DUMP_SCHED_STATE
 #define DUMP_APERIODIC(s,p) rt_queue_dump(&(s)->aperiodic,p)
 #else
-#define DUMP_APERIODIC(s,p) 
+#define DUMP_APERIODIC(s,p)
 #endif
 #else
-#define DUMP_APERIODIC(s,p) 
+#define DUMP_APERIODIC(s,p)
 #endif
 #define PEEK_APERIODIC(s,k) rt_queue_peek(&(s)->aperiodic,k)
 #define SIZE_APERIODIC(s) ((s)->aperiodic.size)
@@ -337,10 +337,10 @@ typedef struct nk_sched_percpu_state {
 #if DUMP_SCHED_STATE
 #define DUMP_APERIODIC(s,p) rt_priority_queue_dump(&(s)->aperiodic,p)
 #else
-#define DUMP_APERIODIC(s,p) 
+#define DUMP_APERIODIC(s,p)
 #endif
 #else
-#define DUMP_APERIODIC(s,p) 
+#define DUMP_APERIODIC(s,p)
 #endif
 #endif
 
@@ -427,7 +427,7 @@ typedef struct nk_sched_thread_state {
     struct nk_thread *thread;
 
     // the thread node in a thread list (the global thread list)
-    struct rt_node   *list; 
+    struct rt_node   *list;
 
 } rt_thread ;
 
@@ -527,7 +527,7 @@ static void pre_reap_thread(rt_thread *r, void *priv)
     nk_thread_t  * t = r->thread;
     rt_node      * temp;
 
-    if (reap_count<MAX_QUEUE && !t->refcount && t->status==NK_THR_EXITED && r->status==EXITING) { 
+    if (reap_count<MAX_QUEUE && !t->refcount && t->status==NK_THR_EXITED && r->status==EXITING) {
 	DEBUG("Reaping tid %llu (%s)\n",t->tid,t->name);
 	reap_pool[reap_count++] = r;
     }
@@ -573,24 +573,24 @@ void nk_sched_dump_cores(int cpu_arg)
 		     s->current->thread->sched_state->constraints.interrupt_priority_class,
 		     s->pending.size, s->runnable.size, s->aperiodic.size,
 		     s->num_thefts,
-		     
+
 #if NAUT_CONFIG_APERIODIC_ROUND_ROBIN
 		     "RR",
 #endif
-		     
-#if NAUT_CONFIG_APERIODIC_DYNAMIC_QUANTUM 
+
+#if NAUT_CONFIG_APERIODIC_DYNAMIC_QUANTUM
 		     "DQ",
 #endif
-		     
+
 #if NAUT_CONFIG_APERIODIC_DYNAMIC_LIFETIME
 		     "DL",
 #endif
-		     
+
 #if NAUT_CONFIG_APERIODIC_LOTTERY
 		     "LO",
 #endif
 		     s->cfg.util_limit,
-		     s->cfg.sporadic_reservation, s->cfg.aperiodic_reservation, 
+		     s->cfg.sporadic_reservation, s->cfg.aperiodic_reservation,
 		     s->cfg.aperiodic_quantum, s->cfg.aperiodic_default_priority,
 		     apic->timer_count);
 #if INSTRUMENT
@@ -619,7 +619,7 @@ void nk_sched_dump_time(int cpu_arg)
 
 	    struct apic_dev *apic = sys->cpus[cpu]->apic;
 	    struct tsc_info *tsc = &sys->cpus[cpu]->sched_state->tsc;
-			 
+
             nk_vc_printf("%dc %luhz %luppt %lucpu %lucpt %luts %luct %lutc %lust %lustc %ldstr %ldstrc\n",
 			 cpu, apic->bus_freq_hz, apic->ps_per_tick,
 			 apic->cycles_per_us, apic->cycles_per_tick,
@@ -709,7 +709,7 @@ void nk_sched_reap(int uncond)
     GLOBAL_UNLOCK();
 
     // Now reap
-    for (i=0;i<reap_count;i++) { 
+    for (i=0;i<reap_count;i++) {
 	nk_thread_destroy(reap_pool[i]->thread);
     }
 
@@ -741,7 +741,7 @@ struct nk_sched_thread_state *nk_sched_thread_state_init(struct nk_thread *threa
 
     ZERO(t);
 
-    if (!constraints) { 
+    if (!constraints) {
 	constraints = &default_constraints;
     }
 
@@ -1157,7 +1157,7 @@ static void rt_list_map(rt_list *l, void (func)(rt_thread *t, void *priv), void 
     }
 }
 
-static rt_thread* rt_list_remove(rt_list *l, rt_node *n) 
+static rt_thread* rt_list_remove(rt_list *l, rt_node *n)
 {
     rt_node *tmp = n->next;
     rt_thread *f;
@@ -1180,7 +1180,7 @@ static rt_thread* rt_list_remove(rt_list *l, rt_node *n)
 }
 
 
-static rt_thread* rt_list_remove_search(rt_list *l, rt_thread *t) 
+static rt_thread* rt_list_remove_search(rt_list *l, rt_thread *t)
 {
     rt_node *n = l->head;
     while (n != NULL) {
@@ -2065,14 +2065,14 @@ struct nk_thread *_sched_need_resched(int have_lock, int force_resched)
 	//}  else {
 	//    INFO("Switching to interrupt thread (%lu, %s)\n",rt_n->thread->tid,rt_n->thread->name);
 	//}
-	if (rt_n->thread->status==NK_THR_RUNNING) { 
+	if (rt_n->thread->status==NK_THR_RUNNING) {
 	    ERROR("Switching to new thread that is already running (old tid=%llu (%s), new tid=%llu (%s))\n",rt_c->status,rt_c->thread->tid,rt_c->thread->name,rt_n->thread->tid,rt_n->thread->name);
 	    DUMP_ENTRY_CONTEXT();
 	}
 	// We may have switched away from a thread attempting to sleep
 	// before we were able to do so, in which case, don't reset its status
 	// we need to try again
-	if (rt_n->thread->status != NK_THR_WAITING) { 
+	if (rt_n->thread->status != NK_THR_WAITING) {
 	    DEBUG("Switching new thread (%lu) from state %u to state %u\n",rt_n->thread->tid, rt_n->thread->status, NK_THR_RUNNING);
 	    rt_n->thread->status=NK_THR_RUNNING;
 	}
@@ -2109,11 +2109,11 @@ struct nk_thread *_sched_need_resched(int have_lock, int force_resched)
 	// we are not switching threads
 	// the thread may be marked waiting as we may have been preempted in the
 	// middle of going to sleep
-	if (rt_c->thread->status!=NK_THR_SUSPENDED && rt_c->thread->status!=NK_THR_WAITING && !yielding) { 
+	if (rt_c->thread->status!=NK_THR_SUSPENDED && rt_c->thread->status!=NK_THR_WAITING && !yielding) {
 	    ERROR("Staying with current thread, but it is not marked suspended or waiting or yielding (thread status is %u rt thread status is %u tid=%llu (%s))\n",rt_c->thread->status,rt_c->status,rt_c->thread->tid,rt_c->thread->name);
 	    DUMP_ENTRY_CONTEXT();
 	}
-	if (rt_c->thread->status!= NK_THR_WAITING) { 
+	if (rt_c->thread->status!= NK_THR_WAITING) {
 	    DEBUG("Switching current thread (%lu) from state %u to state %u\n",rt_c->thread->tid,rt_c->thread->status, NK_THR_RUNNING);
 	    rt_c->thread->status=NK_THR_RUNNING;
 	}
@@ -2466,7 +2466,7 @@ extern void nk_thread_switch(nk_thread_t*);
 // before return if the lock is held
 // prior to any thread switch, the lock is released
 // interrupt state restoration operates just as any other switch
-// have_lock implies we have the lock and we have disabled interrupts, 
+// have_lock implies we have the lock and we have disabled interrupts,
 // with flags being the restore interrupt value
  static void handle_special_switch(rt_status what, int have_lock, uint8_t flags, spinlock_t *lock_to_release)
 {
@@ -2478,7 +2478,7 @@ extern void nk_thread_switch(nk_thread_t*);
 	did_preempt_disable = 1;
     }
 
-    if (!have_lock) { 
+    if (!have_lock) {
 	// we always want a local critical section here
 	flags = irq_disable_save();
     }
@@ -2510,7 +2510,7 @@ extern void nk_thread_switch(nk_thread_t*);
 
     // at this point, the scheduler has been updated and so we can
     // release the user's lock / flags
-    if (lock_to_release) { 
+    if (lock_to_release) {
 	spin_unlock(lock_to_release);
     }
 
@@ -2539,7 +2539,7 @@ extern void nk_thread_switch(nk_thread_t*);
 
 #ifdef NAUT_CONFIG_ENABLE_STACK_CHECK
     if ((c->rsp <= (uint64_t)(c->stack)) || c->rsp >= (uint64_t)(c->stack+c->stack_size)) {
-	panic("This thread (%p, tid=%u) has run off the end (or beginning) of its stack! (start=%p, rsp=%p, start size=%lx)\n", 
+	panic("This thread (%p, tid=%u) has run off the end (or beginning) of its stack! (start=%p, rsp=%p, start size=%lx)\n",
 	      (void*)c,
 	      c->tid,
 	      c->stack,
@@ -2561,7 +2561,7 @@ extern void nk_thread_switch(nk_thread_t*);
     }
 
 
-    // Now preemption is enabled, but interrupts are 
+    // Now preemption is enabled, but interrupts are
     // still off, so we will continue to run to completion
     preempt_reset();
 
@@ -2579,14 +2579,14 @@ extern void nk_thread_switch(nk_thread_t*);
     if (have_lock) {
 	spin_unlock(&s->lock);
     }
-    if (no_switch && did_preempt_disable) { 
+    if (no_switch && did_preempt_disable) {
 	// we are not doing a context switch, so we need to revert
 	// preemption state to what we had on entry
 	// if we had done a context switch, the preemption state
 	// would have been reset before the switch back to us
 	preempt_enable();
     }
-    // and now we restore the interrupt state to 
+    // and now we restore the interrupt state to
     // what we had on entry
     irq_enable_restore(flags);
 }
@@ -3053,7 +3053,7 @@ static void interrupt(void *in, void **out)
     }
 
     struct nk_sched_constraints c = { .type=PERIODIC,
-				      .interrupt_priority_class=0xe, 
+				      .interrupt_priority_class=0xe,
 				      .periodic.phase=0,
 				      .periodic.period=NAUT_CONFIG_INTERRUPT_THREAD_PERIOD_US*1000ULL,
 				      .periodic.slice=NAUT_CONFIG_INTERRUPT_THREAD_SLICE_US*1000ULL};
@@ -3148,12 +3148,12 @@ static int shared_init(struct cpu *my_cpu, struct nk_sched_config *cfg)
 
     // Since this is an already running "thread", it already has a stack.
     // When we return to either init() or to smp_ap_entry(), a stack
-    // switch will be performed to the stack we just allocated.  
+    // switch will be performed to the stack we just allocated.
     // It is possible that init() or smp_ap_entry()
-    // will end up popping stuff off of what the compiler thinks is the 
+    // will end up popping stuff off of what the compiler thinks is the
     // *same* stack throughout.  The result is tha we could underrun the new stack
     // and corrupt adjacent memory at a higher address.
-    // We guard against this by padding the stack pointer 
+    // We guard against this by padding the stack pointer
     main->rsp -= 1024;
 
     main->bound_cpu = my_cpu_id(); // idle threads cannot move
@@ -3300,14 +3300,14 @@ void nk_sched_start()
 	// spin
     }
     cur_cycles = rdtsc();
-    if (my_cpu->is_bsp) { 
+    if (my_cpu->is_bsp) {
 	// everyone has started their local tsc at 0
 	// we will now use the BSP tsc, which has advanced
 	// the furthest, pick a point in the future to advance
 	// every one to. The + 1 here offsets the -1 init value
 	tsc_start = cur_cycles * 16ULL + 1ULL;
     }  else {
-	while (tsc_start==-1ULL) { 
+	while (tsc_start==-1ULL) {
 	    // spin;
 	}
     }
@@ -3322,16 +3322,16 @@ void nk_sched_start()
 
     DEBUG("Time restarted at %lu cycles (currently %lu cycles / %lu ns)\n", tsc_start, cur_cycles, my_cpu->sched_state->tsc.sync_time);
 
-    // with the schedulers now synchronized and running, we launch the 
+    // with the schedulers now synchronized and running, we launch the
     // ancilary threads if needed
     // note that we are still running with interrupts off
     // so we will not switch here unless we yield, which we
     // must not do in creating any of the ancilary threads
 
 #ifdef NAUT_CONFIG_AUTO_REAP
-    if (my_cpu->is_bsp) { 
+    if (my_cpu->is_bsp) {
 	DEBUG("Starting reaper thread\n");
-	if (start_reaper()) { 
+	if (start_reaper()) {
 	    ERROR("Cannot start reaper thread\n");
 	    panic("Cannot start reaper thread\n");
 	    return;
@@ -3352,7 +3352,7 @@ void nk_sched_start()
 	panic("Cannot start interrupt thread for CPU!\n");
 	return;
     }
-#endif	
+#endif
 
     // this is the thread set up by the nk_sched_init/nk_sched_init_ap
     // it's the boot thread and will become the idle thread
@@ -3367,13 +3367,13 @@ void nk_sched_start()
 
     my_cpu->sched_state->tsc.start_time = now;
     my_cpu->sched_state->tsc.set_time = now + my_cpu->sched_state->cfg.aperiodic_quantum;
-    
+
     set_timer(my_cpu->sched_state, main->sched_state, now);
 
     DEBUG("Startup done main tid=%lu\n",main->tid);
 
 }
-    
+
 
 static void timing_test(uint64_t N, uint64_t M, int print);
 
@@ -3470,10 +3470,11 @@ void nk_sched_rt_stats(struct rt_stats *stats){
 
 
 //Parallel thread concept------------------------------------------------
-struct nk_sched_constraints*
-get_rt_constraint(struct nk_thread *t) {
+int
+nk_sched_thread_get_constraints(struct nk_thread *t, struct nk_sched_constraints *c) {
   rt_thread *r = t->sched_state;
-  return &r->constraints;
+  *c = r->constraints;
+  return 0;
 }
 /*
 int

@@ -33,6 +33,8 @@
 #include <nautilus/smp.h>
 #include <nautilus/irq.h>
 #include <nautilus/thread.h>
+#include <nautilus/group.h>
+#include <nautilus/group_sched.h>
 #include <nautilus/timer.h>
 #include <nautilus/idle.h>
 #include <nautilus/percpu.h>
@@ -327,6 +329,9 @@ init (unsigned long mbd,
 
     nk_sched_init(&sched_cfg);
 
+    nk_thread_group_init();
+    nk_group_sched_init();
+
     /* we now switch away from the boot-time stack in low memory */
     naut = smp_ap_stack_switch(get_cur_thread()->rsp, get_cur_thread()->rsp, naut);
 
@@ -417,11 +422,6 @@ init (unsigned long mbd,
 
 
     printk("Nautilus boot thread yielding (indefinitely)\n");
-
-
-    //parallel thread project
-    extern void thread_group_list_init();
-    thread_group_list_init();
 
 
     /* we don't come back from this */

@@ -44,6 +44,8 @@ obj-y += \
         shell.o \
 	fprintk.o \
 	group.o \
+	group_sched.o \
+	scrap.o \
 
 obj-$(NAUT_CONFIG_PROFILE) += instrument.o
 obj-$(NAUT_CONFIG_XEON_PHI) += sfi.o
