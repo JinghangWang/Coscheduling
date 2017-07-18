@@ -37,7 +37,7 @@
 #define TESTS 1
 
 #if TESTS
-#define TESTER_NUM 4
+#define TESTER_NUM 2
 #define BARRIER_TEST_LOOPS 1
 #endif
 
@@ -87,7 +87,7 @@ typedef struct nk_thread_group
     void *message;
     int   msg_flag;
     uint64_t msg_count;
-
+    int terminate_bcast;
     void *state;
 
 #if TESTS
@@ -218,6 +218,7 @@ nk_thread_group_create(char *name) {
     new_group->message = NULL;
     new_group->msg_flag = 0;
     new_group->msg_count = 0;
+    new_group->terminate_bcast = 0;
 
     new_group->state = NULL;
 
@@ -461,7 +462,11 @@ nk_thread_group_broadcast(nk_thread_group_t *group, void *message, uint64_t tid,
     GROUP("msg_count = %d\n", group->msg_count);
     while (group->msg_flag == 0) {
       GROUP("t%d is waiting\n", tid);
+      if (group->terminate_bcast) {
+        return 0;
+      }
     }
+
     message = group->message;
     GROUP("Recv: %s", (char *)message);
     if (atomic_dec_val(group->msg_count) == 0) {
@@ -474,12 +479,22 @@ nk_thread_group_broadcast(nk_thread_group_t *group, void *message, uint64_t tid,
     //sender
     while (group->msg_flag == 1) {
       GROUP("t%d is sending\n", tid);
+      if (group->terminate_bcast) {
+        return 0;
+      }
     }
     group->message = message;
     group->msg_flag = 1;
     GROUP("Msg sent\n");
     GROUP("Send: %s", (char *)message);
   }
+
+  return 0;
+}
+
+int
+nk_thread_group_broadcast_terminate(struct nk_thread_group *group) {
+  atomic_cmpswap(group->terminate_bcast, 0, 1);
 
   return 0;
 }
@@ -724,17 +739,6 @@ static void group_tester(void *in, void **out) {
     group_dur_dump(dst);
   }
 
-  nk_thread_group_barrier(dst);
-
-  nk_thread_group_leave(dst);
-
-  if (tid == leader) {
-    nk_thread_group_delete(dst);
-    FREE(in);
-  }
-
-  return;
-
   char *msg_0;
   char *msg_1;
 
@@ -756,8 +760,18 @@ static void group_tester(void *in, void **out) {
 
   GROUP("t%d says %s\n", tid, msg_1);
 
-  while (1) {}
+  nk_thread_group_broadcast_terminate(dst);
 
+  nk_thread_group_leave(dst);
+
+  nk_thread_group_barrier(dst);
+
+  if (tid == leader) {
+    nk_thread_group_delete(dst);
+    FREE(in);
+  }
+
+  return;
 }
 
 
@@ -829,7 +843,7 @@ void group_test_1() {
     // each join the group
     int i;
     for (i = 0; i < TESTER_NUM; ++i) {
-        if (launch_tester(group_name, i + 4)) {
+        if (launch_tester(group_name, i + 0)) {
             GROUP("starting tester failed\n");
         }
     }
@@ -895,7 +909,7 @@ group_test_lanucher() {
   // launch a few aperiodic threads (testers), i.e. regular threads
   // each join the group
   for (i = 0; i < TESTER_NUM; i++) {
-    if (nk_thread_start(group_tester, (void*)group_name , NULL, 1, PAGE_SIZE_4KB, &tids[i], i + 4)) {
+    if (nk_thread_start(group_tester, (void*)group_name , NULL, 1, PAGE_SIZE_4KB, &tids[i], i + 0)) {
       GROUP("Fail to start group_tester %d\n", i);
     }
   }
@@ -919,11 +933,17 @@ group_test() {
   tester_num = TESTER_NUM;
   group_test_lanucher();
 
-  for (int i = 1; i < TESTER_NUM + 1; i++) {
+  for (int i = 0; i < 10; i++) {
     nk_vc_printf("Round: %d\n", i);
-    tester_num = i;
+    //tester_num = i;
     group_test_lanucher();
   }
+
+  // for (int i = 1; i < TESTER_NUM + 1; i++) {
+  //   nk_vc_printf("Round: %d\n", i);
+  //   tester_num = i;
+  //   group_test_lanucher();
+  // }
   nk_vc_printf("Test Finished\n");
 
   return 0;

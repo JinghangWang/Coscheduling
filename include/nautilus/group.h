@@ -65,6 +65,8 @@ uint64_t                nk_thread_group_election(struct nk_thread_group *group, 
 // broadcast a message to all members of the thread group
 static int              nk_thread_group_broadcast(struct nk_thread_group *group, void *message, uint64_t tid, uint64_t src);
 
+int                     nk_thread_group_broadcast_terminate(struct nk_thread_group *group);
+
 // delete a group (should be empty)
 int                     nk_thread_group_delete(struct nk_thread_group *group);
 
