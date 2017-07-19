@@ -924,8 +924,9 @@ static int handle_cmd(char *buf, int n)
 
     char name[20];
     uint64_t num_samples = 1000;
-    uint64_t periods[NUM_TESTS] = {1, 2, 4, 10, 100, 1000, 10000};
-    //uint64_t periods[NUM_TESTS] = {100000, 10000, 1000, 100, 10, 4, 2, 1};
+    //uint64_t periods[NUM_TESTS] = {1, 2, 4, 10, 100, 1000, 10000};
+    uint64_t periods[NUM_TESTS] = {10000, 1000, 100, 10, 4, 2, 1};
+
 
     uint64_t us = 1000; // 1 microsecond
     tpr = 0xe;
@@ -942,6 +943,7 @@ static int handle_cmd(char *buf, int n)
       }
     }
 
+    nk_sched_dump_cores(bound_cpu);
 
 
     /*

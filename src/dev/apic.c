@@ -1180,6 +1180,20 @@ static void calibrate_apic_timer(struct apic_dev *apic)
 
     APIC_DEBUG("Detected APIC 0x%x CPU cycles per tick as %lu cycles (min was %lu)\n", apic->id, apic->cycles_per_tick,scale_min);
 
+
+    //timing test to capture system management overhead
+#define NUM_TESTS   500
+    uint64_t timing_dur[NUM_TESTS];
+    for (int i = 0; i < NUM_TESTS; ++i){
+        start = rdtsc();
+        nk_simple_timing_loop(1000000);
+        end = rdtsc();
+        timing_dur[i] = end - start;
+    }
+
+    for (int i = 0; i < NUM_TESTS; ++i){
+        printk("%llu \n", timing_dur[i]);
+    }
 }
 
 

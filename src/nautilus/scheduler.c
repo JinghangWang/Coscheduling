@@ -466,8 +466,8 @@ static void print_thread(rt_thread *r, void *priv)
 #define US(ns) ((ns)/1000ULL)
 #define MS(ns) ((ns)/1000000ULL)
 
-#define CO(ns) MS(ns)
-
+//#define CO(ns) MS(ns)
+#define CO(ns)  (ns)
     if (cpu==t->current_cpu || cpu<0) {
 
 	nk_vc_printf("%llut %lur %lluc%s %s %s %s %llus %lluc %llur %llud %llue",
@@ -1889,6 +1889,7 @@ struct nk_thread *_sched_need_resched(int have_lock, int force_resched)
 		    // We are being switched away from, so stash ourselves away
 		    DEBUG("Missed Deadline, immediately re-enqueuing\n");
 		    rt_c->thread->status=NK_THR_SUSPENDED;
+            rt_c->arrival_count++;
 		    if (PUT_RT(scheduler, rt_c)) {
 			goto panic_queue;
 		    }
@@ -2207,9 +2208,9 @@ int nk_sched_thread_change_constraints(struct nk_sched_constraints *constraints)
     	DUMP_APERIODIC(scheduler,"aperiodic before handle special switch");
 
     //werid bug on phi, sometimes it never returns from handle_special_switch;
-    preempt_disable();
+    // preempt_disable();
 	handle_special_switch(CHANGING,1,_local_flags,0);
-    preempt_enable();
+    // preempt_enable();
 
     	// we now have released lock and interrupts are back to prior
 
@@ -2579,7 +2580,10 @@ extern void nk_thread_switch(nk_thread_t*);
     if (have_lock) {
 	spin_unlock(&s->lock);
     }
-    if (no_switch && did_preempt_disable) {
+    
+    irq_enable_restore(flags);
+
+    if (no_switch && did_preempt_disable) { 
 	// we are not doing a context switch, so we need to revert
 	// preemption state to what we had on entry
 	// if we had done a context switch, the preemption state
@@ -2588,7 +2592,7 @@ extern void nk_thread_switch(nk_thread_t*);
     }
     // and now we restore the interrupt state to
     // what we had on entry
-    irq_enable_restore(flags);
+    // irq_enable_restore(flags);
 }
 
 /*
