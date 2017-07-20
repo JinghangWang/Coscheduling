@@ -107,15 +107,15 @@ typedef struct parallel_thread_group_list
 static parallel_thread_group_list_t parallel_thread_group_list; //Malloc at init? pointer or variable
 
 // group member helpers
-static nk_thread_group_t* group_member_init(nk_thread_group_t *g);
+static nk_thread_group_t * group_member_init(nk_thread_group_t *g);
 static void               group_member_deinit(nk_thread_group_t *n);
 static uint64_t           get_next_group_id(void);
 
 // group barrier helpers
-static void             group_barrier_init(nk_barrier_t * barrier);
-static void             group_barrier_join(nk_barrier_t * barrier);
-static int              group_barrier_leave(nk_barrier_t * barrier);
-static int              group_barrier_wait(nk_barrier_t * barrier);
+static void             group_barrier_init(nk_barrier_t *barrier);
+static void             group_barrier_join(nk_barrier_t *barrier);
+static int              group_barrier_leave(nk_barrier_t *barrier);
+static int              group_barrier_wait(nk_barrier_t *barrier);
 
 // barrier lock helpers
 static inline void
@@ -141,7 +141,7 @@ static void thread_group_list_init(void) {
 // deinit the global group list
 // hasn't been used so far
 static int thread_group_list_deinit(void) {
-    spinlock_t * lock = &parallel_thread_group_list.group_list_lock;
+    spinlock_t* lock = &parallel_thread_group_list.group_list_lock;
     spin_lock(lock);
     if (!list_empty(&parallel_thread_group_list.group_list_node)) {
         GROUP("Can't deinit group list!\n");
@@ -176,7 +176,7 @@ nk_thread_group_create(char *name) {
     }
 
 #if TESTS
-    new_group->dur_dump = (uint64_t**)MALLOC(TESTER_NUM*sizeof(uint64_t *));
+    new_group->dur_dump = (uint64_t **)MALLOC(TESTER_NUM*sizeof(uint64_t *));
 
     if (new_group->dur_dump == NULL) {
       FREE(new_group->dur_dump);
@@ -210,17 +210,17 @@ nk_thread_group_create(char *name) {
       INIT_LIST_HEAD(&new_group->group_member_array[i]);
     }
 
-    new_group->group_leader = -1;
-    new_group->group_size = 0;
-    new_group->init_fail = 0;
-    new_group->next_id = 0;
+    // new_group->group_leader = -1;
+    // new_group->group_size = 0;
+    // new_group->init_fail = 0;
+    // new_group->next_id = 0;
 
-    new_group->message = NULL;
-    new_group->msg_flag = 0;
-    new_group->msg_count = 0;
-    new_group->terminate_bcast = 0;
+    // new_group->message = NULL;
+    // new_group->msg_flag = 0;
+    // new_group->msg_count = 0;
+    // new_group->terminate_bcast = 0;
 
-    new_group->state = NULL;
+    // new_group->state = NULL;
 
     INIT_LIST_HEAD(&(new_group->thread_group_node));
 
@@ -500,7 +500,7 @@ nk_thread_group_broadcast_terminate(struct nk_thread_group *group) {
 }
 
 void
-group_barrier_init (nk_barrier_t * barrier)
+group_barrier_init (nk_barrier_t *barrier)
 {
     GROUP_BARRIER("Initializing group barrier, group barrier at %p, count=%u\n", (void*)barrier, 0);
 
@@ -512,7 +512,7 @@ group_barrier_init (nk_barrier_t * barrier)
 }
 
 int
-group_barrier_wait (nk_barrier_t * barrier)
+group_barrier_wait (nk_barrier_t *barrier)
 {
     int res = 0;
 
@@ -541,7 +541,7 @@ group_barrier_wait (nk_barrier_t * barrier)
 }
 
 void
-group_barrier_join (nk_barrier_t * barrier)
+group_barrier_join (nk_barrier_t *barrier)
 {
     bspin_lock(&barrier->lock);
     GROUP_BARRIER("Thread (%p) joining barrier \n", (void*)get_cur_thread());
@@ -551,7 +551,7 @@ group_barrier_join (nk_barrier_t * barrier)
 }
 
 int
-group_barrier_leave (nk_barrier_t * barrier)
+group_barrier_leave (nk_barrier_t *barrier)
 {
     int res = 0;
 
@@ -586,8 +586,10 @@ int nk_thread_group_deinit(void) {
   return 0;
 }
 
+
 #if TESTS
-static void group_dur_dump(nk_thread_group_t* group) {
+
+static void group_dur_dump(nk_thread_group_t *group) {
   for (int i = 0; i < TESTER_NUM; i++) {
     nk_vc_printf("%d,%d,%d,%d,%d,%d\n",
                   i, group->dur_dump[i][0], group->dur_dump[i][1], group->dur_dump[i][2], group->dur_dump[i][3], group->dur_dump[i][4]);
