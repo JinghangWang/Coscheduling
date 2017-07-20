@@ -820,9 +820,38 @@ static int handle_cmd(char *buf, int n)
       return 0;
   }
 //Parallel thread concept------------------------------------------------
+#define CPU_NUM 8
   extern int group_test();
   extern int group_test_0();
   extern int double_group_test();
+  extern int nk_sched_collect_time_stamp();
+
+  if (!strncasecmp(buf,"sched_test",10)) {
+    char name[32];
+
+    uint64_t num_samples = 1000;
+
+    uint64_t us = 1000; // 1 microsecond
+    tpr = 0xe;
+    phase = 0;
+
+    nk_sched_collect_time_stamp();
+
+    for(int i = 0; i < CPU_NUM; ++i){
+      period = 100 * us;
+      slice = period * 0.5;
+      size_ns = period * num_samples;
+      sprintf(name, "burner %d", i);
+      launch_periodic_burner(name, size_ns, tpr, phase, period, slice, i);
+    }
+
+    return 0;
+  }
+
+  if (!strncasecmp(buf,"sched_dump",10)) {
+    global_stamp_dump();
+    return 0;
+  }
 
   if (!strncasecmp(buf,"group_test",10)) {
     group_test();

@@ -53,6 +53,8 @@
 
 #define INSTRUMENT    1
 
+#define TIME_STAMP 1
+
 #define SANITY_CHECKS 0
 
 #define DUMP_THREAD_RT_STATE 0
@@ -110,6 +112,92 @@
 
 #define ZERO(x) memset(x, 0, sizeof(*x))
 //#define ZERO_QUEUE(x) memset(x, 0, sizeof(rt_priority_queue) + MAX_QUEUE * sizeof(rt_thread *))
+
+#if TIME_STAMP
+
+#define CPU_NUM 8
+
+uint64_t collect_time_stamp;
+uint64_t start_time_stamp_index[CPU_NUM];
+uint64_t end_time_stamp_index[CPU_NUM];
+
+uint64_t global_start_array[CPU_NUM][256];
+uint64_t global_end_array[CPU_NUM][256];
+
+int nk_sched_collect_time_stamp(void) {
+  collect_time_stamp = 1;
+
+  return 0;
+}
+
+
+int nk_sched_time_stamp_init(void) {
+  if (memset(start_time_stamp_index, 0, CPU_NUM*sizeof(uint64_t)) == NULL) {
+      ERROR("Fail to clear memory for start_time_stamp_index\n");
+      return -1;
+  }
+
+  if (memset(end_time_stamp_index, 0, CPU_NUM*sizeof(uint64_t)) == NULL) {
+      ERROR("Fail to clear memory for end_time_stamp_index\n");
+      return -1;
+  }
+
+  if (memset(global_start_array, 0, CPU_NUM*256*sizeof(uint64_t)) == NULL) {
+      ERROR("Fail to clear memory for global_start_array\n");
+      return -1;
+  }
+
+  if (memset(global_end_array, 0, CPU_NUM*256*sizeof(uint64_t)) == NULL) {
+    ERROR("Fail to clear memory for global_end_array\n");
+    return -1;
+  }
+
+  return 0;
+}
+
+int global_stamp_dump(void) {
+    uint64_t min_start = global_start_array[0][0];
+    uint64_t min_end = global_end_array[0][0];
+
+    for (int i = 1; i < CPU_NUM; i++) {
+      if (min_start > global_start_array[i][0]) {
+        min_start = global_start_array[i][0];
+      }
+    }
+
+    for (int i = 1; i < CPU_NUM; i++) {
+      if (min_end > global_end_array[i][0]) {
+        min_end = global_end_array[i][0];
+      }
+    }
+
+    printk("Start Time Stamp:\n");
+
+    for (int i = 0; i < 256; i++) {
+      for (int j = 0; j < CPU_NUM; j++) {
+        if (j < CPU_NUM - 1) {
+          printk("%llu, ", global_start_array[j][i] - min_start);
+        } else {
+          printk("%llu\n", global_start_array[j][i] - min_start);
+        }
+      }
+    }
+
+    printk("\nEnd Time Stamp:\n");
+
+    for (int i = 0; i < 256; i++) {
+      for (int j = 0; j < CPU_NUM; j++) {
+        if (j < CPU_NUM - 1) {
+          printk("%llu, ", global_end_array[j][i] - min_end);
+        } else {
+          printk("%llu\n", global_end_array[j][i] - min_end);
+        }
+      }
+    }
+
+    return 0;
+}
+#endif
 
 //
 // Shared scheduler state
@@ -1562,6 +1650,15 @@ struct nk_thread *_sched_need_resched(int have_lock, int force_resched)
 	}
     }
 
+    uint64_t my_cpu_id = my_cpu_id();
+#if TIME_STAMP
+    if (collect_time_stamp) {
+      if (start_time_stamp_index[my_cpu_id] < 256) {
+        global_start_array[my_cpu_id][start_time_stamp_index[my_cpu_id]++] = rdtsc();
+      }
+    }
+#endif
+
     INST_SCHED_IN();
 
     uint64_t now = cur_time();
@@ -2027,6 +2124,22 @@ struct nk_thread *_sched_need_resched(int have_lock, int force_resched)
 	LOCAL_UNLOCK(scheduler);
     }
 
+#if TIME_STAMP
+    if (collect_time_stamp) {
+      if (end_time_stamp_index[my_cpu_id] < 256) {
+        global_end_array[my_cpu_id][end_time_stamp_index[my_cpu_id]++] = rdtsc();
+      }
+    }
+#endif
+
+#if TIME_STAMP
+    if (collect_time_stamp) {
+      if (end_time_stamp_index[my_cpu_id] < 256) {
+        global_end_array[my_cpu_id][end_time_stamp_index[my_cpu_id]++] = rdtsc();
+      }
+    }
+#endif
+
     INST_SCHED_OUT(resched_fast);
 
     return 0;
@@ -2104,6 +2217,15 @@ struct nk_thread *_sched_need_resched(int have_lock, int force_resched)
 	if (!have_lock) {
 	    LOCAL_UNLOCK(scheduler);
 	}
+
+#if TIME_STAMP
+    if (collect_time_stamp) {
+      if (end_time_stamp_index[my_cpu_id] < 256) {
+        global_end_array[my_cpu_id][end_time_stamp_index[my_cpu_id]++] = rdtsc();
+      }
+    }
+#endif
+
 	INST_SCHED_OUT(resched_slow);
 	return rt_n->thread;
     } else {
@@ -2124,6 +2246,15 @@ struct nk_thread *_sched_need_resched(int have_lock, int force_resched)
 	if (!have_lock) {
 	    LOCAL_UNLOCK(scheduler);
 	}
+
+#if TIME_STAMP
+    if (collect_time_stamp) {
+      if (end_time_stamp_index[my_cpu_id] < 256) {
+        global_end_array[my_cpu_id][end_time_stamp_index[my_cpu_id]++] = rdtsc();
+      }
+    }
+#endif
+
 	INST_SCHED_OUT(resched_slow_noswitch);
 	return 0;
     }
@@ -2580,10 +2711,10 @@ extern void nk_thread_switch(nk_thread_t*);
     if (have_lock) {
 	spin_unlock(&s->lock);
     }
-    
+
     irq_enable_restore(flags);
 
-    if (no_switch && did_preempt_disable) { 
+    if (no_switch && did_preempt_disable) {
 	// we are not doing a context switch, so we need to revert
 	// preemption state to what we had on entry
 	// if we had done a context switch, the preemption state
@@ -3186,6 +3317,10 @@ static int shared_init(struct cpu *my_cpu, struct nk_sched_config *cfg)
     // reset local cycle count - this will be synchronized later
     msr_write(IA32_TIME_STAMP_COUNTER,0);
 
+#if TIME_STAMP
+    nk_sched_time_stamp_init();
+#endif
+
     irq_enable_restore(flags);
 
     // we will continue to launch main (idle) within
@@ -3407,6 +3542,10 @@ nk_sched_init(struct nk_sched_config *cfg)
 	ERROR("Could not intialize scheduler\n");
 	return -1;
     }
+
+#if TIME_STAMP
+  collect_time_stamp = 0;
+#endif
 
     return 0;
 }
