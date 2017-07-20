@@ -587,48 +587,11 @@ int nk_thread_group_deinit(void) {
 }
 
 #if TESTS
-
 static void group_dur_dump(nk_thread_group_t* group) {
   for (int i = 0; i < TESTER_NUM; i++) {
     nk_vc_printf("%d,%d,%d,%d,%d,%d\n",
                   i, group->dur_dump[i][0], group->dur_dump[i][1], group->dur_dump[i][2], group->dur_dump[i][3], group->dur_dump[i][4]);
   }
-}
-
-void change_cons_profile() {
-  uint64_t start, end;
-  int integer;
-  struct nk_sched_constraints constraints;
-
-  start = rdtsc();
-  uint64_t test = rdtsc();
-  end = rdtsc();
-  GROUP("rdtsc() overhead = %d\n", end - start);
-
-  start = rdtsc();
-  struct nk_thread *t = get_cur_thread();
-  end = rdtsc();
-  GROUP("get_cur_thread() overhead = %d\n", end - start);
-
-  start = rdtsc();
-  nk_sched_thread_get_constraints(t, &constraints);
-  end = rdtsc();
-  GROUP("nk_sched_thread_get_constraints() overhead = %d\n", end - start);
-
-  start = rdtsc();
-  atomic_cmpswap(integer, 0, 1);
-  end = rdtsc();
-  GROUP("atomic_cmpswap() overhead = %d\n", end - start);
-
-  start = rdtsc();
-  integer = atomic_inc_val(integer);
-  end = rdtsc();
-  GROUP("atomic_inc_val() overhead = %d\n", end - start);
-
-  start = rdtsc();
-  integer = atomic_dec_val(integer);
-  end = rdtsc();
-  GROUP("atomic_dec_val() overhead = %d\n", end - start);
 }
 
 static void group_tester(void *in, void **out) {
@@ -851,7 +814,8 @@ void group_test_1() {
     return;
 }
 
-int double_group_test() {
+int
+double_group_test() {
     nk_thread_id_t tid_0;
     nk_thread_id_t tid_1;
 
@@ -865,6 +829,8 @@ int double_group_test() {
 
     return 0;
 }
+
+int tester_num;
 
 int
 group_test_lanucher() {
@@ -908,13 +874,13 @@ group_test_lanucher() {
 
   // launch a few aperiodic threads (testers), i.e. regular threads
   // each join the group
-  for (i = 0; i < TESTER_NUM; i++) {
+  for (i = 0; i < tester_num; i++) {
     if (nk_thread_start(group_tester, (void*)group_name , NULL, 1, PAGE_SIZE_4KB, &tids[i], i + 0)) {
       GROUP("Fail to start group_tester %d\n", i);
     }
   }
 
-  for (i = 0; i < TESTER_NUM; i++) {
+  for (i = 0; i < tester_num; i++) {
     if (nk_join(tids[i], NULL)) {
       GROUP("Fail to join group_tester %d\n", i);
     }
@@ -925,27 +891,63 @@ group_test_lanucher() {
   return 0;
 }
 
-int tester_num;
-
 int
 group_test() {
   nk_vc_printf("Warm Up\n");
   tester_num = TESTER_NUM;
   group_test_lanucher();
 
-  for (int i = 0; i < 10; i++) {
+  for (int i = 0; i < 10; i = i*2) {
     nk_vc_printf("Round: %d\n", i);
-    //tester_num = i;
+    tester_num = i;
     group_test_lanucher();
   }
 
-  // for (int i = 1; i < TESTER_NUM + 1; i++) {
-  //   nk_vc_printf("Round: %d\n", i);
-  //   tester_num = i;
-  //   group_test_lanucher();
-  // }
+  for (int i = 1; i < TESTER_NUM + 1; i++) {
+    nk_vc_printf("Round: %d\n", i);
+    tester_num = i;
+    group_test_lanucher();
+  }
   nk_vc_printf("Test Finished\n");
 
   return 0;
 }
+
+void
+change_cons_profile() {
+  uint64_t start, end;
+  int integer;
+  struct nk_sched_constraints constraints;
+
+  start = rdtsc();
+  uint64_t test = rdtsc();
+  end = rdtsc();
+  GROUP("rdtsc() overhead = %d\n", end - start);
+
+  start = rdtsc();
+  struct nk_thread *t = get_cur_thread();
+  end = rdtsc();
+  GROUP("get_cur_thread() overhead = %d\n", end - start);
+
+  start = rdtsc();
+  nk_sched_thread_get_constraints(t, &constraints);
+  end = rdtsc();
+  GROUP("nk_sched_thread_get_constraints() overhead = %d\n", end - start);
+
+  start = rdtsc();
+  atomic_cmpswap(integer, 0, 1);
+  end = rdtsc();
+  GROUP("atomic_cmpswap() overhead = %d\n", end - start);
+
+  start = rdtsc();
+  integer = atomic_inc_val(integer);
+  end = rdtsc();
+  GROUP("atomic_inc_val() overhead = %d\n", end - start);
+
+  start = rdtsc();
+  integer = atomic_dec_val(integer);
+  end = rdtsc();
+  GROUP("atomic_dec_val() overhead = %d\n", end - start);
+}
+
 #endif /* TESTS */

@@ -503,7 +503,7 @@ menu Debugging
       depends on DEBUG_PRINTS
       default n
       help
-        Turn on debug prints for group scheduling
+        Turn on debug prints for group
 
     config DEBUG_GROUP_BARRIER
       bool "Debug Group Barrier"
@@ -511,6 +511,13 @@ menu Debugging
       default n
       help
         Turn on debug prints for group barrier
+
+    config DEBUG_GROUP_SCHED
+      bool "Debug Group Sched"
+      depends on DEBUG_PRINTS
+      default n
+      help
+        Turn on debug prints for group scheduling
 
     config DEBUG_PAGING
       bool "Debug Paging"
