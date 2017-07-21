@@ -55,6 +55,7 @@
   We run all serial ports at 115200 N81. 
   
 */
+#define PATCH   1
 
 #define COM1_3_IRQ 4
 #define COM2_4_IRQ 3
@@ -179,9 +180,11 @@ static int serial_do_write(void *state, uint8_t *src)
 {
     struct serial_state *s = (struct serial_state *)state;
 
+#if PATCH
     serial_putchar(*src); //pathces
 
     return 1;
+#endif
 
     int rc = -1;
     int flags;
@@ -701,8 +704,11 @@ static void serial_putchar_early (uchar_t c)
 
 void serial_putchar(uchar_t c)
 {
+#if PATCH
   if (0 && early_dev) { // patch
-  // if (early_dev){
+#else
+  if (early_dev){
+#endif
   	if (c=='\n') { 
   	    serial_do_write(early_dev,"\r");
   	}
