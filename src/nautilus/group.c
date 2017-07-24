@@ -37,6 +37,7 @@
 #define TESTS 1
 
 #if TESTS
+#define CPU_OFFSET 0
 #define TESTER_NUM 7
 #define BARRIER_TEST_LOOPS 1
 #endif
@@ -513,6 +514,7 @@ nk_thread_group_get_size(struct nk_thread_group *group) {
 
 // broadcast a message to all members of the thread group be waiting here
 // if some threads don't get this message, they just enter the next round
+// need to be further flushed out
 int
 nk_thread_group_broadcast(nk_thread_group_t *group, void *message, uint64_t tid, uint64_t src) {
   if (tid != src) {
@@ -705,115 +707,6 @@ static void group_tester(void *in, void **out) {
   return;
 }
 
-
-static int launch_tester(char * group_name, int cpuid) {
-  nk_thread_id_t tid;
-
-  if (nk_thread_start(group_tester, (void*)group_name , NULL, 1, PAGE_SIZE_4KB, &tid, cpuid)) {
-      return -1;
-  } else {
-      return 0;
-  }
-}
-
-void group_test_0() {
-  char* group_name = MALLOC(MAX_GROUP_NAME*sizeof(char));
-  if (!group_name) {
-      GROUP("malloc group name failed");
-      return;
-  }
-
-  sprintf(group_name, "Group 0");
-  nk_thread_group_t * new_group = nk_thread_group_create(group_name);
-  if (new_group != NULL) {
-      GROUP("group_create succeeded\n");
-  } else {
-      GROUP("group_create failed\n");
-      return;
-  }
-
-  nk_thread_group_t * ret = nk_thread_group_find(group_name);
-  if (ret != new_group) {
-      GROUP("result from group_create does not match group_find!\n");
-  }
-
-  // launch a few aperiodic threads (testers), i.e. regular threads
-  // each join the group
-  int i;
-  for (i = 0; i < TESTER_NUM; ++i) {
-      if (launch_tester(group_name, i)) {
-          GROUP("starting tester failed\n");
-      }
-  }
-
-  return;
-}
-
-void group_test_1() {
-  char* group_name = MALLOC(MAX_GROUP_NAME*sizeof(char));
-  if (!group_name) {
-      GROUP("malloc group name faield");
-      return;
-  }
-
-  sprintf(group_name, "Group 1");
-  nk_thread_group_t * new_group = nk_thread_group_create(group_name);
-  if (new_group != NULL) {
-      GROUP("group_create succeeded\n");
-  } else {
-      GROUP("group_create failed\n");
-      return;
-  }
-
-  nk_thread_group_t * ret = nk_thread_group_find(group_name);
-  if (ret != new_group) {
-      GROUP("result from group_create does not match group_find!\n");
-  }
-
-  // launch a few aperiodic threads (testers), i.e. regular threads
-  // each join the group
-  int i;
-  for (i = 0; i < TESTER_NUM; ++i) {
-      if (launch_tester(group_name, i + 0)) {
-          GROUP("starting tester failed\n");
-      }
-  }
-
-  return;
-}
-
-int
-single_group_test() {
-  nk_thread_id_t tid_0;
-  nk_thread_id_t tid_1;
-
-  tester_num = TESTER_NUM;
-
-  if (nk_thread_start(group_test_0, NULL , NULL, 1, PAGE_SIZE_4KB, &tid_0, 0)) {
-      ERROR_PRINT("Lanuch group_test_0 failed\n");
-  }
-
-  return 0;
-}
-
-int
-double_group_test() {
-  nk_thread_id_t tid_0;
-  nk_thread_id_t tid_1;
-
-  tester_num = TESTER_NUM;
-
-  if (nk_thread_start(group_test_0, NULL , NULL, 1, PAGE_SIZE_4KB, &tid_0, 0)) {
-      ERROR_PRINT("Lanuch group_test_0 failed\n");
-  }
-
-  if (nk_thread_start(group_test_1, NULL , NULL, 1, PAGE_SIZE_4KB, &tid_1, 4)) {
-      ERROR_PRINT("Lanuch group_test_1 failed\n");
-  }
-
-  return 0;
-}
-
 int
 group_test_lanucher() {
   uint64_t i = 0;
@@ -857,7 +750,7 @@ group_test_lanucher() {
   // launch a few aperiodic threads (testers), i.e. regular threads
   // each join the group
   for (i = 0; i < tester_num; i++) {
-    if (nk_thread_start(group_tester, (void*)group_name , NULL, 1, PAGE_SIZE_4KB, &tids[i], i + 1)) {
+    if (nk_thread_start(group_tester, (void*)group_name , NULL, 1, PAGE_SIZE_4KB, &tids[i], i + CPU_OFFSET)) {
       GROUP("Fail to start group_tester %d\n", i);
     }
   }
