@@ -37,7 +37,7 @@
 #define TESTS 1
 
 #if TESTS
-#define TESTER_NUM 2
+#define TESTER_NUM 7
 #define BARRIER_TEST_LOOPS 1
 #endif
 
@@ -74,7 +74,7 @@ typedef struct nk_thread_group
 {
     char group_name[MAX_GROUP_NAME];
     uint64_t group_id;
-    uint64_t group_leader;
+    int group_leader;
     uint64_t group_size;
     uint64_t next_id;
 
@@ -169,11 +169,13 @@ nk_thread_group_create(char *name) {
       return NULL;
     }
 
-    if (memset(new_group, 0, sizeof(new_group)) == NULL) {
+    if (memset(new_group, 0, sizeof(nk_thread_group_t)) == NULL) {
       FREE(new_group);
       ERROR_PRINT("Fail to clear memory for group!\n");
       return NULL;
     }
+
+    new_group->group_leader = -1;
 
 #if TESTS
     new_group->dur_dump = (uint64_t **)MALLOC(TESTER_NUM*sizeof(uint64_t *));
@@ -209,18 +211,6 @@ nk_thread_group_create(char *name) {
     for (int i = 0; i < MAX_CPU_NUM; i++) {
       INIT_LIST_HEAD(&new_group->group_member_array[i]);
     }
-
-    // new_group->group_leader = -1;
-    // new_group->group_size = 0;
-    // new_group->init_fail = 0;
-    // new_group->next_id = 0;
-
-    // new_group->message = NULL;
-    // new_group->msg_flag = 0;
-    // new_group->msg_count = 0;
-    // new_group->terminate_bcast = 0;
-
-    // new_group->state = NULL;
 
     INIT_LIST_HEAD(&(new_group->thread_group_node));
 
@@ -442,14 +432,34 @@ nk_thread_group_barrier(nk_thread_group_t *group) {
 }
 
 // all threads in the group call to select one thread as leader
-uint64_t
-nk_thread_group_election(nk_thread_group_t *group, uint64_t my_tid) {
-    uint64_t leader = atomic_cmpswap(group->group_leader, -1, my_tid);
+int
+nk_thread_group_election(nk_thread_group_t *group) {
+    nk_thread_t *c = get_cur_thread();
+
+    int leader = atomic_cmpswap(group->group_leader, -1, c->tid);
     if (leader == -1){
-        leader = my_tid;
+        return 1;
     }
 
-    return leader;
+    return 0;
+}
+
+// reset leader
+int nk_thread_group_reset_leader(nk_thread_group_t *group) {
+  group->group_leader = -1;
+
+  return 0;
+}
+
+//  check if I'm the leader
+int nk_thread_group_check_leader(nk_thread_group_t *group) {
+  nk_thread_t *c = get_cur_thread();
+
+  if (group->group_leader == c->tid) {
+    return 1;
+  }
+
+  return 0;
 }
 
 // broadcast a message to all members of the thread group be waiting here
@@ -588,9 +598,10 @@ int nk_thread_group_deinit(void) {
 
 
 #if TESTS
+static int tester_num;
 
 static void group_dur_dump(nk_thread_group_t *group) {
-  for (int i = 0; i < TESTER_NUM; i++) {
+  for (int i = 0; i < tester_num; i++) {
     nk_vc_printf("%d,%d,%d,%d,%d,%d\n",
                   i, group->dur_dump[i][0], group->dur_dump[i][1], group->dur_dump[i][2], group->dur_dump[i][3], group->dur_dump[i][4]);
   }
@@ -631,7 +642,7 @@ static void group_tester(void *in, void **out) {
   nk_thread_name(get_cur_thread(), name);
 
   int i = 0;
-  while (atomic_add(dst->group_size, 0) != TESTER_NUM) {
+  while (atomic_add(dst->group_size, 0) != tester_num) {
 #ifdef NAUT_CONFIG_DEBUG_GROUP
     i += 1;
     if (i == 0xffffff) {
@@ -648,11 +659,11 @@ static void group_tester(void *in, void **out) {
 #endif
 
   start = rdtsc();
-  int leader = nk_thread_group_election(dst, tid);
+  nk_thread_group_election(dst);
   end = rdtsc();
   dur[1] = end - start;
 
-  if (leader == tid) {
+  if (nk_thread_group_check_leader(dst)) {
     constraints = MALLOC(sizeof(struct nk_sched_constraints));
     constraints->type = APERIODIC;
     constraints->interrupt_priority_class = 0x01;
@@ -696,6 +707,7 @@ static void group_tester(void *in, void **out) {
     GROUP("succ_count = %d\n", succ_count);
   }
 #endif
+
   dur[4] = end - start;
 
   nk_thread_group_barrier(dst);
@@ -704,34 +716,11 @@ static void group_tester(void *in, void **out) {
     group_dur_dump(dst);
   }
 
-  char *msg_0;
-  char *msg_1;
-
-  if (tid == 1) {
-    msg_0 = "Hello\n";
-  }
-
-  if (tid == 0) {
-    msg_1 = "World\n";
-  }
-
-  GROUP("t%d is here\n", tid);
-
-  nk_thread_group_broadcast(dst, (void *)msg_0, tid, 1);
-
-  GROUP("t%d says %s\n", tid, msg_0);
-
-  nk_thread_group_broadcast(dst, (void *)msg_1, tid, 0);
-
-  GROUP("t%d says %s\n", tid, msg_1);
-
-  nk_thread_group_broadcast_terminate(dst);
-
   nk_thread_group_leave(dst);
 
   nk_thread_group_barrier(dst);
 
-  if (tid == leader) {
+  if (nk_thread_group_check_leader(dst)) {
     nk_thread_group_delete(dst);
     FREE(in);
   }
@@ -753,7 +742,7 @@ static int launch_tester(char * group_name, int cpuid) {
 void group_test_0() {
     char* group_name = MALLOC(32*sizeof(char));
     if (!group_name) {
-        GROUP("malloc group name faield");
+        GROUP("malloc group name failed");
         return;
     }
 
@@ -817,9 +806,25 @@ void group_test_1() {
 }
 
 int
+single_group_test() {
+    nk_thread_id_t tid_0;
+    nk_thread_id_t tid_1;
+
+    tester_num = TESTER_NUM;
+
+    if (nk_thread_start(group_test_0, NULL , NULL, 1, PAGE_SIZE_4KB, &tid_0, 0)) {
+        ERROR_PRINT("Lanuch group_test_0 failed\n");
+    }
+
+    return 0;
+}
+
+int
 double_group_test() {
     nk_thread_id_t tid_0;
     nk_thread_id_t tid_1;
+
+    tester_num = TESTER_NUM;
 
     if (nk_thread_start(group_test_0, NULL , NULL, 1, PAGE_SIZE_4KB, &tid_0, 0)) {
         ERROR_PRINT("Lanuch group_test_0 failed\n");
@@ -831,8 +836,6 @@ double_group_test() {
 
     return 0;
 }
-
-int tester_num;
 
 int
 group_test_lanucher() {
@@ -877,7 +880,7 @@ group_test_lanucher() {
   // launch a few aperiodic threads (testers), i.e. regular threads
   // each join the group
   for (i = 0; i < tester_num; i++) {
-    if (nk_thread_start(group_tester, (void*)group_name , NULL, 1, PAGE_SIZE_4KB, &tids[i], i + 0)) {
+    if (nk_thread_start(group_tester, (void*)group_name , NULL, 1, PAGE_SIZE_4KB, &tids[i], i + 1)) {
       GROUP("Fail to start group_tester %d\n", i);
     }
   }
@@ -898,12 +901,6 @@ group_test() {
   nk_vc_printf("Warm Up\n");
   tester_num = TESTER_NUM;
   group_test_lanucher();
-
-  for (int i = 0; i < 10; i = i*2) {
-    nk_vc_printf("Round: %d\n", i);
-    tester_num = i;
-    group_test_lanucher();
-  }
 
   for (int i = 1; i < TESTER_NUM + 1; i++) {
     nk_vc_printf("Round: %d\n", i);

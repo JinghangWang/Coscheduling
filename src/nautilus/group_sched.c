@@ -103,7 +103,7 @@ nk_group_sched_reset_state(void) {
 static int
 group_roll_back_constraint() {
   struct nk_sched_constraints roll_back_constraints = { .type=APERIODIC,
-                                                 .aperiodic.priority=DEFAULT_PRIORITY};
+                                                        .aperiodic.priority=DEFAULT_PRIORITY};
 
   if (nk_sched_thread_change_constraints(&roll_back_constraints) != 0) {
     return -1;
@@ -119,7 +119,7 @@ nk_group_sched_change_constraints(nk_thread_group_t *group, struct nk_sched_cons
   struct nk_sched_constraints old;
   nk_sched_thread_get_constraints(t, &old);
 
-  if (nk_thread_group_get_leader(group) == tid) {
+  if (nk_thread_group_check_leader(group) == 1) {
     spin_lock(&group_change_constraint_lock);
     nk_group_sched_set_state(group, constraints);
     nk_thread_group_attach_state(group, &group_state);

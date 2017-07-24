@@ -822,9 +822,10 @@ static int handle_cmd(char *buf, int n)
 //Parallel thread concept------------------------------------------------
 #define CPU_NUM 8
   extern int group_test();
-  extern int group_test_0();
+  extern int single_group_test();
   extern int double_group_test();
   extern int nk_sched_collect_time_stamp();
+  extern void change_cons_profile();
 
   if (!strncasecmp(buf,"sched_test",10)) {
     char name[32];
@@ -859,7 +860,7 @@ static int handle_cmd(char *buf, int n)
   }
 
   if (!strncasecmp(buf,"single_group_test",17)) {
-    group_test_0();
+    single_group_test();
     return 0;
   }
 
@@ -870,7 +871,6 @@ static int handle_cmd(char *buf, int n)
 
   if (!strncasecmp(buf,"change_profile",14)) {
     nk_vc_printf("change_cons_profile test\n");
-    extern void change_cons_profile();
     change_cons_profile();
     return 0;
   }

@@ -30,45 +30,50 @@ struct nk_thread_group;
 typedef struct nk_thread_group nk_thread_group_t;
 
 // creating a thread group is done as easily as making a name
-struct nk_thread_group *nk_thread_group_create(char *name);
+nk_thread_group_t *nk_thread_group_create(char *name);
 
 // attach a state to the group
-int nk_thread_group_attach_state(struct nk_thread_group *group, void *state);
+int nk_thread_group_attach_state(nk_thread_group_t *group, void *state);
 
 // detach the state of a group
-void *nk_thread_group_detach_state(struct nk_thread_group *group);
+void *nk_thread_group_detach_state(nk_thread_group_t *group);
 
 // recover the state of a group
-void *nk_thread_group_get_state(struct nk_thread_group *group);
+void *nk_thread_group_get_state(nk_thread_group_t *group);
 
 // search for a thread group by name
-struct nk_thread_group *nk_thread_group_find(char *name);
+nk_thread_group_t *nk_thread_group_find(char *name);
 
 // return the size of a group
-uint64_t nk_thread_group_get_size(struct nk_thread_group *group);
-
-// return the leader of a group
-uint64_t nk_thread_group_get_leader(struct nk_thread_group *group);
+uint64_t nk_thread_group_get_size(nk_thread_group_t *group);
 
 // current thread joins a group
-int                     nk_thread_group_join(struct nk_thread_group *group);
+int nk_thread_group_join(nk_thread_group_t *group);
 
 // current thread leaves a group
-int                     nk_thread_group_leave(struct nk_thread_group *group);
+int nk_thread_group_leave(nk_thread_group_t *group);
 
 // all threads in the group call to synchronize
-int                     nk_thread_group_barrier(struct nk_thread_group *group);
+int nk_thread_group_barrier(nk_thread_group_t *group);
 
 // all threads in the group call to select one thread as leader
-uint64_t                nk_thread_group_election(struct nk_thread_group *group, uint64_t my_tid);
+int nk_thread_group_election(nk_thread_group_t *group);
 
+// reset leader
+int nk_thread_group_reset_leader(nk_thread_group_t *group);
+
+//  check if I'm the leader
+int nk_thread_group_check_leader(nk_thread_group_t *group);
+
+// the bcast APIs are still under development
 // broadcast a message to all members of the thread group
-static int              nk_thread_group_broadcast(struct nk_thread_group *group, void *message, uint64_t tid, uint64_t src);
+static int nk_thread_group_broadcast(nk_thread_group_t *group, void *message, uint64_t tid, uint64_t src);
 
-int                     nk_thread_group_broadcast_terminate(struct nk_thread_group *group);
+// terminate the bcast, then nobody will be waiting for sending or recieving
+int nk_thread_group_broadcast_terminate(nk_thread_group_t *group);
 
 // delete a group (should be empty)
-int                     nk_thread_group_delete(struct nk_thread_group *group);
+int nk_thread_group_delete(nk_thread_group_t *group);
 
 // init of module
 int nk_thread_group_init(void);
