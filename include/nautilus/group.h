@@ -26,7 +26,6 @@
 #ifndef _GROUP_H_
 #define _GROUP_H_
 
-struct nk_thread_group;
 typedef struct nk_thread_group nk_thread_group_t;
 
 // creating a thread group is done as easily as making a name
@@ -65,7 +64,7 @@ int nk_thread_group_reset_leader(nk_thread_group_t *group);
 //  check if I'm the leader
 int nk_thread_group_check_leader(nk_thread_group_t *group);
 
-// the bcast APIs are still under development
+// the bcast APIs need to be further flushed out
 // broadcast a message to all members of the thread group
 static int nk_thread_group_broadcast(nk_thread_group_t *group, void *message, uint64_t tid, uint64_t src);
 

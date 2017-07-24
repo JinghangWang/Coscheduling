@@ -128,7 +128,7 @@ bspin_unlock (volatile int * lock) {
   __sync_lock_release(lock);
 }
 
-/******************************************************************************/
+/**********below are internal APIs**********/
 
 // init the global group list
 // should be called in system init
@@ -156,6 +156,124 @@ static int thread_group_list_deinit(void) {
         return 0;
     }
 }
+
+
+// create a group member and init it
+static group_member_t* group_member_create(void)
+{
+    group_member_t *group_member = (group_member_t *)MALLOC(sizeof(group_member_t));
+
+    if (group_member == NULL) {
+      ERROR_PRINT("Fail to malloc space for group member!\n");
+      return NULL;
+    }
+
+    if (memset(group_member, 0, sizeof(group_member)) == NULL) {
+      FREE(group_member);
+      ERROR_PRINT("Fail to clear memory for group member!\n");
+      return NULL;
+    }
+
+    group_member->tid = -1;
+    group_member->thread = get_cur_thread();
+
+    INIT_LIST_HEAD(&group_member->group_member_node);
+
+    return group_member;
+}
+
+// delete the group member from list and free it
+static void group_member_destroy(group_member_t *group_member)
+{
+    list_del(&group_member->group_member_node);
+    FREE(group_member);
+}
+
+// assign a new id for a new group
+static uint64_t get_next_group_id(void) {
+    parallel_thread_group_list_t * l = &parallel_thread_group_list;
+    if (list_empty(&l->group_list_node)) {
+        return 0;
+    } else {
+        nk_thread_group_t *last_member = list_first_entry(&l->group_list_node, nk_thread_group_t, thread_group_node);
+        return last_member->group_id + 1;
+    }
+}
+
+void
+group_barrier_init (nk_barrier_t *barrier)
+{
+    GROUP_BARRIER("Initializing group barrier, group barrier at %p, count=%u\n", (void*)barrier, 0);
+
+    memset(barrier, 0, sizeof(nk_barrier_t));
+    barrier->lock = 0;
+    barrier->notify = 0;
+    barrier->init_count = 0;
+    barrier->remaining  = 0;
+}
+
+int
+group_barrier_wait (nk_barrier_t *barrier)
+{
+    int res = 0;
+
+    bspin_lock(&barrier->lock);
+    GROUP_BARRIER("Thread (%p) entering barrier (%p)\n", (void*)get_cur_thread(), (void*)barrier);
+
+    if (--barrier->remaining == 0) {
+        res = NK_BARRIER_LAST;
+        atomic_cmpswap(barrier->notify, 0, 1); //last thread set notify
+        GROUP_BARRIER("Thread (%p): notify\n", (void*)get_cur_thread());
+    } else {
+        GROUP_BARRIER("Thread (%p): remaining count = %d\n", (void*)get_cur_thread(), barrier->remaining);
+        bspin_unlock(&barrier->lock);
+        BARRIER_WHILE (barrier->notify != 1);
+    }
+
+    if (atomic_inc_val(barrier->remaining) == barrier->init_count) {
+      atomic_cmpswap(barrier->notify, 1, 0); //last thread reset notify
+      GROUP_BARRIER("Thread (%p): reset notify\n", (void*)get_cur_thread());
+      bspin_unlock(&barrier->lock);
+    }
+
+    GROUP_BARRIER("Thread (%p) exiting barrier (%p)\n", (void*)get_cur_thread(), (void*)barrier);
+
+    return res;
+}
+
+void
+group_barrier_join (nk_barrier_t *barrier)
+{
+    bspin_lock(&barrier->lock);
+    GROUP_BARRIER("Thread (%p) joining barrier \n", (void*)get_cur_thread());
+    atomic_inc(barrier->init_count);
+    atomic_inc(barrier->remaining);
+    bspin_unlock(&barrier->lock);
+}
+
+int
+group_barrier_leave (nk_barrier_t *barrier)
+{
+    int res = 0;
+
+    GROUP_BARRIER("Thread (%p) leaving barrier (%p)\n", (void*)get_cur_thread(), (void*)barrier);
+
+    bspin_lock(&barrier->lock);
+
+    atomic_dec(barrier->init_count);
+
+    if (--barrier->remaining == 0) {
+        res = NK_BARRIER_LAST;
+        atomic_cmpswap(barrier->notify, 0, 1); //last thread set notify
+        GROUP_BARRIER("Thread (%p): notify\n", (void*)get_cur_thread());
+    }
+
+    bspin_unlock(&barrier->lock);
+
+    return res;
+}
+
+/**********below are external APIs**********/
 
 // create a group and init it
 struct nk_thread_group *
@@ -281,48 +399,6 @@ nk_thread_group_delete(nk_thread_group_t *group) {
     return 0;
 }
 
-// create a group member and init it
-static group_member_t* group_member_create(void)
-{
-    group_member_t *group_member = (group_member_t *)MALLOC(sizeof(group_member_t));
-
-    if (group_member == NULL) {
-      ERROR_PRINT("Fail to malloc space for group member!\n");
-      return NULL;
-    }
-
-    if (memset(group_member, 0, sizeof(group_member)) == NULL) {
-      FREE(group_member);
-      ERROR_PRINT("Fail to clear memory for group member!\n");
-      return NULL;
-    }
-
-    group_member->tid = -1;
-    group_member->thread = get_cur_thread();
-
-    INIT_LIST_HEAD(&group_member->group_member_node);
-
-    return group_member;
-}
-
-// delete the group member from list and free it
-static void group_member_destroy(group_member_t *group_member)
-{
-    list_del(&group_member->group_member_node);
-    FREE(group_member);
-}
-
-// assign a new id for a new group
-static uint64_t get_next_group_id(void) {
-    parallel_thread_group_list_t * l = &parallel_thread_group_list;
-    if (list_empty(&l->group_list_node)) {
-        return 0;
-    } else {
-        nk_thread_group_t *last_member = list_first_entry(&l->group_list_node, nk_thread_group_t, thread_group_node);
-        return last_member->group_id + 1;
-    }
-}
-
 // search for a thread group by name
 struct nk_thread_group *
 nk_thread_group_find(char *name) {
@@ -342,18 +418,6 @@ nk_thread_group_find(char *name) {
 
     spin_unlock(&l->group_list_lock);
     return NULL;
-}
-
-// return the size of a group
-uint64_t
-nk_thread_group_get_size(struct nk_thread_group *group) {
-  return group->group_size;
-}
-
-// return the leader of a group
-uint64_t
-nk_thread_group_get_leader(struct nk_thread_group *group) {
-  return group->group_leader;
 }
 
 // current thread joins a group with test log
@@ -462,6 +526,12 @@ int nk_thread_group_check_leader(nk_thread_group_t *group) {
   return 0;
 }
 
+// return the size of a group
+uint64_t
+nk_thread_group_get_size(struct nk_thread_group *group) {
+  return group->group_size;
+}
+
 // broadcast a message to all members of the thread group be waiting here
 // if some threads don't get this message, they just enter the next round
 int
@@ -509,79 +579,6 @@ nk_thread_group_broadcast_terminate(struct nk_thread_group *group) {
   return 0;
 }
 
-void
-group_barrier_init (nk_barrier_t *barrier)
-{
-    GROUP_BARRIER("Initializing group barrier, group barrier at %p, count=%u\n", (void*)barrier, 0);
-
-    memset(barrier, 0, sizeof(nk_barrier_t));
-    barrier->lock = 0;
-    barrier->notify = 0;
-    barrier->init_count = 0;
-    barrier->remaining  = 0;
-}
-
-int
-group_barrier_wait (nk_barrier_t *barrier)
-{
-    int res = 0;
-
-    bspin_lock(&barrier->lock);
-    GROUP_BARRIER("Thread (%p) entering barrier (%p)\n", (void*)get_cur_thread(), (void*)barrier);
-
-    if (--barrier->remaining == 0) {
-        res = NK_BARRIER_LAST;
-        atomic_cmpswap(barrier->notify, 0, 1); //last thread set notify
-        GROUP_BARRIER("Thread (%p): notify\n", (void*)get_cur_thread());
-    } else {
-        GROUP_BARRIER("Thread (%p): remaining count = %d\n", (void*)get_cur_thread(), barrier->remaining);
-        bspin_unlock(&barrier->lock);
-        BARRIER_WHILE (barrier->notify != 1);
-    }
-
-    if (atomic_inc_val(barrier->remaining) == barrier->init_count) {
-      atomic_cmpswap(barrier->notify, 1, 0); //last thread reset notify
-      GROUP_BARRIER("Thread (%p): reset notify\n", (void*)get_cur_thread());
-      bspin_unlock(&barrier->lock);
-    }
-
-    GROUP_BARRIER("Thread (%p) exiting barrier (%p)\n", (void*)get_cur_thread(), (void*)barrier);
-
-    return res;
-}
-
-void
-group_barrier_join (nk_barrier_t *barrier)
-{
-    bspin_lock(&barrier->lock);
-    GROUP_BARRIER("Thread (%p) joining barrier \n", (void*)get_cur_thread());
-    atomic_inc(barrier->init_count);
-    atomic_inc(barrier->remaining);
-    bspin_unlock(&barrier->lock);
-}
-
-int
-group_barrier_leave (nk_barrier_t *barrier)
-{
-    int res = 0;
-
-    GROUP_BARRIER("Thread (%p) leaving barrier (%p)\n", (void*)get_cur_thread(), (void*)barrier);
-
-    bspin_lock(&barrier->lock);
-
-    atomic_dec(barrier->init_count);
-
-    if (--barrier->remaining == 0) {
-        res = NK_BARRIER_LAST;
-        atomic_cmpswap(barrier->notify, 0, 1); //last thread set notify
-        GROUP_BARRIER("Thread (%p): notify\n", (void*)get_cur_thread());
-    }
-
-    bspin_unlock(&barrier->lock);
-
-    return res;
-}
-
 int nk_thread_group_init(void) {
   GROUP("Inited\n");
 
@@ -596,6 +593,7 @@ int nk_thread_group_deinit(void) {
   return 0;
 }
 
+/**********below are test APIs**********/
 
 #if TESTS
 static int tester_num;
@@ -632,7 +630,7 @@ static void group_tester(void *in, void **out) {
       return;
   }
 
-  char *name = (char *)MALLOC(32*sizeof(char));
+  char *name = (char *)MALLOC(MAX_GROUP_NAME*sizeof(char));
   if (name == NULL) {
     GROUP("Fail to malloc space for tester name!\n");
     return;
@@ -740,7 +738,7 @@ static int launch_tester(char * group_name, int cpuid) {
 }
 
 void group_test_0() {
-    char* group_name = MALLOC(32*sizeof(char));
+    char* group_name = MALLOC(MAX_GROUP_NAME*sizeof(char));
     if (!group_name) {
         GROUP("malloc group name failed");
         return;
@@ -773,7 +771,7 @@ void group_test_0() {
 }
 
 void group_test_1() {
-    char* group_name = MALLOC(32*sizeof(char));
+    char* group_name = MALLOC(MAX_GROUP_NAME*sizeof(char));
     if (!group_name) {
         GROUP("malloc group name faield");
         return;
@@ -841,14 +839,14 @@ int
 group_test_lanucher() {
   uint64_t i = 0;
 
-  char* group_name = (char *)MALLOC(32*sizeof(char));
+  char* group_name = (char *)MALLOC(MAX_GROUP_NAME*sizeof(char));
   if (group_name == NULL) {
       GROUP("malloc group name failed\n");
       FREE(group_name);
       return -1;
   }
 
-  memset(group_name, 0, 32*sizeof(char));
+  memset(group_name, 0, MAX_GROUP_NAME*sizeof(char));
 
   nk_thread_group_t *new_group = NULL;
   nk_thread_group_t *ret = NULL;
