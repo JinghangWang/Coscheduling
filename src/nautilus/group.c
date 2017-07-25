@@ -509,6 +509,7 @@ nk_thread_group_broadcast(nk_thread_group_t *group, void *message, uint64_t tid,
     // receiver
     int ret = atomic_inc_val(group->msg_count);
     GROUP("msg_count = %d\n", group->msg_count);
+    
     while (group->msg_flag == 0) {
       GROUP("t%d is waiting\n", tid);
       if (group->terminate_bcast) {
@@ -518,11 +519,13 @@ nk_thread_group_broadcast(nk_thread_group_t *group, void *message, uint64_t tid,
 
     message = group->message;
     GROUP("Recv: %s", (char *)message);
+
     if (atomic_dec_val(group->msg_count) == 0) {
       group->message = NULL;
       group->msg_flag = 0;
       GROUP("Reset msg\n");
     }
+
     GROUP("msg_count = %d\n", group->msg_count);
   } else {
     // sender
@@ -532,6 +535,7 @@ nk_thread_group_broadcast(nk_thread_group_t *group, void *message, uint64_t tid,
         return 0;
       }
     }
+
     group->message = message;
     group->msg_flag = 1;
     GROUP("Msg sent\n");

@@ -68,7 +68,7 @@ int nk_thread_group_reset_leader(nk_thread_group_t *group);
 int nk_thread_group_check_leader(nk_thread_group_t *group);
 
 // broadcast a message to all members of the thread group
-static int nk_thread_group_broadcast(nk_thread_group_t *group, void *message, uint64_t tid, uint64_t src);
+int nk_thread_group_broadcast(nk_thread_group_t *group, void *message, uint64_t tid, uint64_t src);
 
 // terminate the bcast, then nobody will be waiting for sending or recieving
 int nk_thread_group_broadcast_terminate(nk_thread_group_t *group);
