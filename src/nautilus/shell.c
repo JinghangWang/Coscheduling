@@ -37,6 +37,7 @@
 #include <test/threads.h>
 
 #include <nautilus/burner.h>
+#include <nautilus/group.h>
 
 
 
@@ -822,10 +823,6 @@ static int handle_cmd(char *buf, int n)
 
 //Parallel thread concept------------------------------------------------
 #define CPU_NUM 8
-  extern int group_test();
-  extern int nk_sched_collect_time_stamp();
-  extern void change_cons_profile();
-
   if (!strncasecmp(buf,"sched_test",10)) {
     char name[32];
 
@@ -835,12 +832,13 @@ static int handle_cmd(char *buf, int n)
     tpr = 0xe;
     phase = 0;
 
+    period = 100 * us;
+    slice = period * 0.5;
+    size_ns = period * num_samples;
+
     nk_sched_collect_time_stamp();
 
-    for(int i = 0; i < CPU_NUM; ++i){
-      period = 100 * us;
-      slice = period * 0.5;
-      size_ns = period * num_samples;
+    for (int i = 0; i < CPU_NUM; ++i) {
       sprintf(name, "burner %d", i);
       launch_periodic_burner(name, size_ns, tpr, phase, period, slice, i);
     }
@@ -849,18 +847,12 @@ static int handle_cmd(char *buf, int n)
   }
 
   if (!strncasecmp(buf,"sched_dump",10)) {
-    global_stamp_dump();
+    nk_sched_global_stamp_dump();
     return 0;
   }
 
   if (!strncasecmp(buf,"group_test",10)) {
-    group_test();
-    return 0;
-  }
-
-  if (!strncasecmp(buf,"change_profile",14)) {
-    nk_vc_printf("change_cons_profile test\n");
-    change_cons_profile();
+    nk_thread_group_test();
     return 0;
   }
 //Parallel thread concept------------------------------------------------

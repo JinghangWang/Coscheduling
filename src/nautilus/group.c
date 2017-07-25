@@ -731,7 +731,7 @@ group_test_lanucher() {
 }
 
 int
-group_test() {
+nk_thread_group_test() {
   nk_vc_printf("Warm Up\n");
   tester_num = TESTER_TOTAL;
   group_test_lanucher();
@@ -744,43 +744,6 @@ group_test() {
   nk_vc_printf("Test Finished\n");
 
   return 0;
-}
-
-void
-change_cons_profile() {
-  uint64_t start, end;
-  int integer;
-  struct nk_sched_constraints constraints;
-
-  start = rdtsc();
-  uint64_t test = rdtsc();
-  end = rdtsc();
-  GROUP("rdtsc() overhead = %d\n", end - start);
-
-  start = rdtsc();
-  struct nk_thread *t = get_cur_thread();
-  end = rdtsc();
-  GROUP("get_cur_thread() overhead = %d\n", end - start);
-
-  start = rdtsc();
-  nk_sched_thread_get_constraints(t, &constraints);
-  end = rdtsc();
-  GROUP("nk_sched_thread_get_constraints() overhead = %d\n", end - start);
-
-  start = rdtsc();
-  atomic_cmpswap(integer, 0, 1);
-  end = rdtsc();
-  GROUP("atomic_cmpswap() overhead = %d\n", end - start);
-
-  start = rdtsc();
-  integer = atomic_inc_val(integer);
-  end = rdtsc();
-  GROUP("atomic_inc_val() overhead = %d\n", end - start);
-
-  start = rdtsc();
-  integer = atomic_dec_val(integer);
-  end = rdtsc();
-  GROUP("atomic_dec_val() overhead = %d\n", end - start);
 }
 
 #endif /* TESTS */

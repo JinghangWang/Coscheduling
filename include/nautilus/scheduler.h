@@ -200,6 +200,7 @@ struct rt_stats {
 
 void nk_sched_rt_stats(struct rt_stats* stats);
 
-int global_stamp_dump(void);
+int nk_sched_collect_time_stamp(void);
+int nk_sched_global_stamp_dump(void);
 
 #endif /* _SCHEDULER_H */

@@ -131,7 +131,7 @@ int nk_sched_collect_time_stamp(void) {
 }
 
 
-int nk_sched_time_stamp_init(void) {
+int time_stamp_init(void) {
   if (memset(start_time_stamp_index, 0, CPU_NUM*sizeof(uint64_t)) == NULL) {
       ERROR("Fail to clear memory for start_time_stamp_index\n");
       return -1;
@@ -155,7 +155,7 @@ int nk_sched_time_stamp_init(void) {
   return 0;
 }
 
-int global_stamp_dump(void) {
+int nk_sched_global_stamp_dump(void) {
     uint64_t min_start = global_start_array[0][0];
     uint64_t min_end = global_end_array[0][0];
 
@@ -3318,7 +3318,7 @@ static int shared_init(struct cpu *my_cpu, struct nk_sched_config *cfg)
     msr_write(IA32_TIME_STAMP_COUNTER,0);
 
 #if TIME_STAMP
-    nk_sched_time_stamp_init();
+    time_stamp_init();
 #endif
 
     irq_enable_restore(flags);

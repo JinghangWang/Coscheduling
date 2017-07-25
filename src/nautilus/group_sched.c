@@ -48,32 +48,13 @@ typedef struct group_state {
 static group_state_t group_state;
 static spinlock_t group_change_constraint_lock;
 
-int
-nk_group_sched_init(void) {
-  if (memset(&group_state, 0, sizeof(group_state)) == NULL) {
-    ERROR_PRINT("Fail to clear memory for group_state!\n");
-    return -1;
-  }
+/*****************************************************/
+/***************Below are Internal APIs***************/
+/*****************************************************/
 
-  spinlock_init(&group_change_constraint_lock);
-
-  return 0;
-}
-
-int
-nk_group_sched_deinit(void) {
-  if (memset(&group_state, 0, sizeof(group_state)) == NULL) {
-    ERROR_PRINT("Fail to clear memory for group_state!\n");
-    return -1;
-  }
-
-  spinlock_deinit(&group_change_constraint_lock);
-
-  return 0;
-}
-
+// set the global group state with given constraints and group
 static int
-nk_group_sched_set_state(nk_thread_group_t *group, struct nk_sched_constraints *constraints) {
+group_set_state(nk_thread_group_t *group, struct nk_sched_constraints *constraints) {
   group_state.group_constraints = *constraints;
   group_state.changing_fail = 0;
   group_state.roll_back_to_old_fail = 0;
@@ -83,8 +64,9 @@ nk_group_sched_set_state(nk_thread_group_t *group, struct nk_sched_constraints *
   return 0;
 }
 
+// reset the global group state
 static int
-nk_group_sched_reset_state(void) {
+group_reset_state(void) {
   int res = 0;
 
   if (memset(&group_state.group_constraints, 0, sizeof(struct nk_sched_constraints)) == NULL) {
@@ -100,6 +82,7 @@ nk_group_sched_reset_state(void) {
   return res;
 }
 
+// roll back ro default constraints, must succeed
 static int
 group_roll_back_constraint() {
   struct nk_sched_constraints roll_back_constraints = { .type=APERIODIC,
@@ -112,16 +95,47 @@ group_roll_back_constraint() {
   return 0;
 }
 
+/*****************************************************/
+/***************Below are External APIs***************/
+/*****************************************************/
+
+// init module, called in init.c
+int
+nk_group_sched_init(void) {
+  if (memset(&group_state, 0, sizeof(group_state)) == NULL) {
+    ERROR_PRINT("Fail to clear memory for group_state!\n");
+    return -1;
+  }
+
+  spinlock_init(&group_change_constraint_lock);
+
+  return 0;
+}
+
+// deinit module, haven't beed used yet
+int
+nk_group_sched_deinit(void) {
+  if (memset(&group_state, 0, sizeof(group_state)) == NULL) {
+    ERROR_PRINT("Fail to clear memory for group_state!\n");
+    return -1;
+  }
+
+  spinlock_deinit(&group_change_constraint_lock);
+
+  return 0;
+}
+
+// cooperatively change the constraints in a group
 int
 nk_group_sched_change_constraints(nk_thread_group_t *group, struct nk_sched_constraints *constraints, uint64_t tid) {
-  //get old constraint
+  //get old constraints
   struct nk_thread *t = get_cur_thread();
   struct nk_sched_constraints old;
   nk_sched_thread_get_constraints(t, &old);
 
   if (nk_thread_group_check_leader(group) == 1) {
     spin_lock(&group_change_constraint_lock);
-    nk_group_sched_set_state(group, constraints);
+    group_set_state(group, constraints);
     nk_thread_group_attach_state(group, &group_state);
   }
 
@@ -162,7 +176,7 @@ nk_group_sched_change_constraints(nk_thread_group_t *group, struct nk_sched_cons
   //finally leave this stage and dec counter, if I'm the last one, unlock the group and reset state
   if(atomic_dec_val(group_state.changing_count) == 0) {
     nk_thread_group_detach_state(group);
-    nk_group_sched_reset_state();
+    group_reset_state();
     spin_unlock(&group_change_constraint_lock);
   }
 

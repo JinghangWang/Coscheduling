@@ -80,4 +80,7 @@ int nk_thread_group_delete(nk_thread_group_t *group);
 // return the size of a group
 uint64_t nk_thread_group_get_size(nk_thread_group_t *group);
 
+// group tester, set parameters in group.c before using it
+int nk_thread_group_test();
+
 #endif /* _GROUP_H */

@@ -28,10 +28,13 @@
 
 #include <nautilus/group.h>
 
+// init module, called in init.c
 int nk_group_sched_init(void);
 
+// deinit module, haven't beed used yet
 int nk_group_sched_deinit(void);
 
+// cooperatively change the constraints in a group
 int nk_group_sched_change_constraints(nk_thread_group_t *group,
                                      struct nk_sched_constraints *group_constraints,
                                      uint64_t tid);
