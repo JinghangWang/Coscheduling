@@ -57,13 +57,13 @@ uint64_t dur_array[TESTER_TOTAL][5];
 #endif // sanity checks
 
 #ifdef NAUT_CONFIG_DEBUG_GROUP
-#define GROUP(fmt, args...)     nk_vc_printf_wrap("CPU %d: " fmt, my_cpu_id(), ##args)
+#define GROUP(fmt, args...)  nk_vc_printf_wrap("CPU %d: " fmt, my_cpu_id(), ##args)
 #else
 #define GROUP(fmt, args...)
 #endif
 
 #ifdef NAUT_CONFIG_DEBUG_GROUP_BARRIER
-#define GROUP_BARRIER(fmt, args...)     nk_vc_printf_wrap("CPU %d: " fmt, my_cpu_id(), ##args)
+#define GROUP_BARRIER(fmt, args...)  nk_vc_printf_wrap("CPU %d: " fmt, my_cpu_id(), ##args)
 #else
 #define GROUP_BARRIER(fmt, args...)
 #endif
@@ -73,8 +73,7 @@ typedef struct group_member {
   struct list_head group_member_node;
 } group_member_t;
 
-typedef struct nk_thread_group
-{
+typedef struct nk_thread_group {
   char group_name[MAX_GROUP_NAME];
   uint64_t group_id;
   int group_leader;
@@ -83,8 +82,8 @@ typedef struct nk_thread_group
 
   struct list_head group_member_array[MAX_CPU_NUM];
 
-  int init_fail;
   nk_barrier_t group_barrier;
+
   spinlock_t group_lock;
 
   void *message;
@@ -97,10 +96,11 @@ typedef struct nk_thread_group
   struct list_head thread_group_node;
 } nk_thread_group_t;
 
-typedef struct parallel_thread_group_list
-{
+typedef struct parallel_thread_group_list {
   spinlock_t group_list_lock;
+
   uint64_t num_groups;
+
   struct list_head group_list_node;
 } parallel_thread_group_list_t;
 
@@ -122,7 +122,8 @@ bspin_unlock (volatile int * lock) {
 
 // init the global group list
 // should be called in system init
-static void thread_group_list_init(void) {
+static void
+thread_group_list_init(void) {
   parallel_thread_group_list.num_groups = 0;
   INIT_LIST_HEAD(&parallel_thread_group_list.group_list_node);
   spinlock_init(&parallel_thread_group_list.group_list_lock);
@@ -130,7 +131,8 @@ static void thread_group_list_init(void) {
 
 // deinit the global group list
 // hasn't been used so far
-static int thread_group_list_deinit(void) {
+static int
+thread_group_list_deinit(void) {
   spinlock_t* lock = &parallel_thread_group_list.group_list_lock;
   spin_lock(lock);
   if (!list_empty(&parallel_thread_group_list.group_list_node)) {
@@ -149,7 +151,8 @@ static int thread_group_list_deinit(void) {
 }
 
 // create a group member and init it
-static group_member_t* group_member_create(void) {
+static group_member_t*
+thread_group_member_create(void) {
   group_member_t *group_member = (group_member_t *)MALLOC(sizeof(group_member_t));
 
   if (group_member == NULL) {
@@ -171,13 +174,15 @@ static group_member_t* group_member_create(void) {
 }
 
 // delete the group member from list and free it
-static void group_member_destroy(group_member_t *group_member) {
+static void
+thread_group_member_destroy(group_member_t *group_member) {
   list_del(&group_member->group_member_node);
   FREE(group_member);
 }
 
 // assign a new id for a new group
-static uint64_t get_next_group_id(void) {
+static uint64_t
+thread_group_get_next_group_id(void) {
   parallel_thread_group_list_t * l = &parallel_thread_group_list;
   if (list_empty(&l->group_list_node)) {
     return 0;
@@ -187,27 +192,31 @@ static uint64_t get_next_group_id(void) {
   }
 }
 
-void
-group_barrier_init (nk_barrier_t *barrier) {
+static void
+thread_group_barrier_init (nk_barrier_t *barrier) {
   GROUP_BARRIER("Initializing group barrier, group barrier at %p, count=%u\n", (void*)barrier, 0);
 
-  memset(barrier, 0, sizeof(nk_barrier_t));
+  if (memset(barrier, 0, sizeof(nk_barrier_t)) == NULL) {
+    ERROR_PRINT("Fail to memset barrier\n");
+  }
+
   barrier->lock = 0;
   barrier->notify = 0;
   barrier->init_count = 0;
   barrier->remaining  = 0;
 }
 
-int
-group_barrier_wait (nk_barrier_t *barrier) {
+static int
+thread_group_barrier_wait (nk_barrier_t *barrier) {
   int res = 0;
 
   bspin_lock(&barrier->lock);
+
   GROUP_BARRIER("Thread (%p) entering barrier (%p)\n", (void*)get_cur_thread(), (void*)barrier);
 
   if (--barrier->remaining == 0) {
     res = NK_BARRIER_LAST;
-    atomic_cmpswap(barrier->notify, 0, 1); //last thread set notify
+    atomic_cmpswap(barrier->notify, 0, 1); // the last thread comes in set notify
     GROUP_BARRIER("Thread (%p): notify\n", (void*)get_cur_thread());
   } else {
     GROUP_BARRIER("Thread (%p): remaining count = %d\n", (void*)get_cur_thread(), barrier->remaining);
@@ -216,7 +225,7 @@ group_barrier_wait (nk_barrier_t *barrier) {
   }
 
   if (atomic_inc_val(barrier->remaining) == barrier->init_count) {
-    atomic_cmpswap(barrier->notify, 1, 0); //last thread reset notify
+    atomic_cmpswap(barrier->notify, 1, 0); // the last thread goes out reset notify
     GROUP_BARRIER("Thread (%p): reset notify\n", (void*)get_cur_thread());
     bspin_unlock(&barrier->lock);
   }
@@ -226,8 +235,8 @@ group_barrier_wait (nk_barrier_t *barrier) {
   return res;
 }
 
-void
-group_barrier_join (nk_barrier_t *barrier) {
+static void
+thread_group_barrier_join (nk_barrier_t *barrier) {
   bspin_lock(&barrier->lock);
   GROUP_BARRIER("Thread (%p) joining barrier \n", (void*)get_cur_thread());
   atomic_inc(barrier->init_count);
@@ -235,8 +244,8 @@ group_barrier_join (nk_barrier_t *barrier) {
   bspin_unlock(&barrier->lock);
 }
 
-int
-group_barrier_leave (nk_barrier_t *barrier) {
+static int
+thread_group_barrier_leave (nk_barrier_t *barrier) {
   int res = 0;
 
   GROUP_BARRIER("Thread (%p) leaving barrier (%p)\n", (void*)get_cur_thread(), (void*)barrier);
@@ -247,7 +256,7 @@ group_barrier_leave (nk_barrier_t *barrier) {
 
   if (--barrier->remaining == 0) {
     res = NK_BARRIER_LAST;
-    atomic_cmpswap(barrier->notify, 0, 1); //last thread set notify
+    atomic_cmpswap(barrier->notify, 0, 1); // if I'm the last one, I should set notify
     GROUP_BARRIER("Thread (%p): notify\n", (void*)get_cur_thread());
   }
 
@@ -261,7 +270,8 @@ group_barrier_leave (nk_barrier_t *barrier) {
 /*****************************************************/
 
 // init of module
-int nk_thread_group_init(void) {
+int
+nk_thread_group_init(void) {
   GROUP("Inited\n");
 
   thread_group_list_init();
@@ -270,14 +280,15 @@ int nk_thread_group_init(void) {
 }
 
 // deinit of module
-int nk_thread_group_deinit(void) {
+int
+nk_thread_group_deinit(void) {
   GROUP("Deinited\n");
 
   return 0;
 }
 
 // create a group and init it
-struct nk_thread_group *
+nk_thread_group_t *
 nk_thread_group_create(char *name) {
   void *ret = NULL;
 
@@ -314,7 +325,7 @@ nk_thread_group_create(char *name) {
 
   spinlock_init(&new_group->group_lock);
 
-  new_group->group_id = get_next_group_id();
+  new_group->group_id = thread_group_get_next_group_id();
 
   if (new_group->group_id < 0) {
     ERROR_PRINT("Fail to assign group id!\n");
@@ -322,36 +333,39 @@ nk_thread_group_create(char *name) {
     return NULL;
   }
 
-  group_barrier_init(&new_group->group_barrier);
+  thread_group_barrier_init(&new_group->group_barrier);
 
   return new_group;
 }
 
 // attach a state to the group
-int nk_thread_group_attach_state(struct nk_thread_group *group, void *state) {
+int
+nk_thread_group_attach_state(nk_thread_group_t *group, void *state) {
   group->state = state;
 
   return 0;
 }
 
 // detach the state of a group
-void *nk_thread_group_detach_state(struct nk_thread_group *group) {
+void *
+nk_thread_group_detach_state(nk_thread_group_t *group) {
   group->state = NULL;
 
-  return 0;
+  return NULL;
 }
 
 // get the schedule state of cur group
-void *nk_thread_group_get_state(struct nk_thread_group *group) {
+void *
+nk_thread_group_get_state(nk_thread_group_t *group) {
   if (group) {
     return group->state;
   } else {
-    return 0;
+    return NULL;
   }
 }
 
 // search for a thread group by name
-struct nk_thread_group *
+nk_thread_group_t *
 nk_thread_group_find(char *name) {
   struct list_head *cur = NULL;
   nk_thread_group_t *cur_group = NULL;
@@ -361,6 +375,7 @@ nk_thread_group_find(char *name) {
 
   list_for_each(cur, (struct list_head *)&parallel_thread_group_list.group_list_node) {
     cur_group = list_entry(cur, nk_thread_group_t, thread_group_node);
+
     if (! (strcmp(cur_group->group_name, name) ))  {
       spin_unlock(&l->group_list_lock);
       return cur_group;
@@ -368,20 +383,21 @@ nk_thread_group_find(char *name) {
   }
 
   spin_unlock(&l->group_list_lock);
+
   return NULL;
 }
 
 // current thread joins a group
 int
 nk_thread_group_join(nk_thread_group_t *group) {
-  group_member_t* group_member = group_member_create();
+  group_member_t* group_member = thread_group_member_create();
 
   if (group_member == NULL) {
     ERROR_PRINT("Fail to create group member!\n");
     return -1;
   }
 
-  group_barrier_join(&group->group_barrier);
+  thread_group_barrier_join(&group->group_barrier);
 
   atomic_inc(group->group_size);
   int id = atomic_inc(group->next_id);
@@ -412,7 +428,7 @@ nk_thread_group_leave(nk_thread_group_t *group) {
   if (cur == &group->group_member_array[my_cpu_id()]) {
     ERROR_PRINT("Fail to find leaving member in group_member_array!\n");
     spin_unlock(&group->group_lock);
-    group_barrier_leave(&group->group_barrier);
+    thread_group_barrier_leave(&group->group_barrier);
     return -1;
   }
 
@@ -422,14 +438,14 @@ nk_thread_group_leave(nk_thread_group_t *group) {
 
   FREE(&leaving_member);
 
-  group_barrier_leave(&group->group_barrier);
+  thread_group_barrier_leave(&group->group_barrier);
 
   atomic_dec(group->group_size);
 
   return 0;
 }
 
-// delete a group (the group should be empty)
+// delete a group, should fail if the group is unempty
 int
 nk_thread_group_delete(nk_thread_group_t *group) {
   if (group->group_size != 0) {
@@ -448,7 +464,7 @@ nk_thread_group_delete(nk_thread_group_t *group) {
 // all threads in the group call to synchronize
 int
 nk_thread_group_barrier(nk_thread_group_t *group) {
-  return group_barrier_wait(&group->group_barrier);
+  return thread_group_barrier_wait(&group->group_barrier);
 }
 
 // all threads in the group call to select one thread as leader
@@ -465,14 +481,16 @@ nk_thread_group_election(nk_thread_group_t *group) {
 }
 
 // reset leader
-int nk_thread_group_reset_leader(nk_thread_group_t *group) {
+int
+nk_thread_group_reset_leader(nk_thread_group_t *group) {
   group->group_leader = -1;
 
   return 0;
 }
 
-//  check if I'm the leader
-int nk_thread_group_check_leader(nk_thread_group_t *group) {
+// check if I'm the leader
+int
+nk_thread_group_check_leader(nk_thread_group_t *group) {
   nk_thread_t *c = get_cur_thread();
 
   if (group->group_leader == c->tid) {
@@ -488,7 +506,7 @@ int nk_thread_group_check_leader(nk_thread_group_t *group) {
 int
 nk_thread_group_broadcast(nk_thread_group_t *group, void *message, uint64_t tid, uint64_t src) {
   if (tid != src) {
-    //receiver
+    // receiver
     int ret = atomic_inc_val(group->msg_count);
     GROUP("msg_count = %d\n", group->msg_count);
     while (group->msg_flag == 0) {
@@ -507,7 +525,7 @@ nk_thread_group_broadcast(nk_thread_group_t *group, void *message, uint64_t tid,
     }
     GROUP("msg_count = %d\n", group->msg_count);
   } else {
-    //sender
+    // sender
     while (group->msg_flag == 1) {
       GROUP("t%d is sending\n", tid);
       if (group->terminate_bcast) {
@@ -525,7 +543,7 @@ nk_thread_group_broadcast(nk_thread_group_t *group, void *message, uint64_t tid,
 
 // terminate the bcast, then nobody will be waiting for sending or recieving
 int
-nk_thread_group_broadcast_terminate(struct nk_thread_group *group) {
+nk_thread_group_broadcast_terminate(nk_thread_group_t *group) {
   atomic_cmpswap(group->terminate_bcast, 0, 1);
 
   return 0;
@@ -533,7 +551,7 @@ nk_thread_group_broadcast_terminate(struct nk_thread_group *group) {
 
 // return the size of a group
 uint64_t
-nk_thread_group_get_size(struct nk_thread_group *group) {
+nk_thread_group_get_size(nk_thread_group_t *group) {
   return group->group_size;
 }
 
@@ -542,14 +560,17 @@ nk_thread_group_get_size(struct nk_thread_group *group) {
 /*****************************************************/
 
 #if TESTS
-static void group_dur_dump(nk_thread_group_t *group) {
+
+static void
+thread_group_dur_dump(nk_thread_group_t *group) {
   for (int i = 0; i < tester_num; i++) {
     nk_vc_printf("%d,%d,%d,%d,%d,%d\n",
                   i, dur_array[i][0], dur_array[i][1], dur_array[i][2], dur_array[i][3], dur_array[i][4]);
   }
 }
 
-static void group_tester(void *in, void **out) {
+static void
+thread_group_tester(void *in, void **out) {
   uint64_t dur[5] = {0, 0, 0, 0, 0};
 
   uint64_t start, end;
@@ -603,6 +624,7 @@ static void group_tester(void *in, void **out) {
   start = rdtsc();
   nk_thread_group_election(dst);
   end = rdtsc();
+
   dur_array[tid][1] = end - start;
 
   if (nk_thread_group_check_leader(dst)) {
@@ -612,7 +634,7 @@ static void group_tester(void *in, void **out) {
   }
 
   start = rdtsc();
-  if (nk_group_sched_change_constraints(dst, constraints, tid)) {
+  if (nk_group_sched_change_constraints(dst, constraints)) {
     end = rdtsc();
     GROUP("t%d change constraint failed!\n", tid);
   } else {
@@ -645,7 +667,7 @@ static void group_tester(void *in, void **out) {
   nk_thread_group_barrier(dst);
 
   if (tid == 0) {
-    group_dur_dump(dst);
+    thread_group_dur_dump(dst);
   }
 
   nk_thread_group_leave(dst);
@@ -658,8 +680,8 @@ static void group_tester(void *in, void **out) {
   return;
 }
 
-int
-group_test_lanucher() {
+static int
+thread_group_test_lanucher() {
   uint64_t i = 0;
 
   if (memset(dur_array, 0, TESTER_TOTAL*5*sizeof(uint64_t)) == NULL) {
@@ -714,14 +736,14 @@ group_test_lanucher() {
   // launch a few aperiodic threads (testers), i.e. regular threads
   // each join the group
   for (i = 0; i < tester_num; i++) {
-    if (nk_thread_start(group_tester, (void*)group_name , NULL, 1, PAGE_SIZE_4KB, &tids[i], i + CPU_OFFSET)) {
-      GROUP("Fail to start group_tester %d\n", i);
+    if (nk_thread_start(thread_group_tester, (void*)group_name , NULL, 1, PAGE_SIZE_4KB, &tids[i], i + CPU_OFFSET)) {
+      GROUP("Fail to start thread_group_tester %d\n", i);
     }
   }
 
   for (i = 0; i < tester_num; i++) {
     if (nk_join(tids[i], NULL)) {
-      GROUP("Fail to join group_tester %d\n", i);
+      GROUP("Fail to join thread_group_tester %d\n", i);
     }
   }
 
@@ -732,15 +754,17 @@ group_test_lanucher() {
 
 int
 nk_thread_group_test() {
+  // warm up round is to get rid of cold-start effect
   nk_vc_printf("Warm Up\n");
   tester_num = TESTER_TOTAL;
-  group_test_lanucher();
+  thread_group_test_lanucher();
 
   for (int i = 1; i < TESTER_TOTAL + 1; i = i * 2) {
     nk_vc_printf("Round: %d\n", i);
     tester_num = i;
-    group_test_lanucher();
+    thread_group_test_lanucher();
   }
+
   nk_vc_printf("Test Finished\n");
 
   return 0;

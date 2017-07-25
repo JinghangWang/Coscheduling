@@ -47,6 +47,8 @@ typedef struct group_state {
 
 static group_state_t group_state;
 static spinlock_t group_change_constraint_lock;
+static struct nk_sched_constraints roll_back_constraints = { .type=APERIODIC,
+                                                             .aperiodic.priority=DEFAULT_PRIORITY};
 
 /*****************************************************/
 /***************Below are Internal APIs***************/
@@ -54,7 +56,7 @@ static spinlock_t group_change_constraint_lock;
 
 // set the global group state with given constraints and group
 static int
-group_set_state(nk_thread_group_t *group, struct nk_sched_constraints *constraints) {
+group_sched_set_state(nk_thread_group_t *group, struct nk_sched_constraints *constraints) {
   group_state.group_constraints = *constraints;
   group_state.changing_fail = 0;
   group_state.roll_back_to_old_fail = 0;
@@ -66,7 +68,7 @@ group_set_state(nk_thread_group_t *group, struct nk_sched_constraints *constrain
 
 // reset the global group state
 static int
-group_reset_state(void) {
+group_sched_reset_state(void) {
   int res = 0;
 
   if (memset(&group_state.group_constraints, 0, sizeof(struct nk_sched_constraints)) == NULL) {
@@ -84,10 +86,7 @@ group_reset_state(void) {
 
 // roll back ro default constraints, must succeed
 static int
-group_roll_back_constraint() {
-  struct nk_sched_constraints roll_back_constraints = { .type=APERIODIC,
-                                                        .aperiodic.priority=DEFAULT_PRIORITY};
-
+group_sched_roll_back_constraint() {
   if (nk_sched_thread_change_constraints(&roll_back_constraints) != 0) {
     return -1;
   }
@@ -127,7 +126,7 @@ nk_group_sched_deinit(void) {
 
 // cooperatively change the constraints in a group
 int
-nk_group_sched_change_constraints(nk_thread_group_t *group, struct nk_sched_constraints *constraints, uint64_t tid) {
+nk_group_sched_change_constraints(nk_thread_group_t *group, struct nk_sched_constraints *constraints) {
   //get old constraints
   struct nk_thread *t = get_cur_thread();
   struct nk_sched_constraints old;
@@ -135,7 +134,7 @@ nk_group_sched_change_constraints(nk_thread_group_t *group, struct nk_sched_cons
 
   if (nk_thread_group_check_leader(group) == 1) {
     spin_lock(&group_change_constraint_lock);
-    group_set_state(group, constraints);
+    group_sched_set_state(group, constraints);
     nk_thread_group_attach_state(group, &group_state);
   }
 
@@ -165,7 +164,7 @@ nk_group_sched_change_constraints(nk_thread_group_t *group, struct nk_sched_cons
     //if there is any failure, roll back to default constraints
     if (group_state.roll_back_to_old_fail) {
       GROUP_SCHED("Fail to roll back to old constraints, roll back to default constraints!\n");
-      if(group_roll_back_constraint() != 0) {
+      if(group_sched_roll_back_constraint() != 0) {
         panic("Roll back to default constraints should not fail!\n");
       }
     }
@@ -176,7 +175,7 @@ nk_group_sched_change_constraints(nk_thread_group_t *group, struct nk_sched_cons
   //finally leave this stage and dec counter, if I'm the last one, unlock the group and reset state
   if(atomic_dec_val(group_state.changing_count) == 0) {
     nk_thread_group_detach_state(group);
-    group_reset_state();
+    group_sched_reset_state();
     spin_unlock(&group_change_constraint_lock);
   }
 

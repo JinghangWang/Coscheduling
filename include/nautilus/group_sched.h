@@ -36,7 +36,6 @@ int nk_group_sched_deinit(void);
 
 // cooperatively change the constraints in a group
 int nk_group_sched_change_constraints(nk_thread_group_t *group,
-                                     struct nk_sched_constraints *group_constraints,
-                                     uint64_t tid);
+                                     struct nk_sched_constraints *group_constraints);
 
 #endif /* _GROUP_SCHED_H_ */
