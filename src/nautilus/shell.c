@@ -35,6 +35,7 @@
 #include <nautilus/backtrace.h>
 #include <test/ipi.h>
 #include <test/threads.h>
+#include <test/groups.h>
 
 #include <nautilus/burner.h>
 #include <nautilus/group.h>
@@ -342,6 +343,10 @@ static int handle_test(char *buf)
 
     if (!strncasecmp(what,"thread",6)) {
 	return test_threads();
+    }
+
+    if (!strncasecmp(what,"group",5)) {
+	return nk_thread_group_test();
     }
 
  dunno:
@@ -865,12 +870,6 @@ static int handle_cmd(char *buf, int n)
 
   if (!strncasecmp(buf,"sched_dump",10)) {
     nk_sched_global_stamp_dump();
-
-    return 0;
-  }
-
-  if (!strncasecmp(buf,"group_test",10)) {
-    nk_thread_group_test();
 
     return 0;
   }

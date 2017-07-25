@@ -26,6 +26,8 @@
 #ifndef _GROUP_H_
 #define _GROUP_H_
 
+#define MAX_GROUP_NAME 32
+
 typedef struct nk_thread_group nk_thread_group_t;
 
 // init of module
@@ -78,8 +80,5 @@ int nk_thread_group_delete(nk_thread_group_t *group);
 
 // return the size of a group
 uint64_t nk_thread_group_get_size(nk_thread_group_t *group);
-
-// group tester, set parameters in group.c before using it
-int nk_thread_group_test();
 
 #endif /* _GROUP_H */

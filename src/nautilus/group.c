@@ -31,19 +31,7 @@
 #include <nautilus/group.h>
 #include <nautilus/group_sched.h>
 
-#define MAX_GROUP_NAME 32
 #define MAX_CPU_NUM NAUT_CONFIG_MAX_CPUS
-
-#define TESTS 1
-
-#if TESTS
-#define CPU_OFFSET 1 // skip CPU0 in tests
-#define TESTER_TOTAL 7
-#define BARRIER_TEST_LOOPS 1
-
-static int tester_num; // the number of tester in one round
-uint64_t dur_array[TESTER_TOTAL][5];
-#endif
 
 #define SANITY_CHECKS 0
 
@@ -57,16 +45,19 @@ uint64_t dur_array[TESTER_TOTAL][5];
 #endif // sanity checks
 
 #ifdef NAUT_CONFIG_DEBUG_GROUP
-#define GROUP(fmt, args...)  nk_vc_printf_wrap("CPU %d: " fmt, my_cpu_id(), ##args)
+#define DEBUG(fmt, args...)  DEBUG_PRINT("group: " fmt, ##args)
 #else
-#define GROUP(fmt, args...)
+#define DEBUG(fmt, args...)
 #endif
 
 #ifdef NAUT_CONFIG_DEBUG_GROUP_BARRIER
-#define GROUP_BARRIER(fmt, args...)  nk_vc_printf_wrap("CPU %d: " fmt, my_cpu_id(), ##args)
+#define DEBUG_BARRIER(fmt, args...)  DEBUG_PRINT("group: " fmt, ##args)
 #else
-#define GROUP_BARRIER(fmt, args...)
+#define DEBUG_BARRIER(fmt, args...)
 #endif
+
+#define ERROR(fmt, args...) ERROR_PRINT("group: " fmt, ##args)
+#define INFO(fmt, args...) INFO_PRINT("group: " fmt, ##args)
 
 typedef struct group_member {
   nk_thread_t *thread;
@@ -136,12 +127,12 @@ thread_group_list_deinit(void) {
   spinlock_t* lock = &parallel_thread_group_list.group_list_lock;
   spin_lock(lock);
   if (!list_empty(&parallel_thread_group_list.group_list_node)) {
-    GROUP("Can't deinit group list!\n");
+    DEBUG("Can't deinit group list!\n");
     spin_unlock(lock);
     return -1;
   } else {
     if (parallel_thread_group_list.num_groups != 0) {
-      panic("The num_groups isn't 0 when parallel_thread_group_list is empty!\n");
+      ERROR("The num_groups isn't 0 when parallel_thread_group_list is empty!\n");
     }
 
     spinlock_deinit(&parallel_thread_group_list.group_list_lock);
@@ -156,13 +147,13 @@ thread_group_member_create(void) {
   group_member_t *group_member = (group_member_t *)MALLOC(sizeof(group_member_t));
 
   if (group_member == NULL) {
-    ERROR_PRINT("Fail to malloc space for group member!\n");
+    ERROR("Fail to malloc space for group member!\n");
     return NULL;
   }
 
   if (memset(group_member, 0, sizeof(group_member)) == NULL) {
     FREE(group_member);
-    ERROR_PRINT("Fail to clear memory for group member!\n");
+    ERROR("Fail to clear memory for group member!\n");
     return NULL;
   }
 
@@ -194,10 +185,10 @@ thread_group_get_next_group_id(void) {
 
 static void
 thread_group_barrier_init (nk_barrier_t *barrier) {
-  GROUP_BARRIER("Initializing group barrier, group barrier at %p, count=%u\n", (void*)barrier, 0);
+  DEBUG_BARRIER("Initializing group barrier, group barrier at %p, count=%u\n", (void*)barrier, 0);
 
   if (memset(barrier, 0, sizeof(nk_barrier_t)) == NULL) {
-    ERROR_PRINT("Fail to memset barrier\n");
+    ERROR("Fail to memset barrier\n");
   }
 
   barrier->lock = 0;
@@ -212,25 +203,25 @@ thread_group_barrier_wait (nk_barrier_t *barrier) {
 
   bspin_lock(&barrier->lock);
 
-  GROUP_BARRIER("Thread (%p) entering barrier (%p)\n", (void*)get_cur_thread(), (void*)barrier);
+  DEBUG_BARRIER("Thread (%p) entering barrier (%p)\n", (void*)get_cur_thread(), (void*)barrier);
 
   if (--barrier->remaining == 0) {
     res = NK_BARRIER_LAST;
     atomic_cmpswap(barrier->notify, 0, 1); // the last thread comes in set notify
-    GROUP_BARRIER("Thread (%p): notify\n", (void*)get_cur_thread());
+    DEBUG_BARRIER("Thread (%p): notify\n", (void*)get_cur_thread());
   } else {
-    GROUP_BARRIER("Thread (%p): remaining count = %d\n", (void*)get_cur_thread(), barrier->remaining);
+    DEBUG_BARRIER("Thread (%p): remaining count = %d\n", (void*)get_cur_thread(), barrier->remaining);
     bspin_unlock(&barrier->lock);
     BARRIER_WHILE (barrier->notify != 1);
   }
 
   if (atomic_inc_val(barrier->remaining) == barrier->init_count) {
     atomic_cmpswap(barrier->notify, 1, 0); // the last thread goes out reset notify
-    GROUP_BARRIER("Thread (%p): reset notify\n", (void*)get_cur_thread());
+    DEBUG_BARRIER("Thread (%p): reset notify\n", (void*)get_cur_thread());
     bspin_unlock(&barrier->lock);
   }
 
-  GROUP_BARRIER("Thread (%p) exiting barrier (%p)\n", (void*)get_cur_thread(), (void*)barrier);
+  DEBUG_BARRIER("Thread (%p) exiting barrier (%p)\n", (void*)get_cur_thread(), (void*)barrier);
 
   return res;
 }
@@ -238,7 +229,7 @@ thread_group_barrier_wait (nk_barrier_t *barrier) {
 static void
 thread_group_barrier_join (nk_barrier_t *barrier) {
   bspin_lock(&barrier->lock);
-  GROUP_BARRIER("Thread (%p) joining barrier \n", (void*)get_cur_thread());
+  DEBUG_BARRIER("Thread (%p) joining barrier \n", (void*)get_cur_thread());
   atomic_inc(barrier->init_count);
   atomic_inc(barrier->remaining);
   bspin_unlock(&barrier->lock);
@@ -248,7 +239,7 @@ static int
 thread_group_barrier_leave (nk_barrier_t *barrier) {
   int res = 0;
 
-  GROUP_BARRIER("Thread (%p) leaving barrier (%p)\n", (void*)get_cur_thread(), (void*)barrier);
+  DEBUG_BARRIER("Thread (%p) leaving barrier (%p)\n", (void*)get_cur_thread(), (void*)barrier);
 
   bspin_lock(&barrier->lock);
 
@@ -257,7 +248,7 @@ thread_group_barrier_leave (nk_barrier_t *barrier) {
   if (--barrier->remaining == 0) {
     res = NK_BARRIER_LAST;
     atomic_cmpswap(barrier->notify, 0, 1); // if I'm the last one, I should set notify
-    GROUP_BARRIER("Thread (%p): notify\n", (void*)get_cur_thread());
+    DEBUG_BARRIER("Thread (%p): notify\n", (void*)get_cur_thread());
   }
 
   bspin_unlock(&barrier->lock);
@@ -272,7 +263,7 @@ thread_group_barrier_leave (nk_barrier_t *barrier) {
 // init of module
 int
 nk_thread_group_init(void) {
-  GROUP("Inited\n");
+  DEBUG("Inited\n");
 
   thread_group_list_init();
 
@@ -282,7 +273,7 @@ nk_thread_group_init(void) {
 // deinit of module
 int
 nk_thread_group_deinit(void) {
-  GROUP("Deinited\n");
+  DEBUG("Deinited\n");
 
   return 0;
 }
@@ -295,13 +286,13 @@ nk_thread_group_create(char *name) {
   nk_thread_group_t* new_group = (nk_thread_group_t *) MALLOC(sizeof(nk_thread_group_t));
 
   if (new_group == NULL) {
-    ERROR_PRINT("Fail to malloc space for group!\n");
+    ERROR("Fail to malloc space for group!\n");
     return NULL;
   }
 
   if (memset(new_group, 0, sizeof(nk_thread_group_t)) == NULL) {
     FREE(new_group);
-    ERROR_PRINT("Fail to clear memory for group!\n");
+    ERROR("Fail to clear memory for group!\n");
     return NULL;
   }
 
@@ -311,7 +302,7 @@ nk_thread_group_create(char *name) {
 
   if (ret == NULL) {
     FREE(new_group);
-    ERROR_PRINT("Fail to copy name for group!\n");
+    ERROR("Fail to copy name for group!\n");
     return NULL;
   }
 
@@ -328,7 +319,7 @@ nk_thread_group_create(char *name) {
   new_group->group_id = thread_group_get_next_group_id();
 
   if (new_group->group_id < 0) {
-    ERROR_PRINT("Fail to assign group id!\n");
+    ERROR("Fail to assign group id!\n");
     FREE(new_group);
     return NULL;
   }
@@ -393,7 +384,7 @@ nk_thread_group_join(nk_thread_group_t *group) {
   group_member_t* group_member = thread_group_member_create();
 
   if (group_member == NULL) {
-    ERROR_PRINT("Fail to create group member!\n");
+    ERROR("Fail to create group member!\n");
     return -1;
   }
 
@@ -418,6 +409,7 @@ nk_thread_group_leave(nk_thread_group_t *group) {
 
   spin_lock(&group->group_lock);
 
+  // currently assumes no thread migration TODO:
   list_for_each(cur, &group->group_member_array[my_cpu_id()]) {
     leaving_member = list_entry(cur, group_member_t, group_member_node);
     if (cur_thread == leaving_member->thread) {
@@ -426,7 +418,7 @@ nk_thread_group_leave(nk_thread_group_t *group) {
   }
 
   if (cur == &group->group_member_array[my_cpu_id()]) {
-    ERROR_PRINT("Fail to find leaving member in group_member_array!\n");
+    ERROR("Fail to find leaving member in group_member_array!\n");
     spin_unlock(&group->group_lock);
     thread_group_barrier_leave(&group->group_barrier);
     return -1;
@@ -449,14 +441,13 @@ nk_thread_group_leave(nk_thread_group_t *group) {
 int
 nk_thread_group_delete(nk_thread_group_t *group) {
   if (group->group_size != 0) {
-    GROUP("Unable to delete thread group!\n");
+    DEBUG("Unable to delete thread group!\n");
     return -1;
   }
 
   list_del(&group->thread_group_node);
 
   //All group members should have been freed.
-  FREE(group->message);
   FREE(group);
   return 0;
 }
@@ -508,29 +499,29 @@ nk_thread_group_broadcast(nk_thread_group_t *group, void *message, uint64_t tid,
   if (tid != src) {
     // receiver
     int ret = atomic_inc_val(group->msg_count);
-    GROUP("msg_count = %d\n", group->msg_count);
+    DEBUG("msg_count = %d\n", group->msg_count);
 
     while (group->msg_flag == 0) {
-      GROUP("t%d is waiting\n", tid);
+      DEBUG("t%d is waiting\n", tid);
       if (group->terminate_bcast) {
         return 0;
       }
     }
 
     message = group->message;
-    GROUP("Recv: %s", (char *)message);
+    DEBUG("Recv: %s", (char *)message);
 
     if (atomic_dec_val(group->msg_count) == 0) {
       group->message = NULL;
       group->msg_flag = 0;
-      GROUP("Reset msg\n");
+      DEBUG("Reset msg\n");
     }
 
-    GROUP("msg_count = %d\n", group->msg_count);
+    DEBUG("msg_count = %d\n", group->msg_count);
   } else {
     // sender
     while (group->msg_flag == 1) {
-      GROUP("t%d is sending\n", tid);
+      DEBUG("t%d is sending\n", tid);
       if (group->terminate_bcast) {
         return 0;
       }
@@ -538,8 +529,8 @@ nk_thread_group_broadcast(nk_thread_group_t *group, void *message, uint64_t tid,
 
     group->message = message;
     group->msg_flag = 1;
-    GROUP("Msg sent\n");
-    GROUP("Send: %s", (char *)message);
+    DEBUG("Msg sent\n");
+    DEBUG("Send: %s", (char *)message);
   }
 
   return 0;
@@ -558,220 +549,3 @@ uint64_t
 nk_thread_group_get_size(nk_thread_group_t *group) {
   return group->group_size;
 }
-
-/*****************************************************/
-/*****************Below are Test APIs*****************/
-/*****************************************************/
-
-#if TESTS
-
-static void
-thread_group_dur_dump(nk_thread_group_t *group) {
-  for (int i = 0; i < tester_num; i++) {
-    nk_vc_printf("%d,%d,%d,%d,%d,%d\n",
-                  i, dur_array[i][0], dur_array[i][1], dur_array[i][2], dur_array[i][3], dur_array[i][4]);
-  }
-}
-
-static void
-thread_group_tester(void *in, void **out) {
-  uint64_t dur[5] = {0, 0, 0, 0, 0};
-
-  uint64_t start, end;
-
-  static struct nk_sched_constraints *constraints;
-
-  nk_thread_group_t *dst = nk_thread_group_find((char*) in);
-
-  if (!dst) {
-    GROUP("group_find failed\n");
-    return;
-  }
-
-  start = rdtsc();
-  int tid = nk_thread_group_join(dst);
-  end = rdtsc();
-
-  dur_array[tid][0] = end - start;
-
-  if (tid < 0) {
-    GROUP("group join failed\n");
-    return;
-  }
-
-  char *name = (char *)MALLOC(MAX_GROUP_NAME*sizeof(char));
-  if (name == NULL) {
-    GROUP("Fail to malloc space for tester name!\n");
-    return;
-  }
-
-  sprintf(name, "tester %d", tid);
-  nk_thread_name(get_cur_thread(), name);
-
-  int i = 0;
-  while (atomic_add(dst->group_size, 0) != tester_num) {
-#ifdef NAUT_CONFIG_DEBUG_GROUP
-    i += 1;
-    if (i == 0xffffff) {
-      GROUP("group_size = %d\n", atomic_add(dst->group_size, 0));
-      i = 0;
-    }
-#endif
-  }
-
-#ifdef NAUT_CONFIG_DEBUG_GROUP
-  if (tid == 0) {
-    GROUP("All joined!\n");
-  }
-#endif
-
-  start = rdtsc();
-  nk_thread_group_election(dst);
-  end = rdtsc();
-
-  dur_array[tid][1] = end - start;
-
-  if (nk_thread_group_check_leader(dst)) {
-    constraints = MALLOC(sizeof(struct nk_sched_constraints));
-    constraints->type = APERIODIC;
-    constraints->interrupt_priority_class = 0x01;
-  }
-
-  start = rdtsc();
-  if (nk_group_sched_change_constraints(dst, constraints)) {
-    end = rdtsc();
-    GROUP("t%d change constraint failed!\n", tid);
-  } else {
-    end = rdtsc();
-    GROUP("t%d #\n", tid);
-  }
-
-  dur_array[tid][2] = end - start;
-
-  //change_constraint measure
-  start = rdtsc();
-  nk_sched_thread_change_constraints(constraints);
-  end = rdtsc();
-
-  dur_array[tid][3] = end - start;
-
-  //barrier test
-  int ret;
-  for (i = 0; i < BARRIER_TEST_LOOPS; ++i) {
-    start = rdtsc();
-    ret = nk_thread_group_barrier(dst);
-    end = rdtsc();
-    if (ret) {
-      GROUP("t%d &\n", tid);
-    }
-  }
-
-  dur_array[tid][4] = end - start;
-
-  nk_thread_group_barrier(dst);
-
-  if (tid == 0) {
-    thread_group_dur_dump(dst);
-  }
-
-  nk_thread_group_leave(dst);
-
-  if (nk_thread_group_delete(dst) != -1) {
-    FREE(in);
-    return;
-  }
-
-  return;
-}
-
-static int
-thread_group_test_lanucher() {
-  uint64_t i = 0;
-
-  if (memset(dur_array, 0, TESTER_TOTAL*5*sizeof(uint64_t)) == NULL) {
-    GROUP("memset dur_array failed\n");
-    return -1;
-  }
-
-  char* group_name = (char *)MALLOC(MAX_GROUP_NAME*sizeof(char));
-  if (group_name == NULL) {
-    GROUP("malloc group name failed\n");
-    FREE(group_name);
-    return -1;
-  }
-
-  if (memset(group_name, 0, MAX_GROUP_NAME*sizeof(char)) == NULL) {
-    GROUP("memset group name failed\n");
-    FREE(group_name);
-    return -1;
-  }
-
-  nk_thread_group_t *new_group = NULL;
-  nk_thread_group_t *ret = NULL;
-  nk_thread_id_t *tids = (nk_thread_id_t *)MALLOC(tester_num*sizeof(nk_thread_id_t));
-
-  if (tids == NULL) {
-    GROUP("malloc tids failed\n");
-    FREE(tids);
-    return -1;
-  }
-
-  if (memset(tids, 0, tester_num*sizeof(nk_thread_id_t)) == NULL) {
-    GROUP("memset tids failed\n");
-    FREE(tids);
-    return -1;
-  }
-
-  sprintf(group_name, "Group Alpha");
-
-  new_group = nk_thread_group_create(group_name);
-
-  if (new_group == NULL) {
-    GROUP("group_create failed\n");
-    return -1;
-  }
-
-  ret = nk_thread_group_find(group_name);
-
-  if (ret != new_group) {
-    GROUP("result from group_create does not match group_find!\n");
-  }
-
-  // launch a few aperiodic threads (testers), i.e. regular threads
-  // each join the group
-  for (i = 0; i < tester_num; i++) {
-    if (nk_thread_start(thread_group_tester, (void*)group_name , NULL, 1, PAGE_SIZE_4KB, &tids[i], i + CPU_OFFSET)) {
-      GROUP("Fail to start thread_group_tester %d\n", i);
-    }
-  }
-
-  for (i = 0; i < tester_num; i++) {
-    if (nk_join(tids[i], NULL)) {
-      GROUP("Fail to join thread_group_tester %d\n", i);
-    }
-  }
-
-  FREE(group_name);
-  FREE(tids);
-  return 0;
-}
-
-int
-nk_thread_group_test() {
-  // warm up round is to get rid of cold-start effect
-  nk_vc_printf("Warm Up\n");
-  tester_num = TESTER_TOTAL;
-  thread_group_test_lanucher();
-
-  for (int i = 1; i < TESTER_TOTAL + 1; i = i * 2) {
-    nk_vc_printf("Round: %d\n", i);
-    tester_num = i;
-    thread_group_test_lanucher();
-  }
-
-  nk_vc_printf("Test Finished\n");
-
-  return 0;
-}
-
-#endif /* TESTS */

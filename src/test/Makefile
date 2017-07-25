@@ -1,6 +1,7 @@
 CXXFLAGS += -DSHARED_LOWLEVEL -DCOMPILE_TIME_MIN_LEVEL=LEVEL_DEBUG  -D__LEGION__
-#-DDEBUG_LOWLEVEL -DDEBUG_HIGHLEVEL 
-obj-y = threads.o
+#-DDEBUG_LOWLEVEL -DDEBUG_HIGHLEVEL
+obj-y += threads.o
+obj-y += groups.o
 
 obj-$(NAUT_CONFIG_X86_64_HOST) += ipi.o
 obj-$(NAUT_CONFIG_X86_64_HOST) += benchmark.o
@@ -8,9 +9,9 @@ obj-$(NAUT_CONFIG_X86_64_HOST) += benchmark.o
 obj-$(NAUT_CONFIG_LEGION_RT) += test_legion.o \
 								circuit.o \
 								circuit_cpu.o \
-								circuit_mapper.o 
-								#saxpy_array.o 
-								#delaunay.o 
+								circuit_mapper.o
+								#saxpy_array.o
+								#delaunay.o
 								#hello_world.o \
 								#partitioning.o \
 								# custom_mapper.o \

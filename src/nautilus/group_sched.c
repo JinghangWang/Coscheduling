@@ -29,13 +29,17 @@
 #include <nautilus/group.h>
 #include <nautilus/group_sched.h>
 
-#define DEFAULT_PRIORITY 1
+// TODO: inport priority from scheduler
+#define DEFAULT_PRIORITY (1000000000ULL/NAUT_CONFIG_HZ)
 
 #ifdef NAUT_CONFIG_DEBUG_GROUP_SCHED
-#define GROUP_SCHED(fmt, args...)     nk_vc_printf_wrap("CPU %d: " fmt, my_cpu_id(), ##args)
+#define DEBUG(fmt, args...)  DEBUG_PRINT("group_sched: " fmt, ##args)
 #else
-#define GROUP_SCHED(fmt, args...)
+#define DEBUG(fmt, args...)
 #endif
+
+#define ERROR(fmt, args...) ERROR_PRINT("group_sched: " fmt, ##args)
+#define INFO(fmt, args...) INFO_PRINT("group_sched: " fmt, ##args)
 
 typedef struct group_state {
   struct nk_sched_constraints group_constraints;
@@ -72,7 +76,7 @@ group_sched_reset_state(void) {
   int res = 0;
 
   if (memset(&group_state.group_constraints, 0, sizeof(struct nk_sched_constraints)) == NULL) {
-    ERROR_PRINT("Fail to clear memory for group constraints!\n");
+    ERROR("Fail to clear memory for group constraints!\n");
     res = 1;
   }
 
@@ -102,11 +106,13 @@ group_sched_roll_back_constraint() {
 int
 nk_group_sched_init(void) {
   if (memset(&group_state, 0, sizeof(group_state)) == NULL) {
-    ERROR_PRINT("Fail to clear memory for group_state!\n");
+    ERROR("Fail to clear memory for group_state!\n");
     return -1;
   }
 
   spinlock_init(&group_change_constraint_lock);
+
+  INFO("Inited\n");
 
   return 0;
 }
@@ -115,11 +121,13 @@ nk_group_sched_init(void) {
 int
 nk_group_sched_deinit(void) {
   if (memset(&group_state, 0, sizeof(group_state)) == NULL) {
-    ERROR_PRINT("Fail to clear memory for group_state!\n");
+    ERROR("Fail to clear memory for group_state!\n");
     return -1;
   }
 
   spinlock_deinit(&group_change_constraint_lock);
+
+  INFO("Deinited\n");
 
   return 0;
 }
@@ -153,23 +161,24 @@ nk_group_sched_change_constraints(nk_thread_group_t *group, struct nk_sched_cons
   //check if there is failure, of so, start roll back
   if (group_state.changing_fail) {
     //try to roll back to old constraints first
-    GROUP_SCHED("Change constraints failed, roll back to old constraints!\n");
+    DEBUG("Change constraints failed, roll back to old constraints!\n");
     if (nk_sched_thread_change_constraints(&old) != 0) {
       atomic_cmpswap(group_state.roll_back_to_old_fail, 0, 1);
-      GROUP_SCHED("Unable to roll back to old constraints!\n");
+      DEBUG("Unable to roll back to old constraints!\n");
     }
 
     nk_thread_group_barrier(group);
 
     //if there is any failure, roll back to default constraints
     if (group_state.roll_back_to_old_fail) {
-      GROUP_SCHED("Fail to roll back to old constraints, roll back to default constraints!\n");
+      DEBUG("Fail to roll back to old constraints, roll back to default constraints!\n");
       if(group_sched_roll_back_constraint() != 0) {
         panic("Roll back to default constraints should not fail!\n");
+        return -1;
       }
     }
 
-    res = 1;
+    res = -1;
   }
 
   //finally leave this stage and dec counter, if I'm the last one, unlock the group and reset state
