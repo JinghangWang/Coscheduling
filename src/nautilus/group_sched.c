@@ -114,7 +114,7 @@ group_roll_back_constraint() {
 
 int
 nk_group_sched_change_constraints(nk_thread_group_t *group, struct nk_sched_constraints *constraints, uint64_t tid) {
-  //store old constraint
+  //get old constraint
   struct nk_thread *t = get_cur_thread();
   struct nk_sched_constraints old;
   nk_sched_thread_get_constraints(t, &old);

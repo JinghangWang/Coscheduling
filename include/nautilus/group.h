@@ -28,6 +28,12 @@
 
 typedef struct nk_thread_group nk_thread_group_t;
 
+// init of module
+int nk_thread_group_init(void);
+
+// deinit of module
+int nk_thread_group_deinit(void);
+
 // creating a thread group is done as easily as making a name
 nk_thread_group_t *nk_thread_group_create(char *name);
 
@@ -42,9 +48,6 @@ void *nk_thread_group_get_state(nk_thread_group_t *group);
 
 // search for a thread group by name
 nk_thread_group_t *nk_thread_group_find(char *name);
-
-// return the size of a group
-uint64_t nk_thread_group_get_size(nk_thread_group_t *group);
 
 // current thread joins a group
 int nk_thread_group_join(nk_thread_group_t *group);
@@ -74,10 +77,7 @@ int nk_thread_group_broadcast_terminate(nk_thread_group_t *group);
 // delete a group (should be empty)
 int nk_thread_group_delete(nk_thread_group_t *group);
 
-// init of module
-int nk_thread_group_init(void);
-
-// deinit of module
-int nk_thread_group_deinit(void);
+// return the size of a group
+uint64_t nk_thread_group_get_size(nk_thread_group_t *group);
 
 #endif /* _GROUP_H */
