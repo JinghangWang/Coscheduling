@@ -17,7 +17,7 @@
  * All rights reserved.
  *
  * Authors:  Xiaoyang Wang <xiaoyangwang2018@u.northwestern.edu>
- *           Jinghang Wang`<jinghangwang2018@u.northwestern.edu>
+ *           Jinghang Wang <jinghangwang2018@u.northwestern.edu>
  *
  * This is free software.  You are permitted to use,
  * redistribute, and modify it as specified in the file "LICENSE.txt".
@@ -509,7 +509,7 @@ nk_thread_group_broadcast(nk_thread_group_t *group, void *message, uint64_t tid,
     // receiver
     int ret = atomic_inc_val(group->msg_count);
     GROUP("msg_count = %d\n", group->msg_count);
-    
+
     while (group->msg_flag == 0) {
       GROUP("t%d is waiting\n", tid);
       if (group->terminate_bcast) {

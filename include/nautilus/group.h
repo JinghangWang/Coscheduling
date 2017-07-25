@@ -17,7 +17,7 @@
  * All rights reserved.
  *
  * Authors: Xiaoyang Wang <xiaoyangwang2018@u.northwestern.edu>
- *          Jinghang Wang`<jinghangwang2018@u.northwestern.edu>
+ *          Jinghang Wang <jinghangwang2018@u.northwestern.edu>
  *
  * This is free software.  You are permitted to use,
  * redistribute, and modify it as specified in the file "LICENSE.txt".
