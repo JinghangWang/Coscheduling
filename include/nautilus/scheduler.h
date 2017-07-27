@@ -29,6 +29,7 @@
 #define _SCHEDULER_H_
 
 #include <nautilus/thread.h>
+#include <nautilus/idt.h>
 
 // All time units are in nanoseconds stored in a 64 bit word
 // Time 0 is machine start time
@@ -202,5 +203,10 @@ void nk_sched_rt_stats(struct rt_stats* stats);
 
 int nk_sched_collect_time_stamp(void);
 int nk_sched_global_stamp_dump(void);
+void sample_time_stamp(void);
+int sample_time_stamp_ipi();
+int sample_time_stamp_ipi_handler(excp_entry_t * excp, excp_vec_t vec, void *state);
+void ipi_sample_dump(void);
+int ipi_complete_check();
 
 #endif /* _SCHEDULER_H */

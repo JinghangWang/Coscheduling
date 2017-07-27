@@ -115,14 +115,17 @@
 
 #if TIME_STAMP
 
-#define CPU_NUM 8
+#define CPU_NUM 256
 
 uint64_t collect_time_stamp;
 uint64_t start_time_stamp_index[CPU_NUM];
 uint64_t end_time_stamp_index[CPU_NUM];
 
+uint64_t global_step_array[CPU_NUM][256];
 uint64_t global_start_array[CPU_NUM][256];
 uint64_t global_end_array[CPU_NUM][256];
+uint64_t global_ipi_array[CPU_NUM];
+
 
 int nk_sched_collect_time_stamp(void) {
   collect_time_stamp = 1;
@@ -148,6 +151,11 @@ int time_stamp_init(void) {
   }
 
   if (memset(global_end_array, 0, CPU_NUM*256*sizeof(uint64_t)) == NULL) {
+    ERROR("Fail to clear memory for global_end_array\n");
+    return -1;
+  }
+
+  if (memset(global_ipi_array, 0, CPU_NUM*sizeof(uint64_t)) == NULL) {
     ERROR("Fail to clear memory for global_end_array\n");
     return -1;
   }
@@ -195,8 +203,92 @@ int nk_sched_global_stamp_dump(void) {
       }
     }
 
+    printk("\nStart Step Length:\n");
+
+    for (int i = 1; i < 256; i++) {
+      for (int j = 0; j < CPU_NUM; j++) {
+        if (j < CPU_NUM - 1) {
+          printk("%llu, ", global_start_array[j][i] - global_start_array[j][i - 1]);
+        } else {
+          printk("%llu\n", global_start_array[j][i] - global_start_array[j][i - 1]);
+        }
+      }
+    }
+
+    printk("\nEnd Step Length:\n");
+
+    for (int i = 1; i < 256; i++) {
+      for (int j = 0; j < CPU_NUM; j++) {
+        if (j < CPU_NUM - 1) {
+          printk("%llu, ", global_end_array[j][i] - global_end_array[j][i - 1]);
+        } else {
+          printk("%llu\n", global_end_array[j][i] - global_end_array[j][i - 1]);
+        }
+      }
+    }
+
     return 0;
 }
+
+void sample_time_stamp(void) {
+  // printk("#");
+  uint64_t stamp = rdtsc();
+  uint64_t my_cpu_id = my_cpu_id();
+  if (collect_time_stamp) {
+    if (start_time_stamp_index[my_cpu_id] < 256) {
+      global_start_array[my_cpu_id][start_time_stamp_index[my_cpu_id]++] = stamp;
+    }
+  }
+
+  return;
+}
+
+static uint64_t ipi_count = 0;
+
+static int ipi_complete(void) {
+  IRQ_HANDLER_END();
+
+  atomic_inc(ipi_count);
+
+  return 0;
+}
+
+int ipi_complete_check() {
+  if (atomic_add(ipi_count, 0) == CPU_NUM - 1) {
+    return 1;
+  } else {
+    return 0;
+  }
+}
+
+int sample_time_stamp_ipi_handler(excp_entry_t * excp, excp_vec_t vec, void *state) {
+  uint64_t cycle = rdtsc();
+
+  global_ipi_array[my_cpu_id()] = cycle;
+
+  ipi_complete();
+
+  return 0;
+}
+
+int sample_time_stamp_ipi() {
+  global_ipi_array[my_cpu_id()] = rdtsc();
+
+  return 0;
+}
+
+void ipi_sample_dump(void) {
+  ipi_count = 0;
+
+  for (int i = 0; i < CPU_NUM; i++) {
+    if (i < CPU_NUM - 1) {
+      nk_vc_printf("%llu, ", global_ipi_array[i]);
+    } else {
+      nk_vc_printf("%llu\n", global_ipi_array[i]);
+    }
+  }
+}
+
 #endif
 
 //
@@ -1639,6 +1731,8 @@ static inline void set_interrupt_priority(rt_thread *t)
 //
 struct nk_thread *_sched_need_resched(int have_lock, int force_resched)
 {
+    uint64_t my_cpu_id = my_cpu_id();
+
     LOCAL_LOCK_CONF;
 
     if (preempt_is_disabled())  {
@@ -1649,15 +1743,6 @@ struct nk_thread *_sched_need_resched(int have_lock, int force_resched)
 	    return 0;
 	}
     }
-
-    uint64_t my_cpu_id = my_cpu_id();
-#if TIME_STAMP
-    if (collect_time_stamp) {
-      if (start_time_stamp_index[my_cpu_id] < 256) {
-        global_start_array[my_cpu_id][start_time_stamp_index[my_cpu_id]++] = rdtsc();
-      }
-    }
-#endif
 
     INST_SCHED_IN();
 
@@ -3319,6 +3404,11 @@ static int shared_init(struct cpu *my_cpu, struct nk_sched_config *cfg)
 
 #if TIME_STAMP
     time_stamp_init();
+
+    if (register_int_handler(APIC_COLLECT_TIME_STAMP_VEC, sample_time_stamp_ipi_handler, NULL) != 0) {
+        ERROR_PRINT("Could not register int handler\n");
+        return 0;
+    }
 #endif
 
     irq_enable_restore(flags);

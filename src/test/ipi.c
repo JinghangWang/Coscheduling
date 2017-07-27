@@ -1,17 +1,17 @@
-/* 
+/*
  * This file is part of the Nautilus AeroKernel developed
- * by the Hobbes and V3VEE Projects with funding from the 
- * United States National  Science Foundation and the Department of Energy.  
+ * by the Hobbes and V3VEE Projects with funding from the
+ * United States National  Science Foundation and the Department of Energy.
  *
  * The V3VEE Project is a joint project between Northwestern University
  * and the University of New Mexico.  The Hobbes Project is a collaboration
- * led by Sandia National Laboratories that includes several national 
+ * led by Sandia National Laboratories that includes several national
  * laboratories and universities. You can find out more at:
  * http://www.v3vee.org  and
  * http://xtack.sandia.gov/hobbes
  *
  * Copyright (c) 2016, Kyle C. Hale <khale@cs.iit.edu>
- * Copyright (c) 2016, The V3VEE Project  <http://www.v3vee.org> 
+ * Copyright (c) 2016, The V3VEE Project  <http://www.v3vee.org>
  *                     The Hobbes Project <http://xstack.sandia.gov/hobbes>
  * All rights reserved.
  *
@@ -43,7 +43,7 @@
         fprintk(data->fd, fmt, ##args); \
     } else { \
         nk_vc_printf_specific(data->vc, fmt, ##args); \
-    } 
+    }
 
 #define rdtscll(val)                    \
     do {                        \
@@ -62,11 +62,11 @@ static const char* exp_types[3] = {"ONEWAY", "ROUNDTRIP", "BROADCAST"};
 static ipi_exp_data_t * glob_exp_data;
 
 static inline const char*
-type2str (ipi_exp_type_t type) 
+type2str (ipi_exp_type_t type)
 {
     if (type < 3) {
         return exp_types[type];
-    } 
+    }
     return "UNKNOWN";
 }
 
@@ -75,7 +75,7 @@ static uint64_t ipi_oneway_end = 0;
 static volatile int done = 0;
 
 
-static inline void 
+static inline void
 bset(unsigned int nr, unsigned long * addr)
 {
         asm volatile("lock bts %1, %0"
@@ -222,9 +222,9 @@ __ipi_measure_roundtrip (void * arg)
 	}
 
     for (i = 0; i < trials; i++) {
-    
+
         uint64_t end = 0, start = 0;
-	
+
 		apic_ipi(apic, remote_apic, PING_VEC);
 
         rdtscll(start);
@@ -239,8 +239,8 @@ __ipi_measure_roundtrip (void * arg)
 
 		done = 0;
 
-		IPI_PRINT("SC: %u TC: %u TRIAL: %u - %u cycles\n", 
-                my_cpu_id(), 
+		IPI_PRINT("SC: %u TC: %u TRIAL: %u - %u cycles\n",
+                my_cpu_id(),
                 cpu,
                 i,
                 end-start);
@@ -271,7 +271,7 @@ __ipi_measure_oneway (void * arg)
 	}
 
     for (i = 0; i < trials; i++) {
-    
+
         uint64_t start = 0;
 
 		apic_ipi(apic, remote_apic, PONG_VEC);
@@ -282,8 +282,8 @@ __ipi_measure_oneway (void * arg)
 
 		done = 0;
 
-		IPI_PRINT("SC: %u TC: %u TRIAL: %u - %u cycles\n", 
-					 my_cpu_id(), 
+		IPI_PRINT("SC: %u TC: %u TRIAL: %u - %u cycles\n",
+					 my_cpu_id(),
 					 cpu,
 					 i,
 					 ipi_oneway_end-start);
@@ -300,7 +300,7 @@ __ipi_measure_oneway (void * arg)
  * This function will block if it is the remote
  * case.
  */
-static inline void 
+static inline void
 ipi_measurement_dispatch (ipi_exp_data_t * data)
 {
 	if (data->src_core == my_cpu_id()) {
@@ -326,13 +326,13 @@ ipi_measure_pairwise_oto (ipi_exp_data_t * data)
 /*
  *	Measures IPI latencies between one particular
  *	source core of interest and all destination
- *	cores 
+ *	cores
  */
 static void
 ipi_measure_pairwise_ota (ipi_exp_data_t * data)
 {
 	int i;
-	
+
 	for (i = 0; i < nk_get_num_cpus(); i++) {
 
 		// don't send to myself
@@ -372,7 +372,7 @@ ipi_measure_pairwise_ato (ipi_exp_data_t * data)
 }
 
 
-/* 
+/*
  * Measures either oneway or roundtrip latencies
  * between all pairs of cores, ignoring the diagonal
  */
@@ -380,7 +380,7 @@ static void
 ipi_measure_pairwise_ata (ipi_exp_data_t * data)
 {
 	int i,j;
-		
+
 	for (i = 0; i < nk_get_num_cpus(); i++) {
 		for (j = 0; j < nk_get_num_cpus(); j++) {
 
@@ -404,7 +404,7 @@ ipi_measure_pairwise_ata (ipi_exp_data_t * data)
  * oneway or rountrip IPIs)
  */
 static void
-ipi_pairwise (ipi_exp_data_t * data) 
+ipi_pairwise (ipi_exp_data_t * data)
 {
 	if (data->src_type == SRC_ONE) {
 		if (data->dst_type == DST_ONE) {
@@ -430,7 +430,7 @@ static inline void
 cores_wait(ipi_exp_data_t * data)
 {
     unsigned me    = (unsigned)my_cpu_id();
-    unsigned lidx  = BIT_WORD(me); 
+    unsigned lidx  = BIT_WORD(me);
     uint64_t bmask = ~(BIT_MASK(me));
     int i;
     uint8_t ready = 0;
@@ -522,7 +522,7 @@ __ipi_measure_bcast (void * arg)
 	uint32_t trials        = data->trials;
     uint64_t start = 0;
     int i;
-		
+
     bcast_setup(data);
 
     reset_bcast_data(data);
@@ -555,7 +555,7 @@ __ipi_measure_bcast (void * arg)
 				IPI_PRINT("ERROR: Strangeness occured in cycle count - start=%llu end=%llu\n", start, data->bcast_cntrs[j]);
 			}
 
-            IPI_PRINT("SC: %u TC: %u TRIAL: %u - %u cycles\n", 
+            IPI_PRINT("SC: %u TC: %u TRIAL: %u - %u cycles\n",
                     my_cpu_id(),
                     j,
                     i,
@@ -570,11 +570,11 @@ __ipi_measure_bcast (void * arg)
 }
 
 
-/* 
- * Measure IPI broadcast latencies from one 
+/*
+ * Measure IPI broadcast latencies from one
  * particular source core
  */
-static inline void 
+static inline void
 ipi_measure_broadcast_ota (ipi_exp_data_t * data)
 {
 	ipi_measurement_dispatch(data);
@@ -598,7 +598,7 @@ ipi_measure_broadcast_ata (ipi_exp_data_t * data)
 
 
 /*
- * Top level function for broadcast IPIs. Only 
+ * Top level function for broadcast IPIs. Only
  * two options here, either all sources, or one
  * source
  */
@@ -614,7 +614,7 @@ ipi_broadcast (ipi_exp_data_t * data)
 
 
 static void
-ipi_print_parms (ipi_exp_data_t * data) 
+ipi_print_parms (ipi_exp_data_t * data)
 {
     IPI_PRINT("# IPI experiment:\n");
     IPI_PRINT("#    TYPE: %s\n", type2str(data->type));
@@ -661,7 +661,7 @@ ipi_run_exps (ipi_exp_data_t * data)
 			nk_vc_printf("ERROR: invalid experiment type %d\n", data->type);
 			return -1;
 	}
-			
+
     ipi_exp_cleanup(data);
 
 	return 0;

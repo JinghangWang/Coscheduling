@@ -37,7 +37,7 @@ extern "C" {
 #define APIC_CMCR_INT_VEC      0xf4
 #define APIC_EXT_LVT_DUMMY_VEC 0xf5
 #define APIC_NULL_KICK_VEC     0xfc
-//0xf6 reserved for APIC_GROUP_JOIN_VEC
+#define APIC_COLLECT_TIME_STAMP_VEC 0xfe
 
 #define APIC_TIMER_DIV 16
 

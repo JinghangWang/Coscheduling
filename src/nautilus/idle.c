@@ -1,17 +1,17 @@
-/* 
+/*
  * This file is part of the Nautilus AeroKernel developed
- * by the Hobbes and V3VEE Projects with funding from the 
- * United States National  Science Foundation and the Department of Energy.  
+ * by the Hobbes and V3VEE Projects with funding from the
+ * United States National  Science Foundation and the Department of Energy.
  *
  * The V3VEE Project is a joint project between Northwestern University
  * and the University of New Mexico.  The Hobbes Project is a collaboration
- * led by Sandia National Laboratories that includes several national 
+ * led by Sandia National Laboratories that includes several national
  * laboratories and universities. You can find out more at:
  * http://www.v3vee.org  and
  * http://xtack.sandia.gov/hobbes
  *
  * Copyright (c) 2015, Kyle C. Hale <kh@u.northwestern.edu>
- * Copyright (c) 2015, The V3VEE Project  <http://www.v3vee.org> 
+ * Copyright (c) 2015, The V3VEE Project  <http://www.v3vee.org>
  *                     The Hobbes Project <http://xstack.sandia.gov/hobbes>
  * All rights reserved.
  *
@@ -29,11 +29,11 @@
 
 #ifndef NAUT_CONFIG_DEBUG_SCHED
 #undef DEBUG_PRINT
-#define DEBUG_PRINT(...) 
+#define DEBUG_PRINT(...)
 #endif
 
 
-static inline void 
+static inline void
 idle_delay (unsigned long long n)
 {
     int i = 0;
@@ -47,7 +47,7 @@ idle_delay (unsigned long long n)
 }
 
 
-void 
+void
 idle (void * in, void ** out)
 {
     get_cur_thread()->is_idle = 1;
@@ -57,22 +57,22 @@ idle (void * in, void ** out)
     uint64_t numstolen;
 
     while (1) {
-	if (!irqs_enabled()) { 
+	if (!irqs_enabled()) {
 	    panic("Idle running with interrupts off!");
 	}
 
 #if NAUT_CONFIG_WORK_STEALING
 	runtime = nk_sched_get_runtime(get_cur_thread());
-	if ((runtime - last_steal) > (NAUT_CONFIG_WORK_STEALING_INTERVAL_MS*1000000ULL)) { 
+	if ((runtime - last_steal) > (NAUT_CONFIG_WORK_STEALING_INTERVAL_MS*1000000ULL)) {
 	    DEBUG_PRINT("CPU %d trying to steal\n",my_cpu_id());
 	    nk_sched_cpu_mug(-1,NAUT_CONFIG_WORK_STEALING_AMOUNT,&numstolen);
 	    DEBUG_PRINT("CPU %d stole %lu threads\n",my_cpu_id(),numstolen);
 	    last_steal = runtime;
 	}
 #endif
-	    
 
-        nk_yield();
+
+        // nk_yield();
 
 #ifdef NAUT_CONFIG_XEON_PHI
         udelay(1);
@@ -86,6 +86,3 @@ idle (void * in, void ** out)
 #endif
     }
 }
-
-
-

@@ -1,17 +1,17 @@
-/* 
+/*
  * This file is part of the Nautilus AeroKernel developed
- * by the Hobbes and V3VEE Projects with funding from the 
- * United States National  Science Foundation and the Department of Energy.  
+ * by the Hobbes and V3VEE Projects with funding from the
+ * United States National  Science Foundation and the Department of Energy.
  *
  * The V3VEE Project is a joint project between Northwestern University
  * and the University of New Mexico.  The Hobbes Project is a collaboration
- * led by Sandia National Laboratories that includes several national 
+ * led by Sandia National Laboratories that includes several national
  * laboratories and universities. You can find out more at:
  * http://www.v3vee.org  and
  * http://xtack.sandia.gov/hobbes
  *
  * Copyright (c) 2015, Kyle C. Hale <kh@u.northwestern.edu>
- * Copyright (c) 2015, The V3VEE Project  <http://www.v3vee.org> 
+ * Copyright (c) 2015, The V3VEE Project  <http://www.v3vee.org>
  *                     The Hobbes Project <http://xstack.sandia.gov/hobbes>
  * All rights reserved.
  *
@@ -22,6 +22,7 @@
  */
 #include <nautilus/idt.h>
 #include <nautilus/thread.h>
+// #include <nautilus/scheduler.h>
 
 .code64
 .macro make_excp_handler v
@@ -51,7 +52,7 @@ END(early_excp_handlers)
     jmp early_irq_common
     .align 16
 .endm
-    
+
 .align 16
 GLOBAL(early_irq_handlers)
     vector = 32
@@ -64,13 +65,13 @@ END(early_irq_handlers)
 
 .align 16
 GLOBAL(early_irq_common)
-
     incw %gs:8   // increment interrupt nesting level -
 	         // cpu is now in interrupt context
     incq %gs:16  // increment interrupt count
 
     SAVE_GPRS()
 
+    // callq sample_time_stamp
 
 #ifdef NAUT_CONFIG_PROFILE
     callq nk_irq_prof_enter
@@ -82,8 +83,8 @@ GLOBAL(early_irq_common)
     movq (%rdx, %rsi, 8), %r8   # pointer to handler
     movabs $idt_state_table, %rdx
     movq (%rdx, %rsi, 8), %rdx   # pointer to state
-	
-    
+
+
 #ifdef NAUT_CONFIG_ENABLE_ASSERTS
     cmpq $256, %rsi
     jge irq_err
@@ -107,7 +108,7 @@ GLOBAL(early_irq_common)
     testq %rax, %rax
     jz thr_return
     movq %rax, %rdi
-    jmp nk_thread_switch_intr_entry 
+    jmp nk_thread_switch_intr_entry
 
 thr_return:
     RESTORE_GPRS()
@@ -130,9 +131,9 @@ GLOBAL(early_excp_common)
     SAVE_GPRS()
 
     incw %gs:8   // increment interrupt nesting level -
-	         // cpu is now in interrupt context 
+	         // cpu is now in interrupt context
     incq %gs:24  // increment exception count
-	
+
     movq 120(%rsp), %rsi
     cmpq $32, %rsi
     jge excp_err

@@ -822,25 +822,42 @@ static int handle_cmd(char *buf, int n)
   }
 
 //Parallel thread concept------------------------------------------------
-#define CPU_NUM 8
   if (!strncasecmp(buf,"sched_test",10)) {
-    char name[32];
-
     uint64_t num_samples = 1000;
 
     uint64_t us = 1000; // 1 microsecond
-    tpr = 0xe;
-    phase = 0;
+    uint32_t tpr = 0xe;
+    uint64_t phase = 0;
 
-    period = 100 * us;
-    slice = period * 0.5;
-    size_ns = period * num_samples;
+    uint64_t period = 100 * us;
+    uint64_t slice = period * 50 / 100;
+    uint64_t size_ns = period * num_samples;
+
+    nk_thread_id_t tid;
+    struct burner_args *a;
+
+    a = malloc(sizeof(struct burner_args));
+    if (!a) {
+      ERROR_PRINT("malloc burner args failed\n");
+      return 0;
+    }
+
+    strncpy(a->name,"burner",MAX_CMD); a->name[MAX_CMD-1]=0;
+
+    a->vc = get_cur_thread()->vc;
+    a->size_ns = size_ns;
+    a->constraints.type = PERIODIC;
+    a->constraints.interrupt_priority_class = (uint8_t) tpr;
+    a->constraints.periodic.phase = phase;
+    a->constraints.periodic.period = period;
+    a->constraints.periodic.slice = slice;
 
     nk_sched_collect_time_stamp();
 
-    for (int i = 0; i < CPU_NUM; ++i) {
-      sprintf(name, "burner %d", i);
-      launch_periodic_burner(name, size_ns, tpr, phase, period, slice, i);
+    for (int i = 0; i < 2; i++) {
+      if (nk_thread_start(wordless_burner, (void*)a , NULL, 1, PAGE_SIZE_4KB, &tid, i)) {
+        ERROR_PRINT("thread start failed at CPU %d\n", my_cpu_id());
+      }
     }
 
     return 0;
@@ -848,13 +865,29 @@ static int handle_cmd(char *buf, int n)
 
   if (!strncasecmp(buf,"sched_dump",10)) {
     nk_sched_global_stamp_dump();
+
     return 0;
   }
 
   if (!strncasecmp(buf,"group_test",10)) {
     nk_thread_group_test();
+
     return 0;
   }
+
+  if (!strncasecmp(buf,"ipi_sample",10)) {
+    struct apic_dev * apic = per_cpu_get(apic);
+    apic_bcast_ipi(apic, APIC_COLLECT_TIME_STAMP_VEC);
+
+    sample_time_stamp_ipi();
+
+    while (!ipi_complete_check()) {}
+
+    ipi_sample_dump();
+
+    return 0;
+  }
+
 //Parallel thread concept------------------------------------------------
 
   if (sscanf(buf,"burn a %s %llu %u %llu", name, &size_ns, &tpr, &priority)==4) {

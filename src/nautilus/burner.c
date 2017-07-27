@@ -1,4 +1,5 @@
 #include <nautilus/burner.h>
+#include <nautilus/scheduler.h>
 
 static void burner(void *in, void **out)
 {
@@ -21,6 +22,9 @@ static void burner(void *in, void **out)
 	return;
     }
 #endif
+    if (my_cpu_id() == 7) {
+      nk_sched_collect_time_stamp();
+    }
 
     //nk_vc_printf("%s (tid %llu) promotion complete - spinning for %lu ns\n", a->name, get_cur_thread()->tid, a->size_ns);
     while(1) {
@@ -96,10 +100,10 @@ int launch_sporadic_burner(char *name, uint64_t size_ns, uint32_t tpr, uint64_t 
     a->constraints.sporadic.aperiodic_priority = aperiodic_priority;
 
     if (nk_thread_start(burner, (void*)a , NULL, 1, PAGE_SIZE_4KB, &tid, -1)) {
-	free(a);
-	return -1;
+	    free(a);
+	    return -1;
     } else {
-	return 0;
+	    return 0;
     }
 }
 
@@ -107,6 +111,7 @@ int launch_periodic_burner(char *name, uint64_t size_ns, uint32_t tpr, uint64_t 
 {
     nk_thread_id_t tid;
     struct burner_args *a;
+    uint64_t start, end;
 
     a = malloc(sizeof(struct burner_args));
     if (!a) {
@@ -133,4 +138,92 @@ int launch_periodic_burner(char *name, uint64_t size_ns, uint32_t tpr, uint64_t 
   //nk_vc_printf("join works\n");
 	return 0;
     }
+}
+
+void wordless_burner(void *in, void **out)
+{
+    uint64_t start, end, dur, total;
+    total = 0;
+    struct burner_args *a = (struct burner_args *)in;
+
+    nk_thread_name(get_cur_thread(),a->name);
+
+    if (nk_bind_vc(get_cur_thread(), a->vc)) {
+	    ERROR_PRINT("Cannot bind virtual console for burner %s\n",a->name);
+	    return;
+    }
+
+#if 1
+    if (nk_sched_thread_change_constraints(&a->constraints)) {
+	    nk_vc_printf("%s (tid %llu) rejected - exiting\n", a->name, get_cur_thread()->tid);
+      free(in);
+	    return;
+    }
+#endif
+
+    while(1) {
+    	start = nk_sched_get_realtime();
+    	udelay(100);
+    	end = nk_sched_get_realtime();
+    	dur = end - start;
+    	if (dur >= a->size_ns) {
+          struct rt_stats* stats = malloc(sizeof(struct rt_stats));
+          nk_vc_printf("%s (tid %llu) exiting period %llu ns, slice %llu ns ", a->name, get_cur_thread()->tid, stats->period, stats->slice);
+          nk_vc_printf("arrival count %llu, resched count %llu, switchin count %llu, miss count %llu, total miss time %llu ns\n",
+                      stats->arrival_num, stats->resched_num, stats->switchin_num, stats->miss_num, stats->miss_time);
+          free(stats);
+          free(in);
+          return;
+    	} else {
+    	    a->size_ns -= dur;
+    	}
+    }
+}
+
+static struct nk_virtual_console * burner_vc;
+
+int set_burner_vc(struct nk_virtual_console * cons) {
+  burner_vc = cons;
+
+  return 0;
+}
+
+void burner_handler()
+{
+  uint64_t num_samples = 1000;
+
+  uint64_t us = 1000; // 1 microsecond
+  uint32_t tpr = 0xe;
+  uint64_t phase = 0;
+
+  uint64_t period = 100 * us;
+  uint64_t slice = period * 50 / 100;
+  uint64_t size_ns = period * num_samples;
+
+  nk_thread_id_t tid;
+  struct burner_args *a;
+
+  a = malloc(sizeof(struct burner_args));
+  if (!a) {
+    ERROR_PRINT("malloc burner args failed\n");
+    return;
+  }
+
+  strncpy(a->name,"burner",MAX_CMD); a->name[MAX_CMD-1]=0;
+
+  a->vc = burner_vc;
+  a->size_ns = size_ns;
+  a->constraints.type = PERIODIC;
+  a->constraints.interrupt_priority_class = (uint8_t) tpr;
+  a->constraints.periodic.phase = phase;
+  a->constraints.periodic.period = period;
+  a->constraints.periodic.slice = slice;
+
+  if (nk_thread_start(wordless_burner, (void*)a , NULL, 1, PAGE_SIZE_4KB, &tid, my_cpu_id())) {
+    ERROR_PRINT("thread start failed at CPU %d\n", my_cpu_id());
+  }
+
+  nk_vc_printf("%d #", my_cpu_id());
+
+  return;
 }

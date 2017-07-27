@@ -3,4 +3,8 @@ ssh root@v-test-r415-8.cs.northwestern.edu
 scp nautilus.iso root@v-test-r415-8.cs.northwestern.edu:/boot
 ipmitool -I lanplus -H v-test-r415-8-rsa.cs.northwestern.edu -U tessel -P Tessel\!123 sol activate | tee serial-.out
 tail -f serial-.out
-make isoimage && qemu-system-x86_64 -vga std  -smp 2  -m 2048 -serial stdio  -cdrom nautilus.iso | tee serial.out
+make isoimage && qemu-system-x86_64 -vga std  -smp 2  -m 2048 -serial file:foo.out -serial stdio  -cdrom nautilus.iso | tee serial.out
+
+https://v-test-5038ki-rsa.cs.northwestern.edu/login.html
+ssh root@v-test-5038ki.cs.northwestern.edu
+scp nautilus.bin root@v-test-5038ki.cs.northwestern.edu:/boot
