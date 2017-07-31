@@ -35,6 +35,7 @@
 #include <nautilus/backtrace.h>
 #include <test/ipi.h>
 #include <test/threads.h>
+#include <test/groups.h>
 #include <test/net_udp_echo.h>
 
 #ifdef NAUT_CONFIG_PALACIOS
@@ -576,6 +577,10 @@ static int handle_test(char *buf)
 	return test_threads();
     }
 
+    if (!strncasecmp(what,"group",5)) {
+        return nk_thread_group_test();
+    }
+
     if (!strncasecmp(what,"stop",4)) { 
 	return test_stop();
     }
@@ -784,7 +789,7 @@ static int handle_cmd(char *buf, int n)
     nk_vc_printf("bench\n");
     nk_vc_printf("blktest dev r|w start count\n");
     nk_vc_printf("blktest dev r|w start count\n");
-    nk_vc_printf("test threads|stop|iso|bdwgc|pdsgc|\n");
+    nk_vc_printf("test threads|groups|stop|iso|bdwgc|pdsgc|\n");
     nk_vc_printf("     udp_echo nic ip port num|...\n");
     nk_vc_printf("vm name [embedded image]\n");
     nk_vc_printf("run path\n");
