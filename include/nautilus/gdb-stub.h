@@ -10,41 +10,22 @@
  * http://www.v3vee.org  and
  * http://xstack.sandia.gov/hobbes
  *
- * Copyright (c) 2015, Kyle C. Hale <kh@u.northwestern.edu>
- * Copyright (c) 2015, The V3VEE Project  <http://www.v3vee.org> 
+ * Copyright (c) 2017, Peter Dinda <pdinda@northwestern.edu>
+ * Copyright (c) 2017, The V3VEE Project  <http://www.v3vee.org> 
  *                     The Hobbes Project <http://xstack.sandia.gov/hobbes>
  * All rights reserved.
  *
- * Author: Kyle C. Hale <kh@u.northwestern.edu>
- *         Peter A. Dinda <pdinda@northwestern.edu>
+ * Author:  Peter Dinda <pdinda@northwestern.edu>
  *
  * This is free software.  You are permitted to use,
  * redistribute, and modify it as specified in the file "LICENSE.txt".
  */
-#ifndef __SERIAL_H__
-#define __SERIAL_H__
+#ifndef _GDB_STUB
+#define _GDB_STUB
 
-#include <stddef.h>
-#include <stdarg.h>
+int nk_gdb_init();
+int nk_gdb_init_ap();
 
-#ifndef SERIAL_PRINT_DEBUG_LEVEL
-#define SERIAL_PRINT_DEBUG_LEVEL  10
-#endif
-
-void serial_putchar(unsigned char c);
-void serial_write(const char *buf);
-void serial_puts(const char *buf);
-void serial_print(const char * format, ...);
-
-void serial_printlevel(int level, const char * format, ...);
-
-void serial_print_poll(const char *format, ...);
-
-int serial_debugger_put(uint8_t c);
-int serial_debugger_get(uint8_t *c);
-
-void  serial_early_init(void);
-
-void  serial_init(void);
+#define nk_gdb_breakpoint_here() __asm__ __volatile__ ("int $3")
 
 #endif

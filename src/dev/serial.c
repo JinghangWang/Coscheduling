@@ -33,6 +33,9 @@
 #include <nautilus/dev.h>
 #include <nautilus/chardev.h>
 #include <dev/serial.h>
+#ifdef NAUT_CONFIG_ENABLE_REMOTE_DEBUGGING
+#include <nautilus/gdb-stub.h>
+#endif
 
 /*
   The serial driver provides two stages of functionality
@@ -50,11 +53,17 @@
 
   Additional serial devices can be initialized via serial_init_one().
 
-  We expect that every serial port is at least a 16550.
-  We run all serial ports at 115200 N81.
+  We expect that every serial port is at least a 16550. 
+  We run all serial ports at 115200 N81. 
 
+  The serial driver additionally supports a single optional remote debugging
+  port.  This port is handled in polling fashion with the exception that
+  any receive interrupt or line status (e.g., break) interrupt is interpretted
+  as being an interrupt request from the debugger,and will trigger an immediate
+  breakpoint. 
+  
 */
-#define PATCH   1
+#define PATCH   0
 
 #define COM1_3_IRQ 4
 #define COM2_4_IRQ 3
@@ -73,6 +82,17 @@ static uint16_t serial_io_addr = 0;
 static uint_t serial_print_level;
 static uint8_t com_irq;
 static struct serial_state *early_dev = 0;
+
+
+#ifdef NAUT_CONFIG_SERIAL_DEBUGGER
+/* 
+  This state supports polled operation for communication with
+  a remote debugger
+*/
+static uint16_t   debug_io_addr = 0;
+
+#endif
+
 
 
 /* The following state is for late output */
@@ -551,6 +571,61 @@ serial_irq_handler_early (excp_entry_t * excp,
   return 0;
 }
 
+
+#ifdef NAUT_CONFIG_SERIAL_DEBUGGER
+static int 
+debug_irq_handler(excp_entry_t * excp,
+		  excp_vec_t vec,
+		  void *state)
+{
+  char iir;
+  char id;
+  char lsr;
+
+  INFO_PRINT("Debugger interrupt\n");
+
+  iir = inb(debug_io_addr + IIR);
+  
+  id = iir & 0xf;
+  
+  // we care only about receive and LSR->break
+  
+  switch (id) {
+  case 4:
+    INFO_PRINT("Debugger Received Data\n");
+    // receive data - gdb handler will absorb the data
+#ifdef NAUT_CONFIG_ENABLE_REMOTE_DEBUGGING
+    nk_gdb_breakpoint_here();
+#endif    
+    break;
+    
+  case 6:
+    // LSR
+    lsr = inb(debug_io_addr + LSR);
+    
+    if (lsr & 0x10) {
+#ifdef NAUT_CONFIG_ENABLE_REMOTE_DEBUGGING
+      INFO_PRINT("Debugger LSR break\n");
+      // BREAK
+      nk_gdb_breakpoint_here();
+#endif
+    }
+    // we don't care about any other condition
+    
+    break;
+    
+  default:
+    // we don't care
+    break;
+  }
+  
+  IRQ_HANDLER_END();
+  
+  return 0;
+}
+
+#endif
+
 static int serial_irq_handler_late(struct serial_state *s,excp_entry_t * excp,excp_vec_t vec, void *state)
 {
     uint8_t iir;
@@ -628,10 +703,17 @@ serial_irq_handler(excp_entry_t * excp,
     return rc;
 }
 
-static void
-serial_init_addr (uint16_t io_addr)
+
+static void 
+serial_init_addr (uint16_t io_addr, int debugger) 
 {
-  serial_io_addr = io_addr;
+  if (!debugger) {
+    serial_io_addr = io_addr;
+  } else {
+#ifdef NAUT_CONFIG_SERIAL_DEBUGGER
+    debug_io_addr = io_addr;
+#endif
+  }
 
   //  io_adr = 3F8=COM1, 2F8=COM2, 3E8=COM3, 2E8=COM4
 
@@ -650,23 +732,34 @@ serial_init_addr (uint16_t io_addr)
   // 8 bit word, 1 stop bit, no parity
   outb(0x03, io_addr + 3);
 
-  // interrupt enable register
-  // raise interrupts on received data available
-  // do not raise interrupts on transmit holding register empty,
-  // line status update, or modem status update
-  //
-  outb(0x01, io_addr + 1);
-
-  // FIFO control register
-  // turn off FIFOs;  chip is now going to raise an
-  // interrupt on every incoming word
-  outb(0, io_addr + 2);
-
-  // prepare to handle our ~~~ commands
-  reset_cmd_fsm();
-
-  // enable interrupts (bit 3)
-  // outb(0x08, io_addr + 4);
+  if (!debugger) { 
+      // interrupt enable register
+      // raise interrupts on received data available
+      // do not raise interrupts on transmit holding register empty,
+      // line status update, or modem status update
+      // 
+      outb(0x01, io_addr + 1);
+      
+      // FIFO control register
+      // turn off FIFOs;  chip is now going to raise an
+      // interrupt on every incoming word
+      outb(0, io_addr + 2);
+      
+      // prepare to handle our ~~~ commands
+      reset_cmd_fsm();
+      
+      // enable interrupts (bit 3)
+      // outb(0x08, io_addr + 4);
+  } else {
+#ifdef NAUT_CONFIG_SERIAL_DEBUGGER
+      // debugger - raise interrupts on receive and line status (break)
+      outb(0x05, io_addr + 1);
+      // FIFOs off
+      outb(0, io_addr + 2);
+      // interrupt global enable
+      INFO_PRINT("Debug Interrupts enabled\n");
+#endif
+  }
 }
 
 static void serial_putchar_early (uchar_t c)
@@ -726,6 +819,8 @@ void
 serial_write (const char *buf)
 {
     if (early_dev) {
+	//	ERROR_PRINT("Early dev: %p\n",early_dev);
+	//panic("Early Dev");
 	char c;
 	int flags = spin_lock_irq_save(&serial_lock);
 	while ((c=*buf)) {
@@ -893,6 +988,42 @@ serial_printlevel (int level, const char * format, ...)
   }
 }
 
+#ifdef NAUT_CONFIG_SERIAL_DEBUGGER
+
+int serial_debugger_put(uint8_t c)
+{
+    if (!debug_io_addr) {
+        return -1;
+    }
+    
+    // Wait on THRE
+    while (!(inb(debug_io_addr + 5) & 0x20)) {
+    }
+
+    // pump data
+    outb(c, debug_io_addr + 0);
+    
+    return 0;
+}
+
+int serial_debugger_get(uint8_t *c)
+{
+    if (!debug_io_addr) {
+        return -1;
+    }
+    
+    // Wait on DR
+    while (!(inb(debug_io_addr + 5) & 0x01)) {
+    }
+    
+    // pump data
+    *c = inb(debug_io_addr + 0);
+    
+    return 0;
+
+}
+
+#endif
 
 static struct nk_dev_int devops = {
     .open=0,
@@ -912,23 +1043,23 @@ serial_early_init (void)
   serial_output_sink_poll.Finish = &Serial_Finish_Poll;
 
 #if NAUT_CONFIG_SERIAL_REDIRECT
-#if NAUT_CONFIG_SERIAL_REDIRECT_PORT == 1
-  serial_init_addr(COM1_ADDR);
+#if NAUT_CONFIG_SERIAL_REDIRECT_PORT == 1 
+  serial_init_addr(COM1_ADDR,0);
   register_irq_handler(COM1_3_IRQ, serial_irq_handler, NULL);
   com_irq = COM1_3_IRQ;
   nk_unmask_irq(com_irq);
-#elif NAUT_CONFIG_SERIAL_REDIRECT_PORT == 2
-  serial_init_addr(COM2_ADDR);
+#elif NAUT_CONFIG_SERIAL_REDIRECT_PORT == 2 
+  serial_init_addr(COM2_ADDR,0);
   register_irq_handler(COM2_4_IRQ, serial_irq_handler, NULL);
   com_irq = COM2_4_IRQ;
   nk_unmask_irq(com_irq);
-#elif NAUT_CONFIG_SERIAL_REDIRECT_PORT == 3
-  serial_init_addr(COM3_ADDR);
+#elif NAUT_CONFIG_SERIAL_REDIRECT_PORT == 3 
+  serial_init_addr(COM3_ADDR,0);
   register_irq_handler(COM1_3_IRQ, serial_irq_handler, NULL);
   com_irq = COM1_3_IRQ;
   nk_unmask_irq(com_irq);
 #elif NAUT_CONFIG_SERIAL_REDIRECT_PORT == 4
-  serial_init_addr(COM4_ADDR);
+  serial_init_addr(COM4_ADDR,0);
   register_irq_handler(COM2_4_IRQ, serial_irq_handler, NULL);
   com_irq = COM2_4_IRQ;;
   nk_unmask_irq(com_irq);
@@ -938,19 +1069,62 @@ serial_early_init (void)
 #endif
 
   serial_device_ready = 1;
+
+
+#if NAUT_CONFIG_SERIAL_DEBUGGER
+  
+#if NAUT_CONFIG_SERIAL_DEBUGGER_PORT == 1 
+  serial_init_addr(COM1_ADDR,1);
+  register_irq_handler(COM1_3_IRQ, debug_irq_handler, NULL);
+  nk_unmask_irq(COM1_3_IRQ);
+  INFO_PRINT("Debug Interrupts unmasked\n");
+  
+#elif NAUT_CONFIG_SERIAL_DEBUGGER_PORT == 2 
+  serial_init_addr(COM2_ADDR,1);
+  register_irq_handler(COM2_4_IRQ, debug_irq_handler, NULL);
+  nk_unmask_irq(COM2_4_IRQ);
+#elif NAUT_CONFIG_SERIAL_DEBUGGER_PORT == 3 
+  serial_init_addr(COM3_ADDR,1);
+  register_irq_handler(COM1_3_IRQ, debug_irq_handler, NULL);
+  nk_unmask_irq(COM1_3_IRQ);
+#elif NAUT_CONFIG_SERIAL_DEBUGGER_PORT == 4
+  serial_init_addr(COM4_ADDR,1);
+  register_irq_handler(COM2_4_IRQ, debug_irq_handler, NULL);
+  nk_unmask_irq(COM2_4_IRQ);
+#else
+#error Invalid serial port
+#endif
+#endif
+
 }
 
+#if NAUT_CONFIG_SERIAL_DEBUGGER && NAUT_CONFIG_SERIAL_DEBUGGER_PORT==NAUT_CONFIG_SERIAL_REDIRECT_PORT
+#error "Redirect Serial Port and Debugger Serial Port cannot be the same!"
+#endif
 
 void serial_init()
 {
     // post-facto register the generic serial output device
     nk_dev_register("serial-boot",NK_DEV_GENERIC,0,&devops,0);
 
-    // attempt to find and setup all legacy serial devices
+#if NAUT_CONFIG_SERIAL_DEBUGGER
+    nk_dev_register("serial-debug", NK_DEV_GENERIC, 0, &devops, 0);
+#endif
+
+    // attempt to find and setup all legacy serial devices 
+    // do not change the debugger port if we have one 
+#if !NAUT_CONFIG_SERIAL_DEBUGGER || NAUT_CONFIG_SERIAL_DEBUGGER_PORT!=1
     serial_init_one("serial0",COM1_ADDR,COM1_3_IRQ,0,&legacy[0]);
+#endif
+#if !NAUT_CONFIG_SERIAL_DEBUGGER || NAUT_CONFIG_SERIAL_DEBUGGER_PORT!=2
     serial_init_one("serial1",COM2_ADDR,COM2_4_IRQ,0,&legacy[1]);
+#endif
+#if !NAUT_CONFIG_SERIAL_DEBUGGER || NAUT_CONFIG_SERIAL_DEBUGGER_PORT!=3
     serial_init_one("serial2",COM3_ADDR,COM1_3_IRQ,0,&legacy[2]);
+#endif
+#if !NAUT_CONFIG_SERIAL_DEBUGGER || NAUT_CONFIG_SERIAL_DEBUGGER_PORT!=4
     serial_init_one("serial3",COM4_ADDR,COM2_4_IRQ,0,&legacy[3]);
+#endif
 
 #ifdef NAUT_CONFIG_SERIAL_REDIRECT
 #if NAUT_CONFIG_SERIAL_REDIRECT_PORT == 1
