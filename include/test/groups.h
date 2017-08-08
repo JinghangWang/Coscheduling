@@ -26,7 +26,8 @@
 #ifndef _TEST_GROUP_H_
 #define _TEST_GROUP_H_
 
-// group tester, set parameters in group.c before using it
+// group testers, set parameters in group.c before using them
 int nk_thread_group_test();
+int nk_thread_group_sync_test();
 
 #endif /* _TEST_GROUP_H_ */

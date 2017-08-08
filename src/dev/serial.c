@@ -1,18 +1,18 @@
-/* 
+/*
  * This file is part of the Nautilus AeroKernel developed
- * by the Hobbes and V3VEE Projects with funding from the 
- * United States National  Science Foundation and the Department of Energy.  
+ * by the Hobbes and V3VEE Projects with funding from the
+ * United States National  Science Foundation and the Department of Energy.
  *
  * The V3VEE Project is a joint project between Northwestern University
  * and the University of New Mexico.  The Hobbes Project is a collaboration
- * led by Sandia National Laboratories that includes several national 
+ * led by Sandia National Laboratories that includes several national
  * laboratories and universities. You can find out more at:
  * http://www.v3vee.org  and
  * http://xstack.sandia.gov/hobbes
  *
  * Copyright (c) 2015, Kyle C. Hale <kh@u.northwestern.edu>
  * Copyright (c) 2017, Peter A. Dinda <pdinda@northwestern.edu>
- * Copyright (c) 2015, The V3VEE Project  <http://www.v3vee.org> 
+ * Copyright (c) 2015, The V3VEE Project  <http://www.v3vee.org>
  *                     The Hobbes Project <http://xstack.sandia.gov/hobbes>
  * All rights reserved.
  *
@@ -22,7 +22,7 @@
  * This is free software.  You are permitted to use,
  * redistribute, and modify it as specified in the file "LICENSE.txt".
  *
- * Parts of this file were taken from the GeekOS teaching OS 
+ * Parts of this file were taken from the GeekOS teaching OS
  */
 #include <nautilus/nautilus.h>
 #include <nautilus/fmtout.h>
@@ -36,24 +36,25 @@
 
 /*
   The serial driver provides two stages of functionality
-  
+
   The default configured port is used to provide early output
   during the boot process, well before the device framework is
   up and running.   This is achieved by using serial_early_init()
-  and then the various serial functions. 
+  and then the various serial functions.
 
   Once we are past the early stage, serial_init() is then invoked.
-  This in turn initializes all UARTs at the legacy addresses (e.g., 
+  This in turn initializes all UARTs at the legacy addresses (e.g.,
   COM1 through COM4) and make them available via the char dev framework.
   It will also promote the early-inited serial port to this functionality
-  while leaving the serial_ functions active as well. 
+  while leaving the serial_ functions active as well.
 
   Additional serial devices can be initialized via serial_init_one().
 
-  We expect that every serial port is at least a 16550. 
-  We run all serial ports at 115200 N81. 
-  
+  We expect that every serial port is at least a 16550.
+  We run all serial ports at 115200 N81.
+
 */
+#define PATCH   1
 
 #define COM1_3_IRQ 4
 #define COM2_4_IRQ 3
@@ -77,7 +78,7 @@ static struct serial_state *early_dev = 0;
 /* The following state is for late output */
 
 #define BUFSIZE 512
-  
+
 struct serial_state {
     struct nk_char_dev *dev;
     int         mmio;   // if this is a memory-mapped UART
@@ -116,7 +117,7 @@ static int serial_input_full(struct serial_state *s)
     return ((s->input_buf_tail + 1) % BUFSIZE) == s->input_buf_head;
 }
 
-static int serial_output_full(struct serial_state *s) 
+static int serial_output_full(struct serial_state *s)
 {
     return ((s->output_buf_tail + 1) % BUFSIZE) == s->output_buf_head;
 }
@@ -160,11 +161,11 @@ static int serial_do_read(void *state, uint8_t *dest)
     if (serial_input_empty(s)) {
 	rc = 0;
 	goto out;
-    } 
+    }
 
     *dest = serial_input_pull(s);
     rc = 1;
-    
+
  out:
     spin_unlock_irq_restore(&s->input_lock, flags);
     return rc;
@@ -178,19 +179,25 @@ static int serial_do_write(void *state, uint8_t *src)
 {
     struct serial_state *s = (struct serial_state *)state;
 
+#if PATCH
+    serial_putchar(*src); //pathces
+
+    return 1;
+#endif
+
     int rc = -1;
     int flags;
- 
+
     flags = spin_lock_irq_save(&s->output_lock);
 
     if (serial_output_full(s)) {
 	rc = 0;
 	goto out;
-    } 
+    }
 
     serial_output_push(s,*src);
     rc = 1;
-    
+
  out:
     kick_output(s);
     spin_unlock_irq_restore(&s->output_lock, flags);
@@ -212,8 +219,8 @@ static struct nk_char_dev_int chardevops = {
 
 static void serial_write_reg(struct serial_state *s, uint8_t offset, uint8_t val)
 {
-    if (s) { 
-	if (s->mmio) { 
+    if (s) {
+	if (s->mmio) {
 	    *(volatile uint8_t *)(s->addr + offset) = val;
 	} else {
 	    outb(val, (uint16_t) (s->addr + offset));
@@ -225,8 +232,8 @@ static void serial_write_reg(struct serial_state *s, uint8_t offset, uint8_t val
 
 static uint8_t serial_read_reg(struct serial_state *s, uint8_t offset)
 {
-    if (s) { 
-	if (s->mmio) { 
+    if (s) {
+	if (s->mmio) {
 	    return *(volatile uint8_t *)(s->addr + offset);
 	} else {
 	    return inb((uint16_t) (s->addr + offset));
@@ -255,10 +262,10 @@ static uint8_t serial_read_reg(struct serial_state *s, uint8_t offset)
 // return 0  => success
 // return 1  => does not exist
 static int serial_setup(struct serial_state *s)
-{     
+{
     // check for existence by changing the scratchpad reg
     serial_write_reg(s,SCR,0xde);
-    if (serial_read_reg(s,SCR) != 0xde) { 
+    if (serial_read_reg(s,SCR) != 0xde) {
 	return 1;
     }
 
@@ -268,7 +275,7 @@ static int serial_setup(struct serial_state *s)
 
     // write divisor to divisor latch to set speed
     // LSB then MSB
-    // 115200 / 1 = 115200 baud 
+    // 115200 / 1 = 115200 baud
     serial_write_reg(s,DLL,1);
     serial_write_reg(s,DLM,0);
 
@@ -299,7 +306,7 @@ static int serial_setup(struct serial_state *s)
     serial_write_reg(s,FCR,0xc1);
 #endif
     return 0;
-}  
+}
 
 static int serial_irq_handler (excp_entry_t * excp, excp_vec_t vec, void *state);
 
@@ -316,18 +323,18 @@ static int serial_init_one(char *name, uint64_t addr, uint8_t irq, int mmio, str
     spinlock_init(&s->input_lock);
     spinlock_init(&s->output_lock);
 
-    if ((rc = serial_setup(s))) { 
+    if ((rc = serial_setup(s))) {
 	memset(s,0,sizeof(*s));
 	return rc;
     }
 
     register_irq_handler(irq, serial_irq_handler, s);
-    
+
     s->dev = nk_char_dev_register(name,0,&chardevops,s);
 
-    if (!s->dev) { 
+    if (!s->dev) {
 	return -1;
-    } 
+    }
 
     nk_unmask_irq(irq);
 
@@ -339,9 +346,9 @@ static void kick_output(struct serial_state *s)
 {
     uint64_t count=0;
 
-    while (!serial_output_empty(s)) { 
+    while (!serial_output_empty(s)) {
 	uint8_t ls =  serial_read_reg(s,LSR);
-	if (ls & 0x20) { 
+	if (ls & 0x20) {
 	    // transmit holding register is empty
 	    // drive a byte to the device
 	    uint8_t data = serial_output_pull(s);
@@ -357,14 +364,14 @@ static void kick_output(struct serial_state *s)
 	    goto out;
 	}
     }
-    
+
     // the chip has room, but we have no data for it, so
     // disable the transmit interrupt for now
     uint8_t ier = serial_read_reg(s,IER);
     ier &= ~0x2;
     serial_write_reg(s,IER,ier);
  out:
-    if (count>0) { 
+    if (count>0) {
 	nk_dev_signal((struct nk_dev*)(s->dev));
     }
     return;
@@ -374,25 +381,25 @@ static void kick_output(struct serial_state *s)
 static void kick_input(struct serial_state *s)
 {
     uint64_t count=0;
-    
-    while (!serial_input_full(s)) { 
+
+    while (!serial_input_full(s)) {
 	uint8_t ls =  serial_read_reg(s,LSR);
 	if (ls & 0x04) {
 	    // parity error, skip this byte
 	    continue;
 	}
-	if (ls & 0x08) { 
+	if (ls & 0x08) {
 	    // framing error, skip this byte
 	    continue;
 	}
-	if (ls & 0x10) { 
+	if (ls & 0x10) {
 	    // break interrupt, but we do want this byte
 	}
-	if (ls & 0x02) { 
+	if (ls & 0x02) {
 	    // overrun error - we have lost a byte
 	    // but we do want this next one
 	}
-	if (ls & 0x01) { 
+	if (ls & 0x01) {
 	    // data ready
 	    // grab a byte from the device if there is room
 	    uint8_t data = serial_read_reg(s,RBR);
@@ -418,18 +425,18 @@ extern int vprintk(const char * fmt, va_list args);
 
 // Commands are of the form ~~~K
 // cmd_state counts how many ~s we have seen so far
-static int cmd_state = 0; 
+static int cmd_state = 0;
 
-static void reset_cmd_fsm() 
+static void reset_cmd_fsm()
 {
     cmd_state = 0;
 }
 
 static int drive_cmd_fsm(char c)
 {
-    if (c=='~') { 
+    if (c=='~') {
 	cmd_state++;
-	if (cmd_state==4) { 
+	if (cmd_state==4) {
 	    // dump the ~s we have seen
 	    DEBUG_PRINT("~~~");
 	    reset_cmd_fsm();
@@ -438,7 +445,7 @@ static int drive_cmd_fsm(char c)
 	    return 1;
 	}
     } else {
-	if (cmd_state==3) { 
+	if (cmd_state==3) {
 	    switch (c) {
 	    case 'k' :
 		DEBUG_PRINT("Rebooting Machine\n");
@@ -457,7 +464,7 @@ static int drive_cmd_fsm(char c)
 		break;
 	    default:
 		// not a command; the user typed ~~~somethingelse
-		// this would queue up ~~~ 
+		// this would queue up ~~~
 		DEBUG_PRINT("User typed \"~~~\"\n");
 		reset_cmd_fsm();
 		return 0;
@@ -468,9 +475,9 @@ static int drive_cmd_fsm(char c)
 	}
     }
 }
-    
 
-static int 
+
+static int
 serial_irq_handler_early (excp_entry_t * excp,
 			  excp_vec_t vec,
 			  void *state)
@@ -482,7 +489,7 @@ serial_irq_handler_early (excp_entry_t * excp,
 
   // Note that the DEBUG_PRINT statements here
   // are dangerous since they can do serial output
-  // themselves, which introduces a race... 
+  // themselves, which introduces a race...
   // for production, these need to be removed
 
   DEBUG_PRINT("serial_irq_handler\n");
@@ -490,13 +497,13 @@ serial_irq_handler_early (excp_entry_t * excp,
   irr = inb(serial_io_addr + 2);
 
   DEBUG_PRINT("irr=0x%x\n",irr);
-  
+
   id = irr & 0xf;
-  
+
   DEBUG_PRINT("id=0x%x\n",id);
-  
+
   switch (id) {
-  case 0: 
+  case 0:
       DEBUG_PRINT("Modem status change\n");
       goto out;
       break;
@@ -513,8 +520,8 @@ serial_irq_handler_early (excp_entry_t * excp,
 
       rcv_byte = inb(serial_io_addr + 0);
       DEBUG_PRINT("Received data: '%c'\n",rcv_byte);
-      
-      if (!drive_cmd_fsm(rcv_byte)) { 
+
+      if (!drive_cmd_fsm(rcv_byte)) {
 	  // this would enqueue the byte into a recv queue
 	  DEBUG_PRINT("char '%c' received\n",rcv_byte);
       }
@@ -548,7 +555,7 @@ static int serial_irq_handler_late(struct serial_state *s,excp_entry_t * excp,ex
 {
     uint8_t iir;
     int done = 0;
-    
+
     do {
 	iir = serial_read_reg(s,IIR);
 
@@ -561,7 +568,7 @@ static int serial_irq_handler_late(struct serial_state *s,excp_entry_t * excp,ex
 	    kick_output(s);
 	    spin_unlock(&s->output_lock);
 	    break;
-	case 4:  // received data available 
+	case 4:  // received data available
 	case 12: // received data available (FIFO timeout)
 	    spin_lock(&s->input_lock);
 	    kick_input(s);
@@ -583,13 +590,13 @@ static int serial_irq_handler_late(struct serial_state *s,excp_entry_t * excp,ex
 	}
 
     } while ((iir & 0xf) != 1);
-    
+
     return 0;
 }
 
 
 
-static int 
+static int
 serial_irq_handler(excp_entry_t * excp,
 		   excp_vec_t vec,
 		   void *state)
@@ -597,36 +604,36 @@ serial_irq_handler(excp_entry_t * excp,
     int i;
     int rc=0;
 
-#ifdef NAUT_CONFIG_SERIAL_REDIRECT 
-    if (!early_dev) { 
+#ifdef NAUT_CONFIG_SERIAL_REDIRECT
+    if (!early_dev) {
 	// use the old handler until we have full functionality
 	return serial_irq_handler_early(excp,vec,state);
-    } 
+    }
 #endif
 
     // the following is disgusting...  we don't know which serial device
     // interrupted, so we will check all legacy ones...
-    
-    for (i=0;i<4;i++) { 
-	if (legacy[i].addr) { 
+
+    for (i=0;i<4;i++) {
+	if (legacy[i].addr) {
 	    // valid device
 	    rc |= serial_irq_handler_late(&legacy[i], excp, vec, state);
 	}
     }
 
-    // other devices?  Not yet.  
-    
+    // other devices?  Not yet.
+
     IRQ_HANDLER_END();
 
     return rc;
 }
 
-static void 
-serial_init_addr (uint16_t io_addr) 
+static void
+serial_init_addr (uint16_t io_addr)
 {
   serial_io_addr = io_addr;
 
-  //  io_adr = 3F8=COM1, 2F8=COM2, 3E8=COM3, 2E8=COM4 
+  //  io_adr = 3F8=COM1, 2F8=COM2, 3E8=COM3, 2E8=COM4
 
   // line control register
   // set DLAB so we can write divisor
@@ -634,7 +641,7 @@ serial_init_addr (uint16_t io_addr)
 
   // write divisor to divisor latch to set speed
   // LSB then MSB
-  // 115200 / 1 = 115200 baud 
+  // 115200 / 1 = 115200 baud
   outb(1, io_addr + 0);
   outb(0, io_addr + 1);
 
@@ -647,17 +654,17 @@ serial_init_addr (uint16_t io_addr)
   // raise interrupts on received data available
   // do not raise interrupts on transmit holding register empty,
   // line status update, or modem status update
-  // 
+  //
   outb(0x01, io_addr + 1);
 
   // FIFO control register
   // turn off FIFOs;  chip is now going to raise an
   // interrupt on every incoming word
   outb(0, io_addr + 2);
-  
+
   // prepare to handle our ~~~ commands
   reset_cmd_fsm();
-  
+
   // enable interrupts (bit 3)
   // outb(0x08, io_addr + 4);
 }
@@ -665,7 +672,7 @@ serial_init_addr (uint16_t io_addr)
 static void serial_putchar_early (uchar_t c)
 {
     //  static unsigned short io_adr;
-    if (serial_io_addr==0) { 
+    if (serial_io_addr==0) {
         return;
     }
 
@@ -675,7 +682,7 @@ static void serial_putchar_early (uchar_t c)
 
     int flags = spin_lock_irq_save(&serial_lock);
 
-    if (c == '\n') { 
+    if (c == '\n') {
 
         /* wait for transmitter holding register ready */
         while( (inb(serial_io_addr + 5) & 0x20) == 0);
@@ -683,7 +690,7 @@ static void serial_putchar_early (uchar_t c)
         /* send char */
         outb('\r', serial_io_addr + 0);
 
-    } 
+    }
 
     /* wait for transmitter holding register ready */
     while( (inb(serial_io_addr + 5) & 0x20) == 0);
@@ -696,9 +703,13 @@ static void serial_putchar_early (uchar_t c)
 
 void serial_putchar(uchar_t c)
 {
-    if (early_dev) {
+  #if PATCH
+    if (0 && early_dev) { // patch
+  #else
+    if (early_dev){
+  #endif
 	int flags = spin_lock_irq_save(&serial_lock);
-	if (c=='\n') { 
+	if (c=='\n') {
 	    serial_do_write_wait(early_dev,"\r");
 	}
 	serial_do_write_wait(early_dev,&c);
@@ -706,19 +717,19 @@ void serial_putchar(uchar_t c)
     } else {
 	serial_putchar_early(c);
     }
-    
+
 }
 
 
 
-void 
-serial_write (const char *buf) 
+void
+serial_write (const char *buf)
 {
     if (early_dev) {
 	char c;
 	int flags = spin_lock_irq_save(&serial_lock);
-	while ((c=*buf)) { 
-	    if (c=='\n') { 
+	while ((c=*buf)) {
+	    if (c=='\n') {
 		serial_do_write_wait(early_dev,"\r");
 	    }
 	    serial_do_write_wait(early_dev,&c);
@@ -734,7 +745,7 @@ serial_write (const char *buf)
 }
 
 
-void 
+void
 serial_puts( const char *buf)
 {
   serial_write(buf);
@@ -742,11 +753,11 @@ serial_puts( const char *buf)
 }
 
 
-static void 
+static void
 serial_print_hex (uchar_t x)
 {
   uchar_t z;
-  
+
   z = (x >> 4) & 0xf;
   serial_print("%x", z);
 
@@ -755,7 +766,7 @@ serial_print_hex (uchar_t x)
 }
 
 
-static void 
+static void
 serial_mem_dump (uint8_t * start, int n)
 {
     int i, j;
@@ -768,7 +779,7 @@ serial_mem_dump (uint8_t * start, int n)
 
             serial_print(" ");
             serial_print_hex(*((uchar_t *)(start + j)));
-            if ((j + 1) < n) { 
+            if ((j + 1) < n) {
                 serial_print_hex(*((uchar_t *)(start + j + 1)));
             }
 
@@ -788,29 +799,29 @@ serial_mem_dump (uint8_t * start, int n)
 
 static struct Output_Sink serial_output_sink_poll;
 
-static void 
-Serial_Emit_Poll (struct Output_Sink * o, int ch) 
-{ 
-  serial_putchar_early((uchar_t)ch); 
+static void
+Serial_Emit_Poll (struct Output_Sink * o, int ch)
+{
+  serial_putchar_early((uchar_t)ch);
 }
 
-static void 
+static void
 Serial_Finish_Poll (struct Output_Sink * o) { return; }
 
-static void 
-Serial_Emit (struct Output_Sink * o, int ch) 
-{ 
-  serial_putchar((uchar_t)ch); 
+static void
+Serial_Emit (struct Output_Sink * o, int ch)
+{
+  serial_putchar((uchar_t)ch);
 }
 
 static struct Output_Sink serial_output_sink;
 
-static void 
+static void
 Serial_Finish (struct Output_Sink * o) { return; }
 
 
-void 
-__serial_print (const char * format, va_list ap) 
+void
+__serial_print (const char * format, va_list ap)
 {
     uint8_t flags;
 
@@ -824,7 +835,7 @@ __serial_print (const char * format, va_list ap)
 }
 
 
-void 
+void
 serial_print (const char * format, ...)
 {
   va_list args;
@@ -838,8 +849,8 @@ serial_print (const char * format, ...)
 }
 
 
-void 
-__serial_print_poll (const char * format, va_list ap) 
+void
+__serial_print_poll (const char * format, va_list ap)
 {
     uint8_t flags;
 
@@ -853,7 +864,7 @@ __serial_print_poll (const char * format, va_list ap)
 }
 
 
-void 
+void
 serial_print_poll(const char * format, ...)
 {
   va_list args;
@@ -867,18 +878,18 @@ serial_print_poll(const char * format, ...)
 }
 
 
-void 
-serial_printlevel (int level, const char * format, ...) 
+void
+serial_printlevel (int level, const char * format, ...)
 {
   if (level > serial_print_level) {
     va_list args;
     uint8_t iflag = irq_disable_save();
-    
+
     va_start(args, format);
     __serial_print(format, args);
     va_end(args);
-    
-    irq_enable_restore(iflag);   
+
+    irq_enable_restore(iflag);
   }
 }
 
@@ -888,8 +899,8 @@ static struct nk_dev_int devops = {
     .close=0,
 };
 
-void 
-serial_early_init (void) 
+void
+serial_early_init (void)
 {
   serial_print_level = SERIAL_PRINT_DEBUG_LEVEL;
 
@@ -901,17 +912,17 @@ serial_early_init (void)
   serial_output_sink_poll.Finish = &Serial_Finish_Poll;
 
 #if NAUT_CONFIG_SERIAL_REDIRECT
-#if NAUT_CONFIG_SERIAL_REDIRECT_PORT == 1 
+#if NAUT_CONFIG_SERIAL_REDIRECT_PORT == 1
   serial_init_addr(COM1_ADDR);
   register_irq_handler(COM1_3_IRQ, serial_irq_handler, NULL);
   com_irq = COM1_3_IRQ;
   nk_unmask_irq(com_irq);
-#elif NAUT_CONFIG_SERIAL_REDIRECT_PORT == 2 
+#elif NAUT_CONFIG_SERIAL_REDIRECT_PORT == 2
   serial_init_addr(COM2_ADDR);
   register_irq_handler(COM2_4_IRQ, serial_irq_handler, NULL);
   com_irq = COM2_4_IRQ;
   nk_unmask_irq(com_irq);
-#elif NAUT_CONFIG_SERIAL_REDIRECT_PORT == 3 
+#elif NAUT_CONFIG_SERIAL_REDIRECT_PORT == 3
   serial_init_addr(COM3_ADDR);
   register_irq_handler(COM1_3_IRQ, serial_irq_handler, NULL);
   com_irq = COM1_3_IRQ;
@@ -934,19 +945,19 @@ void serial_init()
 {
     // post-facto register the generic serial output device
     nk_dev_register("serial-boot",NK_DEV_GENERIC,0,&devops,0);
-    
-    // attempt to find and setup all legacy serial devices 
+
+    // attempt to find and setup all legacy serial devices
     serial_init_one("serial0",COM1_ADDR,COM1_3_IRQ,0,&legacy[0]);
     serial_init_one("serial1",COM2_ADDR,COM2_4_IRQ,0,&legacy[1]);
     serial_init_one("serial2",COM3_ADDR,COM1_3_IRQ,0,&legacy[2]);
     serial_init_one("serial3",COM4_ADDR,COM2_4_IRQ,0,&legacy[3]);
 
 #ifdef NAUT_CONFIG_SERIAL_REDIRECT
-#if NAUT_CONFIG_SERIAL_REDIRECT_PORT == 1 
+#if NAUT_CONFIG_SERIAL_REDIRECT_PORT == 1
     early_dev = &legacy[0];
-#elif NAUT_CONFIG_SERIAL_REDIRECT_PORT == 2 
+#elif NAUT_CONFIG_SERIAL_REDIRECT_PORT == 2
     early_dev = &legacy[1];
-#elif NAUT_CONFIG_SERIAL_REDIRECT_PORT == 3 
+#elif NAUT_CONFIG_SERIAL_REDIRECT_PORT == 3
     early_dev = &legacy[2];
 #elif NAUT_CONFIG_SERIAL_REDIRECT_PORT == 4
     early_dev = &legacy[3];
