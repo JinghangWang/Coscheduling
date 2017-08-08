@@ -227,3 +227,7 @@ void burner_handler()
 
   return;
 }
+
+void empty_burner(void) {
+  return;
+}

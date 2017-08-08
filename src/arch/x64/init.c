@@ -420,6 +420,8 @@ init (unsigned long mbd,
 
     runtime_init();
 
+    extern int time_stamp_init(void);
+    time_stamp_init();
 
     printk("Nautilus boot thread yielding (indefinitely)\n");
 

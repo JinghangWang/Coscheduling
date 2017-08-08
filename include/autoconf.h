@@ -1,7 +1,7 @@
 /*
  * Automatically generated C config: don't edit
  * Nautilus version: 
- * Wed Jul 26 14:48:04 2017
+ * Tue Aug  8 14:43:54 2017
  */
 #define AUTOCONF_INCLUDED
 
@@ -19,7 +19,7 @@
  * Nautilus AeroKernel Build Config
  */
 #define NAUT_CONFIG_USE_NAUT_BUILTINS 1
-#define NAUT_CONFIG_CXX_SUPPORT 1
+#undef NAUT_CONFIG_CXX_SUPPORT
 #define NAUT_CONFIG_TOOLCHAIN_ROOT ""
 
 /*

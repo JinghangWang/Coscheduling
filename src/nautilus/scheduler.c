@@ -255,6 +255,7 @@ static int ipi_complete(void) {
 
 int ipi_complete_check() {
   if (atomic_add(ipi_count, 0) == CPU_NUM - 1) {
+    // printk("complete: %d\n", ipi_count);
     return 1;
   } else {
     return 0;

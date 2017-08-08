@@ -1182,18 +1182,26 @@ static void calibrate_apic_timer(struct apic_dev *apic)
 
 
     //timing test to capture system management overhead
-// #define NUM_TESTS   500
-//     uint64_t timing_dur[NUM_TESTS];
-//     for (int i = 0; i < NUM_TESTS; ++i){
-//         start = rdtsc();
-//         nk_simple_timing_loop(1000000);
-//         end = rdtsc();
-//         timing_dur[i] = end - start;
-//     }
-//
-//     for (int i = 0; i < NUM_TESTS; ++i){
-//         printk("%llu \n", timing_dur[i]);
-//     }
+#define NUM_TESTS   500
+    uint64_t timing_dur[NUM_TESTS];
+    uint64_t count_0 = 0, count_1 = 0;
+    count_0 = msr_read(0x34);
+    for (int i = 0; i < NUM_TESTS; i++){
+        start = rdtsc();
+        nk_simple_timing_loop(1000000);
+        // outb(0xff, 0xb2); // write value to port 0xb2 - may trigger smi
+        end = rdtsc();
+        // out(0xff, 0x80);
+        timing_dur[i] = end - start;
+    }
+
+    for (int i = 0; i < NUM_TESTS; ++i){
+        printk("%llu \n", timing_dur[i]);
+    }
+
+    count_1 = msr_read(0x34);
+    
+    printk("SMI count_0 = %llu, count_1 = %llu\n", count_0, count_1);
 }
 
 

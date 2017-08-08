@@ -349,6 +349,10 @@ static int handle_test(char *buf)
 	return nk_thread_group_test();
     }
 
+    if (!strncasecmp(what,"gsync",5)) {
+        return nk_thread_group_sync_test();
+    }
+
  dunno:
     nk_vc_printf("Unknown test request\n");
     return -1;
@@ -876,13 +880,36 @@ static int handle_cmd(char *buf, int n)
 
   if (!strncasecmp(buf,"ipi_sample",10)) {
     struct apic_dev * apic = per_cpu_get(apic);
-    apic_bcast_ipi(apic, APIC_COLLECT_TIME_STAMP_VEC);
 
-    sample_time_stamp_ipi();
+    for (int i = 0; i < 100; i++) {
+      apic_bcast_ipi(apic, APIC_COLLECT_TIME_STAMP_VEC);
 
-    while (!ipi_complete_check()) {}
+      sample_time_stamp_ipi();
 
-    ipi_sample_dump();
+      while (!ipi_complete_check()) {}
+
+      ipi_sample_dump();
+
+      udelay(10000);
+    }
+
+    return 0;
+  }
+
+  if (!strncasecmp(buf,"func_call",9)) {
+    uint64_t start, end;
+
+    start = rdtsc();
+    sample_time_stamp();
+    end = rdtsc();
+
+    printk("func call overhead: %llu\n", end - start);
+
+    start = rdtsc();
+    empty_burner();
+    end = rdtsc();
+
+    printk("empty func call overhead: %llu\n", end - start);
 
     return 0;
   }

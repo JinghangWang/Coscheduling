@@ -71,7 +71,7 @@ GLOBAL(early_irq_common)
 
     SAVE_GPRS()
 
-    // callq sample_time_stamp
+      // callq sample_time_stamp
 
 #ifdef NAUT_CONFIG_PROFILE
     callq nk_irq_prof_enter

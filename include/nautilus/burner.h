@@ -8,3 +8,4 @@ int launch_sporadic_burner(char *name, uint64_t size_ns, uint32_t tpr, uint64_t 
 int launch_aperiodic_burner(char *name, uint64_t size_ns, uint32_t tpr, uint64_t priority);
 void burner_handler();
 void wordless_burner(void *in, void **out);
+void empty_burner(void);
