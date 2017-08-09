@@ -30,9 +30,8 @@
 #include <test/groups.h>
 
 #define CPU_OFFSET 1 // skip CPU0 in tests
-#define TESTER_TOTAL 255
+#define TESTER_TOTAL 7
 #define INTERLEAVE 0
-#define P_TEST 1
 #define SAMPLE_NUM 500
 #define BARRIER_TEST_LOOPS 1
 
@@ -66,6 +65,7 @@
 #define INFO(fmt, args...) INFO_PRINT("group: " fmt, ##args)
 
 static int tester_num; // the number of tester in one round
+static int sync_tester_num;
 uint64_t dur_array[TESTER_TOTAL][5];
 uint64_t sync_array[TESTER_TOTAL][SAMPLE_NUM];
 
@@ -284,14 +284,16 @@ nk_thread_group_test() {
 
   return 0;
 }
+
 /**********Below are sync tests**********/
+
 static void
 thread_group_sync_dump(void) {
   printk("Dump sync data\n");
 
   for (int i = 0; i < SAMPLE_NUM; i++) {
-    for (int j = 0; j < TESTER_TOTAL; j++) {
-      if (j < TESTER_TOTAL - 1) {
+    for (int j = 0; j < sync_tester_num; j++) {
+      if (j < sync_tester_num - 1) {
         nk_vc_log_wrap("%llu,", sync_array[j][i]);
       } else {
         nk_vc_log_wrap("%llu\n", sync_array[j][i]);
@@ -303,14 +305,14 @@ thread_group_sync_dump(void) {
 
   for (int i = 0; i < SAMPLE_NUM; i++) {
     uint64_t min = sync_array[0][i];
-    for (int j = 1; j < TESTER_TOTAL; j++) {
+    for (int j = 1; j < sync_tester_num; j++) {
       if (min > sync_array[j][i]) {
         min = sync_array[j][i];
       }
     }
 
-    for (int j = 0; j < TESTER_TOTAL; j++) {
-      if (j < TESTER_TOTAL - 1) {
+    for (int j = 0; j < sync_tester_num; j++) {
+      if (j < sync_tester_num - 1) {
         nk_vc_log_wrap("%llu,", sync_array[j][i] - min);
       } else {
         nk_vc_log_wrap("%llu\n", sync_array[j][i] - min);
@@ -324,9 +326,9 @@ thread_group_sync_tester(void *in, void **out) {
   uint64_t time_stamp = 0;
   uint64_t init_time_stamp = 0;
 
-  init_time_stamp = rdtsc();
-
   static struct nk_sched_constraints *constraints;
+
+  init_time_stamp = rdtsc();
 
   nk_thread_group_t *dst = nk_thread_group_find((char*) in);
 
@@ -358,29 +360,29 @@ thread_group_sync_tester(void *in, void **out) {
   nk_thread_name(get_cur_thread(), name);
 
   int i = 0;
-  while (nk_thread_group_get_size(dst) != TESTER_TOTAL) { }
+
+  while (nk_thread_group_get_size(dst) != sync_tester_num) {}
 
   nk_thread_group_election(dst);
+
   time_stamp = rdtsc();
 
   sync_array[tid][2] = time_stamp;
 
   if (nk_thread_group_check_leader(dst)) {
-    uint64_t us = 1000; // 1 microsecond
-
     constraints = MALLOC(sizeof(struct nk_sched_constraints));
 
-#if P_TEST
+    // constraints->type = APERIODIC;
+    // constraints->interrupt_priority_class = 0x01;
+    // constraints->aperiodic.priority = DEFAULT_PRIORITY;
+
+    uint64_t us = 1000; // 1 microsecond
+
     constraints->type = PERIODIC;
     constraints->interrupt_priority_class = (uint8_t) 0xe;
     constraints->periodic.phase = 0;
     constraints->periodic.period = 150*us;
     constraints->periodic.slice = 75*us;
-#else
-    constraints->type = APERIODIC;
-    constraints->interrupt_priority_class = 0x01;
-    constraints->aperiodic.priority = DEFAULT_PRIORITY;
-#endif
   }
 
   if (nk_group_sched_change_constraints(dst, constraints)) {
@@ -395,19 +397,12 @@ thread_group_sync_tester(void *in, void **out) {
 
   extern void nk_simple_timing_loop(uint64_t);
 
-  // test sync in user program
   for (i = 4; i < SAMPLE_NUM; i++) {
     nk_simple_timing_loop(1000000);
-
-    if (i == 100) {
-      nk_thread_group_barrier(dst);
-    }
-
     time_stamp = rdtsc();
     sync_array[tid][i] = time_stamp;
   }
 
-  // test finished, terminate group
   nk_thread_group_barrier(dst);
 
   nk_thread_group_leave(dst);
@@ -420,12 +415,12 @@ thread_group_sync_tester(void *in, void **out) {
   return;
 }
 
-int
-nk_thread_group_sync_test() {
+static int
+thread_group_sync_test_launcher() {
   uint64_t i = 0;
 
   if (memset(sync_array, 0, TESTER_TOTAL*5*sizeof(uint64_t)) == NULL) {
-    DEBUG("memset sync_array failed\n");
+    DEBUG("memset dur_array failed\n");
     return -1;
   }
 
@@ -444,7 +439,7 @@ nk_thread_group_sync_test() {
 
   nk_thread_group_t *new_group = NULL;
   nk_thread_group_t *ret = NULL;
-  nk_thread_id_t *tids = (nk_thread_id_t *)MALLOC(tester_num*sizeof(nk_thread_id_t));
+  nk_thread_id_t *tids = (nk_thread_id_t *)MALLOC(sync_tester_num*sizeof(nk_thread_id_t));
 
   if (tids == NULL) {
     DEBUG("malloc tids failed\n");
@@ -452,13 +447,13 @@ nk_thread_group_sync_test() {
     return -1;
   }
 
-  if (memset(tids, 0, tester_num*sizeof(nk_thread_id_t)) == NULL) {
+  if (memset(tids, 0, sync_tester_num*sizeof(nk_thread_id_t)) == NULL) {
     DEBUG("memset tids failed\n");
     FREE(tids);
     return -1;
   }
 
-  sprintf(group_name, "Group Sync");
+  sprintf(group_name, "Group Alpha");
 
   new_group = nk_thread_group_create(group_name);
 
@@ -475,25 +470,30 @@ nk_thread_group_sync_test() {
 
   // launch a few aperiodic threads (testers), i.e. regular threads
   // each join the group
-  for (i = 0; i < TESTER_TOTAL; i++) {
-#if INTERLEAVE
-    if (nk_thread_start(thread_group_sync_tester, (void*)group_name , NULL, 0, PAGE_SIZE_4KB, &tids[i], i*2 + CPU_OFFSET)) {
-#else
+  for (i = 0; i < sync_tester_num; i++) {
     if (nk_thread_start(thread_group_sync_tester, (void*)group_name , NULL, 0, PAGE_SIZE_4KB, &tids[i], i + CPU_OFFSET)) {
-#endif
       DEBUG("Fail to start thread_group_tester %d\n", i);
     }
   }
 
-  for (i = 0; i < TESTER_TOTAL; i++) {
+  for (i = 0; i < sync_tester_num; i++) {
     if (nk_join(tids[i], NULL)) {
       DEBUG("Fail to join thread_group_tester %d\n", i);
     }
   }
 
+  thread_group_sync_dump();
+
   FREE(tids);
 
-  thread_group_sync_dump();
+  return 0;
+}
+
+int
+nk_thread_group_sync_test() {
+  sync_tester_num = TESTER_TOTAL;
+
+  thread_group_sync_test_launcher();
 
   return 0;
 }

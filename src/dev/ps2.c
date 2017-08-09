@@ -1,17 +1,17 @@
-/* 
+/*
  * This file is part of the Nautilus AeroKernel developed
- * by the Hobbes and V3VEE Projects with funding from the 
- * United States National  Science Foundation and the Department of Energy.  
+ * by the Hobbes and V3VEE Projects with funding from the
+ * United States National  Science Foundation and the Department of Energy.
  *
  * The V3VEE Project is a joint project between Northwestern University
  * and the University of New Mexico.  The Hobbes Project is a collaboration
- * led by Sandia National Laboratories that includes several national 
+ * led by Sandia National Laboratories that includes several national
  * laboratories and universities. You can find out more at:
  * http://www.v3vee.org  and
  * http://xstack.sandia.gov/hobbes
  *
  * Copyright (c) 2015, Kyle C. Hale <kh@u.northwestern.edu>
- * Copyright (c) 2015, The V3VEE Project  <http://www.v3vee.org> 
+ * Copyright (c) 2015, The V3VEE Project  <http://www.v3vee.org>
  *                     The Hobbes Project <http://xstack.sandia.gov/hobbes>
  * All rights reserved.
  *
@@ -19,7 +19,7 @@
  *          Yang Wu, Fei Luo and Yuanhui Yang
  *          {YangWu2015, FeiLuo2015, YuanhuiYang2015}@u.northwestern.edu
  *          Peter Dinda <pdinda@northwestern.edu>
- *          William Wallace, Scott Renshaw 
+ *          William Wallace, Scott Renshaw
  *          {WilliamWallace2018,ScottRenshaw2018}@u.northwestern.edu>
  * This is free software.  You are permitted to use,
  * redistribute, and modify it as specified in the file "LICENSE.txt".
@@ -34,7 +34,7 @@
 
 #ifndef NAUT_CONFIG_DEBUG_PS2
 #undef DEBUG_PRINT
-#define DEBUG_PRINT(fmt, args...) 
+#define DEBUG_PRINT(fmt, args...)
 #endif
 
 #define ERROR(fmt, args...) ERROR_PRINT("ps2: " fmt, ##args)
@@ -71,7 +71,7 @@ typedef union ps2_cmd {
 	uint8_t kint:1; // enable keyboard interrupts
 	uint8_t mint:1; // enable mouse interrupts
 	uint8_t sys:1;  // set/clear sysflag / do BAT
-	uint8_t rsv1:1; 
+	uint8_t rsv1:1;
 	uint8_t ken:1;  // keyboard enable, active low
 	uint8_t men:1;  // mouse enable, active low
 	uint8_t xlat:1; // do scancode translation
@@ -96,7 +96,7 @@ static int ps2_wait(wait_t w)
 	       ((!status.ibf) && (w==INPUT))));
 
     return 0;
-} 
+}
 
 /***************************************************************
     KEYBOARD
@@ -224,7 +224,7 @@ static nk_keycode_t flags = 0;
 
 static void queue_scancode(nk_scancode_t scan)
 {
-  if (switcher_num_queued==SCAN_MAX_QUEUE) { 
+  if (switcher_num_queued==SCAN_MAX_QUEUE) {
     ERROR("Out of room in switcher queue\n");
   } else {
     switcher_scancode_queue[switcher_num_queued++] = scan;
@@ -235,7 +235,7 @@ static void dequeue_scancodes()
 {
   int i;
 
-  for (i=0;i<switcher_num_queued;i++) { 
+  for (i=0;i<switcher_num_queued;i++) {
     nk_vc_handle_keyboard(switcher_scancode_queue[i]);
   }
 
@@ -253,31 +253,31 @@ nk_keycode_t kbd_translate(nk_scancode_t scan)
   const nk_keycode_t *table=0;
   nk_keycode_t cur;
   nk_keycode_t flag;
-  
+
 
   // update the flags
 
   release = scan & KB_KEY_RELEASE;
   scan &= ~KB_KEY_RELEASE;
 
-  if (flags & KEY_CAPS_FLAG) { 
-    if (flags & KEY_SHIFT_FLAG) { 
+  if (flags & KEY_CAPS_FLAG) {
+    if (flags & KEY_SHIFT_FLAG) {
       table = ShiftCaps;
     } else {
       table = NoShiftCaps;
     }
   } else {
-    if (flags & KEY_SHIFT_FLAG) { 
+    if (flags & KEY_SHIFT_FLAG) {
       table = ShiftNoCaps;
     } else {
       table = NoShiftNoCaps;
     }
-  }    
-  
+  }
+
   cur = table[scan];
-  
+
   flag = 0;
-  switch (cur) { 
+  switch (cur) {
   case KEY_LSHIFT:
   case KEY_RSHIFT:
     flag = KEY_SHIFT_FLAG;
@@ -297,14 +297,14 @@ nk_keycode_t kbd_translate(nk_scancode_t scan)
     goto do_noflags;
     break;
   }
-  
+
   // do_flags:
-  if (flag==KEY_CAPS_FLAG) { 
-    if ((!release) && (flags & KEY_CAPS_FLAG)) { 
+  if (flag==KEY_CAPS_FLAG) {
+    if ((!release) && (flags & KEY_CAPS_FLAG)) {
       // turn off caps lock on second press
       flags &= ~KEY_CAPS_FLAG;
       flag = 0;
-    } 
+    }
   }
 
   if (release) {
@@ -318,7 +318,7 @@ nk_keycode_t kbd_translate(nk_scancode_t scan)
   return NO_KEY;
 
  do_noflags:
-  if (release) { 
+  if (release) {
     DEBUG("Handled key release (returning 0x%x)\n", flags|cur);
     return flags | cur;
   } else {
@@ -331,22 +331,22 @@ nk_keycode_t kbd_translate(nk_scancode_t scan)
 #define ONE 0x2
 #define TWO 0x3
 #define TILDE 0x29
- 
+
 /*
   Special case handling of scancodes relating to virtual
   console switching.  This happens regardless of whether
   the current console is raw or cooked.   If the console
   switch state machine doesn't recognize the scancode (or
-  the ones it has accumulated), it passes them to the 
-  virtual console subsystem for further processing.  
+  the ones it has accumulated), it passes them to the
+  virtual console subsystem for further processing.
 */
-static int switcher(nk_scancode_t scan) 
+static int switcher(nk_scancode_t scan)
 {
   queue_scancode(scan);
 
-  switch (switch_state) { 
+  switch (switch_state) {
   case VC_START:
-    if (scan==ALT) { 
+    if (scan==ALT) {
       DEBUG("VC CONTEXT\n");
       switch_state = VC_CONTEXT;
     } else {
@@ -356,10 +356,10 @@ static int switcher(nk_scancode_t scan)
     }
     break;
   case VC_CONTEXT:
-    if (scan==ONE) { 
+    if (scan==ONE) {
       DEBUG("VC PREV\n");
       switch_state = VC_PREV;
-    } else if (scan==TWO) { 
+    } else if (scan==TWO) {
       DEBUG("VC NEXT\n");
       switch_state = VC_NEXT;
     } else if (scan==TILDE) {
@@ -372,7 +372,7 @@ static int switcher(nk_scancode_t scan)
     }
     break;
   case VC_PREV:
-    if (scan==(ONE | KB_KEY_RELEASE)) { 
+    if (scan==(ONE | KB_KEY_RELEASE)) {
       DEBUG("VC PREV ALT\n");
       switch_state = VC_PREV_ALT;
     } else {
@@ -382,7 +382,7 @@ static int switcher(nk_scancode_t scan)
     }
     break;
   case VC_NEXT:
-    if (scan==(TWO | KB_KEY_RELEASE)) { 
+    if (scan==(TWO | KB_KEY_RELEASE)) {
       DEBUG("VC NEXT ALT\n");
       switch_state = VC_NEXT_ALT;
     } else {
@@ -392,7 +392,7 @@ static int switcher(nk_scancode_t scan)
     }
     break;
   case VC_MENU:
-    if (scan==(TILDE | KB_KEY_RELEASE)) { 
+    if (scan==(TILDE | KB_KEY_RELEASE)) {
       DEBUG("VC MENU ALT\n");
       switch_state = VC_MENU_ALT;
     } else {
@@ -402,7 +402,7 @@ static int switcher(nk_scancode_t scan)
     }
     break;
   case VC_PREV_ALT:
-    if (scan==(ALT | KB_KEY_RELEASE)) { 
+    if (scan==(ALT | KB_KEY_RELEASE)) {
       DEBUG("VC SWITCH TO PREV\n");
       nk_switch_to_prev_vc();
       switch_state = VC_START;
@@ -414,7 +414,7 @@ static int switcher(nk_scancode_t scan)
     }
     break;
   case VC_NEXT_ALT:
-    if (scan==(ALT | KB_KEY_RELEASE)) { 
+    if (scan==(ALT | KB_KEY_RELEASE)) {
       DEBUG("VC SWITCH TO NEXT\n");
       nk_switch_to_next_vc();
       switch_state = VC_START;
@@ -424,9 +424,9 @@ static int switcher(nk_scancode_t scan)
       dequeue_scancodes();
       switch_state = VC_START;
     }
-    break;  
+    break;
   case VC_MENU_ALT:
-    if (scan==(ALT | KB_KEY_RELEASE)) { 
+    if (scan==(ALT | KB_KEY_RELEASE)) {
       DEBUG("VC SWITCH TO MENU\n");
       nk_switch_to_vc_list();
       switch_state = VC_START;
@@ -447,15 +447,15 @@ static int switcher(nk_scancode_t scan)
 }
 
 
-static int 
+static int
 kbd_handler (excp_entry_t * excp, excp_vec_t vec, void *state)
 {
-  
+
   uint8_t status;
   nk_scancode_t scan;
   uint8_t key;
   uint8_t flag;
-  
+
   status = inb(KBD_CMD_REG);
 
   io_delay();
@@ -464,8 +464,8 @@ kbd_handler (excp_entry_t * excp, excp_vec_t vec, void *state)
     scan  = inb(KBD_DATA_REG);
     DEBUG("Keyboard: status=0x%x, scancode=0x%x\n", status, scan);
     io_delay();
-    
-    
+
+
 #if NAUT_CONFIG_THREAD_EXIT_KEYCODE == 0xc4
     // Vestigal debug handling to force thread exit
     if (scan == 0xc4) {
@@ -475,9 +475,9 @@ kbd_handler (excp_entry_t * excp, excp_vec_t vec, void *state)
       nk_thread_exit(ret);
     }
 #endif
-    
+
     switcher(scan);
-    
+
   }
 
   IRQ_HANDLER_END();
@@ -502,7 +502,7 @@ union mouse_packet {
 	uint8_t  xm;
 	uint8_t  ym;
     } __packed;
-} __packed; 
+} __packed;
 
 
 
@@ -533,7 +533,7 @@ int ps2_mouse_reset()
 
     // enable mouse in PS2 controller
     ps2_wait(INPUT);
-    outb(0xa8,KBD_CMD_REG); 
+    outb(0xa8,KBD_CMD_REG);
 
     DEBUG("Mouse enabled on PS2 controller\n");
 
@@ -553,8 +553,8 @@ int ps2_mouse_reset()
 
     // reset mouse
     DEBUG("Reset\n");
-    mouse_write(0xff);  
-    rc = mouse_read(); 
+    mouse_write(0xff);
+    rc = mouse_read();
     rc = (rc << 8) | mouse_read();
     rc = (rc << 8) | mouse_read();
     if (rc==0xfaaa00) {  // ACK SELF-TEST-PASSED DONE
@@ -564,9 +564,9 @@ int ps2_mouse_reset()
     }
 
     // determine mouse type
-    mouse_write(0xf2);  
-    rc = mouse_read(); 
-    if (rc!=0xfa) { 
+    mouse_write(0xf2);
+    rc = mouse_read();
+    if (rc!=0xfa) {
 	ERROR("On reset, mouse did not return ack, but rather 0x%x\n",rc);
     } else {
 	rc = mouse_read();
@@ -574,26 +574,26 @@ int ps2_mouse_reset()
     }
 
     // configure mouse for defaults
-    mouse_write(0xf6);  
-    rc = mouse_read(); 
-    if (rc!=0xfa) { 
+    mouse_write(0xf6);
+    rc = mouse_read();
+    if (rc!=0xfa) {
 	ERROR("On config, mouse did not return ack, but rather 0x%x\n",rc);
     }
 
     // set stream mode (shouldn't have to do this)
     mouse_write(0xea);
     rc = mouse_read();
-    if (rc!=0xfa) { 
+    if (rc!=0xfa) {
 	ERROR("Cannot set stream mode (%x)\n",rc);
     }
 
     // enable mouse data reporting
     mouse_write(0xf4);
-    rc = mouse_read(); 
-    if (rc!=0xfa) { 
+    rc = mouse_read();
+    if (rc!=0xfa) {
 	ERROR("On enable, mouse did not return ack, but rather 0x%x\n",rc);
     }
-    
+
     DEBUG("Mouse reset done\n");
 
     return 0;
@@ -611,11 +611,11 @@ static int mouse_handler(excp_entry_t * excp, excp_vec_t vec, void *state)
 
     uint8_t data;
     data = inb(KBD_DATA_REG);
-    
+
     //INFO("Have mouse data (%x)\n",(uint32_t)data);
     cur_mouse_packet.data[cur_mouse_packet_byte] = data;
 
-    if (cur_mouse_packet_byte==0 && !(data&0x8)) { 
+    if (cur_mouse_packet_byte==0 && !(data&0x8)) {
 	ERROR("Invalid first byte (%02x) - lost sync, retry\n",data);
 	goto out;
     }
@@ -627,7 +627,7 @@ static int mouse_handler(excp_entry_t * excp, excp_vec_t vec, void *state)
 	int dx = cur_mouse_packet.xm - ((cur_mouse_packet.data[0] << 4) & 0x100);
 	int dy = cur_mouse_packet.ym - ((cur_mouse_packet.data[0] << 3) & 0x100);
 
-	if (cur_mouse_packet.xo || cur_mouse_packet.yo) { 
+	if (cur_mouse_packet.xo || cur_mouse_packet.yo) {
 	    DEBUG("Mouse Packet Ignored: overflows: xo: %d yo: %d\n",
 		  cur_mouse_packet.xo, cur_mouse_packet.yo);
 	    DEBUG("Mouse: %02x %02x %02x\n", cur_mouse_packet.data[0], cur_mouse_packet.data[1], cur_mouse_packet.data[2]);
@@ -652,7 +652,7 @@ static int mouse_handler(excp_entry_t * excp, excp_vec_t vec, void *state)
 	}
 	cur_mouse_packet_byte=0;
     }
-    
+
  out:
     IRQ_HANDLER_END();
     return 0;
@@ -682,7 +682,7 @@ static struct nk_dev_int mops = {
     .open=0,
     .close=0,
 };
-   
+
 int ps2_init(struct naut_info * naut)
 {
   INFO("init\n");
@@ -706,7 +706,3 @@ int ps2_deinit()
   nk_mask_irq(12);
   return 0;
 }
-
-
-
-

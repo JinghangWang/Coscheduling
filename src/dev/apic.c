@@ -1185,7 +1185,7 @@ static void calibrate_apic_timer(struct apic_dev *apic)
 #define NUM_TESTS   500
     uint64_t timing_dur[NUM_TESTS];
     uint64_t count_0 = 0, count_1 = 0;
-    count_0 = msr_read(0x34);
+    // count_0 = msr_read(0x34);
     for (int i = 0; i < NUM_TESTS; i++){
         start = rdtsc();
         nk_simple_timing_loop(1000000);
@@ -1199,9 +1199,9 @@ static void calibrate_apic_timer(struct apic_dev *apic)
         printk("%llu \n", timing_dur[i]);
     }
 
-    count_1 = msr_read(0x34);
-    
-    printk("SMI count_0 = %llu, count_1 = %llu\n", count_0, count_1);
+    // count_1 = msr_read(0x34);
+
+    // printk("SMI count_0 = %llu, count_1 = %llu\n", count_0, count_1);
 }
 
 
