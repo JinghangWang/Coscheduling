@@ -1000,7 +1000,7 @@ int nk_sched_thread_pre_destroy(nk_thread_t * t)
 
     GLOBAL_UNLOCK();
 
-    free(r);
+    // free(r);
 
     return 0;
 }
@@ -3120,7 +3120,12 @@ static int rt_thread_admit(rt_scheduler *scheduler, rt_thread *thread, uint64_t 
 	    reset_state(thread);
 	    reset_stats(thread);
 	    // the next arrival of this thread will be at this time
-	    thread->deadline = now + thread->constraints.periodic.phase;
+      if (thread->constraints.periodic.start < now){
+        ERROR("first time %llu is earlier than now %llu!\n", thread->constraints.periodic.start, now);
+  	    thread->deadline = now + thread->constraints.periodic.phase;
+      } else {
+        thread->deadline = thread->constraints.periodic.start + thread->constraints.periodic.phase;        
+      }
 	    DEBUG("Admitting PERIODIC thread\n");
 	    return 0;
 	} else {
@@ -3709,6 +3714,10 @@ nk_sched_thread_get_constraints(struct nk_thread *t, struct nk_sched_constraints
   rt_thread *r = t->sched_state;
   *c = r->constraints;
   return 0;
+}
+
+uint64_t nk_sched_get_cur_time(void){
+  return cur_time();
 }
 /*
 int

@@ -51,6 +51,7 @@ struct nk_sched_periodic_constraints {
     uint64_t phase;  // time of first arrival relative to time of admission
     uint64_t period; // how frequently it arrives (arrival+period=deadline)
     uint64_t slice;  // how much RT computation when it arrives
+    uint64_t start;  // first arrival time in ns
 };
 
 struct nk_sched_sporadic_constraints {
@@ -200,6 +201,7 @@ struct rt_stats {
 };
 
 void nk_sched_rt_stats(struct rt_stats* stats);
+uint64_t nk_sched_get_cur_time(void);
 
 int nk_sched_collect_time_stamp(void);
 int nk_sched_global_stamp_dump(void);
