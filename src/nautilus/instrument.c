@@ -1,17 +1,17 @@
-/* 
+/*
  * This file is part of the Nautilus AeroKernel developed
- * by the Hobbes and V3VEE Projects with funding from the 
- * United States National  Science Foundation and the Department of Energy.  
+ * by the Hobbes and V3VEE Projects with funding from the
+ * United States National  Science Foundation and the Department of Energy.
  *
  * The V3VEE Project is a joint project between Northwestern University
  * and the University of New Mexico.  The Hobbes Project is a collaboration
- * led by Sandia National Laboratories that includes several national 
+ * led by Sandia National Laboratories that includes several national
  * laboratories and universities. You can find out more at:
  * http://www.v3vee.org  and
  * http://xtack.sandia.gov/hobbes
  *
  * Copyright (c) 2015, Kyle C. Hale <kh@u.northwestern.edu>
- * Copyright (c) 2015, The V3VEE Project  <http://www.v3vee.org> 
+ * Copyright (c) 2015, The V3VEE Project  <http://www.v3vee.org>
  *                     The Hobbes Project <http://xstack.sandia.gov/hobbes>
  * All rights reserved.
  *
@@ -46,14 +46,14 @@ struct func_data {
 };
 
 
-static unsigned 
+static unsigned
 instr_hash_fn(addr_t key) {
     char * name = (char *)key;
     return nk_hash_buffer((uint8_t *)name, strlen(name));
 }
 
 
-static int 
+static int
 instr_eq_fn (addr_t key1, addr_t key2) {
     char * name1 = (char *)key1;
     char * name2 = (char *)key2;
@@ -62,7 +62,7 @@ instr_eq_fn (addr_t key1, addr_t key2) {
 }
 
 
-static void 
+static void
 instr_calibrate (void)
 {
     NK_PROFILE_ENTRY();
@@ -71,7 +71,7 @@ instr_calibrate (void)
 }
 
 
-void 
+void
 nk_profile_func_enter (const char  *func)
 {
     struct func_data * new = NULL;
@@ -105,7 +105,7 @@ nk_profile_func_enter (const char  *func)
 }
 
 
-void 
+void
 nk_profile_func_exit (const char *func)
 {
     struct timespec te;
@@ -146,12 +146,12 @@ nk_profile_func_exit (const char *func)
 
 
 /* TODO: calibrate and subtract the overhead of instrumentation */
-void 
-nk_instrument_init (void) 
+void
+nk_instrument_init (void)
 {
     int i;
     uint8_t flags = irq_disable_save();
-    
+
     for (i = 0; i < nk_get_nautilus_info()->sys.num_cpus; i++) {
         printk("init instrumentation for cpu %u\n", i);
 
@@ -194,8 +194,8 @@ nk_instrument_start (void)
     atomic_cmpswap(instr_active, 0, 1);
 }
 
-void 
-nk_instrument_end (void) 
+void
+nk_instrument_end (void)
 {
     struct timespec te;
     clock_gettime(CLOCK_MONOTONIC, &te);
@@ -235,7 +235,7 @@ nk_malloc_exit (void)
     }
 
     md = &(per_cpu_get(instr_data)->mallocstat);
-    
+
     clock_gettime(CLOCK_MONOTONIC, &te);
 
     end = 1000000000 * te.tv_sec + te.tv_nsec;
@@ -285,12 +285,12 @@ nk_irq_prof_exit (void)
     }
 
     irq = &(per_cpu_get(instr_data)->irqstat);
-    
+
     clock_gettime(CLOCK_MONOTONIC, &te);
 
     end = 1000000000 * te.tv_sec + te.tv_nsec;
     if (end < irq->start_count) {
-        return;
+        return;{}
     }
     time = end - irq->start_count;
     if (time < irq->min_latency) {
@@ -339,7 +339,7 @@ nk_thr_switch_prof_exit (void)
     if (thr->count == 0) {
         return;
     }
-    
+
     clock_gettime(CLOCK_MONOTONIC, &te);
 
     end = 1000000000 * te.tv_sec + te.tv_nsec;
@@ -357,7 +357,7 @@ nk_thr_switch_prof_exit (void)
 }
 
 
-void 
+void
 nk_instrument_query (void)
 {
     int i;
@@ -381,7 +381,7 @@ nk_instrument_query (void)
             uint64_t total_nsec = (instr_end_count - instr_start_count);
 
             if (data->call_count > 0) {
-                printk("\t%lu.%lu\% Func: %s\n\tCount: %16u Lat - Avg: %16llunsec Max: %16llunsec Min: %16llunsec\n", 
+                printk("\t%lu.%lu\% Func: %s\n\tCount: %16u Lat - Avg: %16llunsec Max: %16llunsec Min: %16llunsec\n",
                         data->total_count / total_nsec,
                         data->total_count % total_nsec,
                         func,
@@ -397,20 +397,20 @@ nk_instrument_query (void)
         printk("Malloc Stats for Core %u:\n", i);
 
         /* print malloc data */
-        printk("\tCount: %16u Lat - Avg: %16llunsec, Max: %16llunsec Min: %16llunsec\n", 
+        printk("\tCount: %16u Lat - Avg: %16llunsec, Max: %16llunsec Min: %16llunsec\n",
                 this_cpu->instr_data->mallocstat.count,
                 this_cpu->instr_data->mallocstat.avg_latency,
                 this_cpu->instr_data->mallocstat.max_latency,
                 this_cpu->instr_data->mallocstat.min_latency);
         printk("IRQ Stats for Core %u:\n", i);
-        printk("\tCount: %16u Lat - Avg: %16llunsec Max: %16llunsec Min: %16llunsec\n", 
+        printk("\tCount: %16u Lat - Avg: %16llunsec Max: %16llunsec Min: %16llunsec\n",
                 this_cpu->instr_data->irqstat.count,
                 this_cpu->instr_data->irqstat.avg_latency,
                 this_cpu->instr_data->irqstat.max_latency,
                 this_cpu->instr_data->irqstat.min_latency);
         printk("Thread Switch Stats for Core %u:\n", i);
-        printk("\tCount: %16u Lat - Avg: %16llunsec Max: %16llunsec Min: %16llunsec\n", 
-                
+        printk("\tCount: %16u Lat - Avg: %16llunsec Max: %16llunsec Min: %16llunsec\n",
+
                 this_cpu->instr_data->thr_switch.count,
                 this_cpu->instr_data->thr_switch.avg_latency,
                 this_cpu->instr_data->thr_switch.max_latency,
@@ -419,18 +419,44 @@ nk_instrument_query (void)
     }
 }
 
+void
+nk_profile_dump(void)
+{
+    int i;
+
+    printk("Dumping instrumentation data...\n");
+    for (i = 0; i < nk_get_nautilus_info()->sys.num_cpus; i++) {
+        struct cpu * this_cpu = nk_get_nautilus_info()->sys.cpus[i];
+
+        printk("Malloc Stats for Core %u:\n", i);
+        printk("\tCount: %16u | Lat - Avg: %16llunsec | Max: %16llunsec | Min: %16llunsec\n",
+                this_cpu->instr_data->mallocstat.count,
+                this_cpu->instr_data->mallocstat.avg_latency,
+                this_cpu->instr_data->mallocstat.max_latency,
+                this_cpu->instr_data->mallocstat.min_latency);
+
+        printk("IRQ Stats for Core %u:\n", i);
+        printk("\tCount: %16u | Lat - Avg: %16llunsec | Max: %16llunsec | Min: %16llunsec\n",
+                this_cpu->instr_data->irqstat.count,
+                this_cpu->instr_data->irqstat.avg_latency,
+                this_cpu->instr_data->irqstat.max_latency,
+                this_cpu->instr_data->irqstat.min_latency);
+
+        printk("Thread Switch Stats for Core %u:\n", i);
+        printk("\tCount: %16u | Lat - Avg: %16llunsec | Max: %16llunsec | Min: %16llunsec\n",
+                this_cpu->instr_data->thr_switch.count,
+                this_cpu->instr_data->thr_switch.avg_latency,
+                this_cpu->instr_data->thr_switch.max_latency,
+                this_cpu->instr_data->thr_switch.min_latency);
+
+    }
+}
 
 void
 nk_instrument_calibrate (unsigned loops)
 {
-    int i; 
+    int i;
     for (i = 0; i < loops; i++) {
         instr_calibrate();
     }
 }
-
-
-
-
-
-

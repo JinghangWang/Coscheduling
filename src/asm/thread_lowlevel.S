@@ -1,17 +1,17 @@
-/* 
+/*
  * This file is part of the Nautilus AeroKernel developed
- * by the Hobbes and V3VEE Projects with funding from the 
- * United States National  Science Foundation and the Department of Energy.  
+ * by the Hobbes and V3VEE Projects with funding from the
+ * United States National  Science Foundation and the Department of Energy.
  *
  * The V3VEE Project is a joint project between Northwestern University
  * and the University of New Mexico.  The Hobbes Project is a collaboration
- * led by Sandia National Laboratories that includes several national 
+ * led by Sandia National Laboratories that includes several national
  * laboratories and universities. You can find out more at:
  * http://www.v3vee.org  and
  * http://xtack.sandia.gov/hobbes
  *
  * Copyright (c) 2015, Kyle C. Hale <kh@u.northwestern.edu>
- * Copyright (c) 2015, The V3VEE Project  <http://www.v3vee.org> 
+ * Copyright (c) 2015, The V3VEE Project  <http://www.v3vee.org>
  *                     The Hobbes Project <http://xstack.sandia.gov/hobbes>
  * All rights reserved.
  *
@@ -27,9 +27,9 @@
 /* NOTE: the below offsets and constants are VERY fragile
  * make sure to check assumptions elsewhere when changing them
  */
-    
 
-/* 
+
+/*
  * We come in like this:
  * ----------
  * thread_ptr
@@ -60,7 +60,7 @@ ENTRY(nk_thread_switch)
     incw %gs:8           // increment interrupt nesting level
 	                 // pretend we are doing an interrupt-driven switch
 	                 // to make the sums work out
-	
+
 ENTRY(nk_thread_switch_intr_entry)
 
 #ifdef NAUT_CONFIG_PROFILE
@@ -68,6 +68,10 @@ ENTRY(nk_thread_switch_intr_entry)
     callq nk_thr_switch_prof_enter
     popq %rdi
 #endif
+
+    pushq %rdi
+    callq switch_enter
+    popq %rdi
 
     movq %gs:0x0, %rax
 
@@ -95,6 +99,8 @@ ENTRY(nk_thread_switch_intr_entry)
     callq nk_thr_switch_prof_exit
 #endif
 
+    callq switch_exit
+
     RESTORE_GPRS()      /* load the new thread's GPRs */
 
     leaq 16(%rsp), %rsp /* pop off the vector and the error code */
@@ -107,7 +113,7 @@ ENTRY(nk_thread_switch_intr_entry)
 
 
 
-ENTRY(nk_thread_entry) 
+ENTRY(nk_thread_entry)
 
 #ifdef NAUT_CONFIG_ENABLE_STACK_CHECK
     /* test and see if we've overrun our stack */
@@ -134,7 +140,7 @@ loop:
     hlt
     jmp loop
 #endif
-    
+
 // RBP and RSP are intentionally not saved here
 // 15 quadwords (14 regs + flags)
 
@@ -199,7 +205,7 @@ leaq 8(%rsp), %rsp ;                            // This instruction must not aff
 #define FPR_SAVE_SIZE (0)
 
 #define REG_SAVE_SIZE (GPR_SAVE_SIZE+SR_SAVE_SIZE+FPR_SAVE_SIZE)
-	
+
 
 /*
 	The entry point for forking a thread is essentially
@@ -213,7 +219,7 @@ leaq 8(%rsp), %rsp ;                            // This instruction must not aff
 	data.  The launcher will then switch to the cloned
 	stack and restore register state and return
 
-*/	
+*/
 
 ENTRY(nk_thread_fork)
 	REG_SAVE()                  // RBP and RSP will be handled in _thread_fork
@@ -237,13 +243,13 @@ ENTRY(_fork_return)
 	foo(struct nk_regs *r)
 
 	nk_interrupt_like_trampoline(foo)
-	
+
 */
 ENTRY(nk_interrupt_like_trampoline)
 	// we need to create a whole interrupt stack frame
 	mov  %ss, %rax
 	movq %rax, -8(%rsp)
-	movq %rsp, -16(%rsp)	
+	movq %rsp, -16(%rsp)
 	leaq -16(%rsp),%rsp
 	pushfq
 	mov   %cs, %rax
@@ -258,7 +264,7 @@ ENTRY(nk_interrupt_like_trampoline)
 	REG_LOAD_SKIP_RAX() // pops flags
 	// now we have 7 more words of crud to toss
 	leaq 56(%rsp), %rsp
-	retq			
+	retq
 
 
 /*
@@ -266,7 +272,7 @@ ENTRY(nk_interrupt_like_trampoline)
 
 	nk_fp_save(destptr)
 	mk_fp_restore(srcptr)
-	
+
 */
 ENTRY(nk_fp_save)
 	fxsave (%rdi)
@@ -275,6 +281,6 @@ ENTRY(nk_fp_save)
 ENTRY(nk_fp_restore)
 	fxrstor (%rdi)
 	ret
-	
+
 panic_str:
 .ascii "Stack corruption detected\12\0"

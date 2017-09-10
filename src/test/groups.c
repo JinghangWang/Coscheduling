@@ -27,12 +27,12 @@
 #include <nautilus/atomic.h>
 #include <nautilus/group.h>
 #include <nautilus/group_sched.h>
+#include <nautilus/instrument.h>
 #include <test/groups.h>
 
 #define CPU_OFFSET 1 // skip CPU0 in tests
 #define TESTER_TOTAL 7
-#define INTERLEAVE 0
-#define SAMPLE_NUM 500
+#define SAMPLE_NUM 1000
 #define BARRIER_TEST_LOOPS 1
 
 // TODO: inport priority from scheduler
@@ -68,6 +68,7 @@ static int tester_num; // the number of tester in one round
 static int sync_tester_num;
 uint64_t dur_array[TESTER_TOTAL][5];
 uint64_t sync_array[TESTER_TOTAL][SAMPLE_NUM];
+static int start_profile = 0;
 
 // int tester_total;
 // uint64_t *dur_array = malloc(sizeof(uint64_t)*tester_total*5);
@@ -91,6 +92,8 @@ thread_group_tester(void *in, void **out) {
   uint64_t dur[5] = {0, 0, 0, 0, 0};
 
   uint64_t start, end;
+
+  uint64_t start_time, end_time;
 
   static struct nk_sched_constraints *constraints;
 
@@ -146,19 +149,38 @@ thread_group_tester(void *in, void **out) {
 
   if (nk_thread_group_check_leader(dst)) {
     constraints = MALLOC(sizeof(struct nk_sched_constraints));
-    constraints->type = APERIODIC;
-    constraints->interrupt_priority_class = 0x01;
-    constraints->aperiodic.priority = DEFAULT_PRIORITY;
+
+    // constraints->type = APERIODIC;
+    // constraints->interrupt_priority_class = 0x01;
+    // constraints->aperiodic.priority = DEFAULT_PRIORITY;
+
+    uint64_t us = 1000; // 1 microsecond
+
+    constraints->type = PERIODIC;
+    constraints->interrupt_priority_class = (uint8_t) 0xe;
+    constraints->periodic.phase = 0;
+    constraints->periodic.period = 150*us;
+    constraints->periodic.slice = 75*us;
+    constraints->periodic.start = nk_sched_get_cur_time() + 10*1000*1000*us;
   }
 
   start = rdtsc();
+  // start_time = nk_sched_get_cur_time();
   if (nk_group_sched_change_constraints(dst, constraints)) {
     end = rdtsc();
+    // end_time = nk_sched_get_cur_time();
     DEBUG("t%d change constraint failed!\n", tid);
   } else {
     end = rdtsc();
+    // end_time = nk_sched_get_cur_time();
     DEBUG("t%d #\n", tid);
   }
+
+  // if(my_cpu_id() == 1) {
+  //   printk("dur = %llu\n", end - start);
+  //   printk("dur time = %llu\n", end_time - start_time);
+  //   printk("start time: %llu\nend time: %llu\n", start_time, end_time);
+  // }
 
   dur_array[tid][2] = end - start;
 
@@ -285,6 +307,14 @@ nk_thread_group_test() {
   return 0;
 }
 
+int
+nk_thread_group_switch_context_test() {
+  // warm up round is to get rid of cold-start effect
+  tester_num = TESTER_TOTAL;
+  thread_group_test_launcher();
+
+  return 0;
+}
 /**********Below are sync tests**********/
 
 static void
@@ -383,6 +413,7 @@ thread_group_sync_tester(void *in, void **out) {
     constraints->periodic.phase = 0;
     constraints->periodic.period = 150*us;
     constraints->periodic.slice = 75*us;
+    constraints->periodic.start = nk_sched_get_cur_time() + 10*1000*1000*us;
   }
 
   if (nk_group_sched_change_constraints(dst, constraints)) {
@@ -393,6 +424,12 @@ thread_group_sync_tester(void *in, void **out) {
     DEBUG("t%d #\n", tid);
   }
 
+  if (start_profile == 1) {
+    nk_sched_observe_context_switch();
+  }
+
+  // nk_yield();
+
   sync_array[tid][3] = time_stamp;
 
   extern void nk_simple_timing_loop(uint64_t);
@@ -401,6 +438,7 @@ thread_group_sync_tester(void *in, void **out) {
     nk_simple_timing_loop(1000000);
     time_stamp = rdtsc();
     sync_array[tid][i] = time_stamp;
+    // nk_yield();
   }
 
   nk_thread_group_barrier(dst);
@@ -482,8 +520,6 @@ thread_group_sync_test_launcher() {
     }
   }
 
-  thread_group_sync_dump();
-
   FREE(tids);
 
   return 0;
@@ -494,6 +530,20 @@ nk_thread_group_sync_test() {
   sync_tester_num = TESTER_TOTAL;
 
   thread_group_sync_test_launcher();
+
+  // nk_instrument_start();
+
+  start_profile = 1;
+
+  thread_group_sync_test_launcher();
+
+  // nk_instrument_end();
+
+  thread_group_sync_dump();
+
+  // nk_profile_dump();
+
+  nk_sched_context_switch_stamp_dump();
 
   return 0;
 }

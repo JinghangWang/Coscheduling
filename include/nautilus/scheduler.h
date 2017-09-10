@@ -210,5 +210,8 @@ int sample_time_stamp_ipi();
 int sample_time_stamp_ipi_handler(excp_entry_t * excp, excp_vec_t vec, void *state);
 void ipi_sample_dump(void);
 int ipi_complete_check();
-
+void interrupt_inc();
+void interrupt_dump();
+int nk_sched_observe_context_switch();
+int nk_sched_context_switch_stamp_dump();
 #endif /* _SCHEDULER_H */

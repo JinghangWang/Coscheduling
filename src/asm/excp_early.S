@@ -72,6 +72,7 @@ GLOBAL(early_irq_common)
     SAVE_GPRS()
 
       // callq sample_time_stamp
+    callq irp_enter
 
 #ifdef NAUT_CONFIG_PROFILE
     callq nk_irq_prof_enter
@@ -98,6 +99,7 @@ GLOBAL(early_irq_common)
     testq %rax, %rax
     jnz irq_err
 
+    callq irq_exit
 #ifdef NAUT_CONFIG_PROFILE
     callq nk_irq_prof_exit
 #endif
@@ -108,6 +110,11 @@ GLOBAL(early_irq_common)
     testq %rax, %rax
     jz thr_return
     movq %rax, %rdi
+
+    pushq %rdi
+    call resched_exit //TODO: Question
+    popq %rdi
+
     jmp nk_thread_switch_intr_entry
 
 thr_return:

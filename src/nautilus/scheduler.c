@@ -86,6 +86,10 @@
 #define MAX(x, y) (((x) >(y)) ? (x) : (y))
 #endif
 
+// delay time for reinjecting a timer/kick interrupts
+// that we must currently ignore because preemption is off
+#define DELAY_FOR_PREEMPT_NS 10000ULL
+
 // representation of a utilization of one.
 #define UTIL_ONE 1000000ULL
 
@@ -112,185 +116,6 @@
 
 #define ZERO(x) memset(x, 0, sizeof(*x))
 //#define ZERO_QUEUE(x) memset(x, 0, sizeof(rt_priority_queue) + MAX_QUEUE * sizeof(rt_thread *))
-
-#if TIME_STAMP
-
-#define CPU_NUM 256
-
-uint64_t collect_time_stamp;
-uint64_t start_time_stamp_index[CPU_NUM];
-uint64_t end_time_stamp_index[CPU_NUM];
-
-uint64_t global_step_array[CPU_NUM][256];
-uint64_t global_start_array[CPU_NUM][256];
-uint64_t global_end_array[CPU_NUM][256];
-uint64_t global_ipi_array[CPU_NUM];
-
-
-int nk_sched_collect_time_stamp(void) {
-  collect_time_stamp = 1;
-
-  return 0;
-}
-
-
-int time_stamp_init(void) {
-  if (memset(start_time_stamp_index, 0, CPU_NUM*sizeof(uint64_t)) == NULL) {
-      ERROR("Fail to clear memory for start_time_stamp_index\n");
-      return -1;
-  }
-
-  if (memset(end_time_stamp_index, 0, CPU_NUM*sizeof(uint64_t)) == NULL) {
-      ERROR("Fail to clear memory for end_time_stamp_index\n");
-      return -1;
-  }
-
-  if (memset(global_start_array, 0, CPU_NUM*256*sizeof(uint64_t)) == NULL) {
-      ERROR("Fail to clear memory for global_start_array\n");
-      return -1;
-  }
-
-  if (memset(global_end_array, 0, CPU_NUM*256*sizeof(uint64_t)) == NULL) {
-    ERROR("Fail to clear memory for global_end_array\n");
-    return -1;
-  }
-
-  if (memset(global_ipi_array, 0, CPU_NUM*sizeof(uint64_t)) == NULL) {
-    ERROR("Fail to clear memory for global_end_array\n");
-    return -1;
-  }
-
-  return 0;
-}
-
-int nk_sched_global_stamp_dump(void) {
-    uint64_t min_start = global_start_array[0][0];
-    uint64_t min_end = global_end_array[0][0];
-
-    for (int i = 1; i < CPU_NUM; i++) {
-      if (min_start > global_start_array[i][0]) {
-        min_start = global_start_array[i][0];
-      }
-    }
-
-    for (int i = 1; i < CPU_NUM; i++) {
-      if (min_end > global_end_array[i][0]) {
-        min_end = global_end_array[i][0];
-      }
-    }
-
-    printk("Start Time Stamp:\n");
-
-    for (int i = 0; i < 256; i++) {
-      for (int j = 0; j < CPU_NUM; j++) {
-        if (j < CPU_NUM - 1) {
-          printk("%llu, ", global_start_array[j][i] - min_start);
-        } else {
-          printk("%llu\n", global_start_array[j][i] - min_start);
-        }
-      }
-    }
-
-    printk("\nEnd Time Stamp:\n");
-
-    for (int i = 0; i < 256; i++) {
-      for (int j = 0; j < CPU_NUM; j++) {
-        if (j < CPU_NUM - 1) {
-          printk("%llu, ", global_end_array[j][i] - min_end);
-        } else {
-          printk("%llu\n", global_end_array[j][i] - min_end);
-        }
-      }
-    }
-
-    printk("\nStart Step Length:\n");
-
-    for (int i = 1; i < 256; i++) {
-      for (int j = 0; j < CPU_NUM; j++) {
-        if (j < CPU_NUM - 1) {
-          printk("%llu, ", global_start_array[j][i] - global_start_array[j][i - 1]);
-        } else {
-          printk("%llu\n", global_start_array[j][i] - global_start_array[j][i - 1]);
-        }
-      }
-    }
-
-    printk("\nEnd Step Length:\n");
-
-    for (int i = 1; i < 256; i++) {
-      for (int j = 0; j < CPU_NUM; j++) {
-        if (j < CPU_NUM - 1) {
-          printk("%llu, ", global_end_array[j][i] - global_end_array[j][i - 1]);
-        } else {
-          printk("%llu\n", global_end_array[j][i] - global_end_array[j][i - 1]);
-        }
-      }
-    }
-
-    return 0;
-}
-
-void sample_time_stamp(void) {
-  // printk("#");
-  uint64_t stamp = rdtsc();
-  uint64_t my_cpu_id = my_cpu_id();
-  if (collect_time_stamp) {
-    if (start_time_stamp_index[my_cpu_id] < 256) {
-      global_start_array[my_cpu_id][start_time_stamp_index[my_cpu_id]++] = stamp;
-    }
-  }
-
-  return;
-}
-
-static uint64_t ipi_count = 0;
-
-static int ipi_complete(void) {
-  IRQ_HANDLER_END();
-
-  atomic_inc(ipi_count);
-
-  return 0;
-}
-
-int ipi_complete_check() {
-  if (atomic_add(ipi_count, 0) == CPU_NUM - 1) {
-    // printk("complete: %d\n", ipi_count);
-    return 1;
-  } else {
-    return 0;
-  }
-}
-
-int sample_time_stamp_ipi_handler(excp_entry_t * excp, excp_vec_t vec, void *state) {
-  uint64_t cycle = rdtsc();
-
-  global_ipi_array[my_cpu_id()] = cycle;
-
-  ipi_complete();
-
-  return 0;
-}
-
-int sample_time_stamp_ipi() {
-  global_ipi_array[my_cpu_id()] = rdtsc();
-
-  return 0;
-}
-
-void ipi_sample_dump(void) {
-  ipi_count = 0;
-
-  for (int i = 0; i < CPU_NUM; i++) {
-    if (i < CPU_NUM - 1) {
-      nk_vc_printf("%llu, ", global_ipi_array[i]);
-    } else {
-      nk_vc_printf("%llu\n", global_ipi_array[i]);
-    }
-  }
-}
-
-#endif
 
 //
 // Shared scheduler state
@@ -637,7 +462,348 @@ static inline void     get_periodic_util(rt_scheduler *sched, uint64_t *util, ui
 static inline void     get_sporadic_util(rt_scheduler *sched, uint64_t now, uint64_t *util, uint64_t *count);
 static inline uint64_t get_random();
 
+// Parallel Thread Project
+#if TIME_STAMP
 
+#define CPU_NUM 8
+#define SAMPLE_NUM 256
+
+#define OB_CPU_A 1
+#define OB_CPU_B 2
+
+// enable this to flip a GPIO periodically within
+// the main loop of test thread
+#define GET_OUT() inb(0xe010)
+#define SET_OUT(x) outb(x,0xe010)
+
+#define SWITCH() SET_OUT(~GET_OUT())
+#define LOOP() {SWITCH(); udelay(1000); }
+
+#define SET_OUT_A(x) outb(x,0xe010)
+#define SET_OUT_B(x) outb(x,0xe010)
+
+uint64_t collect_time_stamp;
+uint64_t observe_scheduler;
+uint64_t observe_context_switch;
+
+uint64_t interrupt_count = 0;
+uint64_t start_time_stamp_index[CPU_NUM];
+uint64_t end_time_stamp_index[CPU_NUM];
+
+uint64_t irq_time_stamp_index[CPU_NUM];
+uint64_t resched_time_stamp_index[CPU_NUM];
+uint64_t switch_time_stamp_index[CPU_NUM];
+
+uint64_t global_step_array[CPU_NUM][SAMPLE_NUM];
+uint64_t global_start_array[CPU_NUM][SAMPLE_NUM];
+uint64_t global_end_array[CPU_NUM][SAMPLE_NUM];
+uint64_t global_ipi_array[CPU_NUM];
+
+uint64_t global_step_array[CPU_NUM][SAMPLE_NUM];
+uint64_t global_start_array[CPU_NUM][SAMPLE_NUM];
+
+uint64_t global_irp_array[CPU_NUM][SAMPLE_NUM];
+uint64_t global_resched_array[CPU_NUM][SAMPLE_NUM];
+uint64_t global_switch_array[CPU_NUM][SAMPLE_NUM];
+
+uint64_t irq_stamp[CPU_NUM];
+uint64_t resched_stamp[CPU_NUM];
+uint64_t switch_stamp[CPU_NUM];
+
+int nk_sched_collect_time_stamp(void) {
+  collect_time_stamp = 1;
+
+  return 0;
+}
+
+int nk_sched_observe_scheduler(void) {
+  observe_scheduler = 1;
+
+  return 0;
+}
+
+int nk_sched_observe_context_switch(void) {
+  observe_context_switch = 1;
+
+  return 0;
+}
+
+int time_stamp_init(void) {
+  printk("time_stamp_init\n");
+
+  collect_time_stamp = 0;
+  observe_scheduler = 0;
+  observe_context_switch = 0;
+
+  if (memset(start_time_stamp_index, 0, CPU_NUM*sizeof(uint64_t)) == NULL) {
+      ERROR("Fail to clear memory for start_time_stamp_index\n");
+      return -1;
+  }
+
+  if (memset(end_time_stamp_index, 0, CPU_NUM*sizeof(uint64_t)) == NULL) {
+      ERROR("Fail to clear memory for end_time_stamp_index\n");
+      return -1;
+  }
+
+  if (memset(irq_time_stamp_index, 0, CPU_NUM*sizeof(uint64_t)) == NULL) {
+    ERROR("Fail to clear memory for irp_time_stamp_index\n");
+    return -1;
+  }
+
+  if (memset(resched_time_stamp_index, 0, CPU_NUM*sizeof(uint64_t)) == NULL) {
+    ERROR("Fail to clear memory for resched_time_stamp_index\n");
+    return -1;
+  }
+
+  if (memset(switch_time_stamp_index, 0, CPU_NUM*sizeof(uint64_t)) == NULL) {
+    ERROR("Fail to clear memory for switch_time_stamp_index\n");
+    return -1;
+  }
+
+  if (memset(global_start_array, 0, CPU_NUM*SAMPLE_NUM*sizeof(uint64_t)) == NULL) {
+      ERROR("Fail to clear memory for global_start_array\n");
+      return -1;
+  }
+
+  if (memset(global_end_array, 0, CPU_NUM*SAMPLE_NUM*sizeof(uint64_t)) == NULL) {
+    ERROR("Fail to clear memory for global_end_array\n");
+    return -1;
+  }
+
+  if (memset(global_ipi_array, 0, CPU_NUM*sizeof(uint64_t)) == NULL) {
+    ERROR("Fail to clear memory for global_end_array\n");
+    return -1;
+  }
+
+  if (memset(global_irp_array, 0, CPU_NUM*SAMPLE_NUM*sizeof(uint64_t)) == NULL) {
+    ERROR("Fail to clear memory for global_end_array\n");
+    return -1;
+  }
+
+  if (memset(global_resched_array, 0, CPU_NUM*SAMPLE_NUM*sizeof(uint64_t)) == NULL) {
+    ERROR("Fail to clear memory for global_end_array\n");
+    return -1;
+  }
+
+  if (memset(global_switch_array, 0, CPU_NUM*SAMPLE_NUM*sizeof(uint64_t)) == NULL) {
+    ERROR("Fail to clear memory for global_end_array\n");
+    return -1;
+  }
+
+  if (memset(irq_stamp, 0, CPU_NUM*sizeof(uint64_t)) == NULL) {
+    ERROR("Fail to clear memory for irq_stamp\n");
+    return -1;
+  }
+
+  if (memset(resched_stamp, 0, CPU_NUM*sizeof(uint64_t)) == NULL) {
+    ERROR("Fail to clear memory for resched_stamp\n");
+    return -1;
+  }
+
+  if (memset(switch_stamp, 0, CPU_NUM*sizeof(uint64_t)) == NULL) {
+    ERROR("Fail to clear memory for switch_stamp\n");
+    return -1;
+  }
+
+  return 0;
+}
+
+int nk_sched_global_stamp_dump(void) {
+    uint64_t min_start = global_start_array[0][0];
+    uint64_t min_end = global_end_array[0][0];
+
+    for (int i = 1; i < CPU_NUM; i++) {
+      if (min_start > global_start_array[i][0]) {
+        min_start = global_start_array[i][0];
+      }
+    }
+
+    for (int i = 1; i < CPU_NUM; i++) {
+      if (min_end > global_end_array[i][0]) {
+        min_end = global_end_array[i][0];
+      }
+    }
+
+    printk("Start Time Stamp:\n");
+
+    for (int i = 0; i < SAMPLE_NUM; i++) {
+      for (int j = 0; j < CPU_NUM; j++) {
+        if (j < CPU_NUM - 1) {
+          printk("%llu, ", global_start_array[j][i] - min_start);
+        } else {
+          printk("%llu\n", global_start_array[j][i] - min_start);
+        }
+      }
+    }
+
+    printk("\nEnd Time Stamp:\n");
+
+    for (int i = 0; i < SAMPLE_NUM; i++) {
+      for (int j = 0; j < CPU_NUM; j++) {
+        if (j < CPU_NUM - 1) {
+          printk("%llu, ", global_end_array[j][i] - min_end);
+        } else {
+          printk("%llu\n", global_end_array[j][i] - min_end);
+        }
+      }
+    }
+
+    return 0;
+}
+
+int nk_sched_context_switch_stamp_dump(void) {
+  printk("\nIRQ Overhead:\n");
+
+  for (int i = 1; i < SAMPLE_NUM; i++) {
+    for (int j = 0; j < CPU_NUM; j++) {
+      if (j < CPU_NUM - 1) {
+        printk("%llu, ", global_irp_array[j][i]);
+      } else {
+        printk("%llu\n", global_irp_array[j][i]);
+      }
+    }
+  }
+
+  printk("\nResched Overhead:\n");
+
+  for (int i = 1; i < SAMPLE_NUM; i++) {
+    for (int j = 0; j < CPU_NUM; j++) {
+      if (j < CPU_NUM - 1) {
+        printk("%llu, ", global_resched_array[j][i]);
+      } else {
+        printk("%llu\n", global_resched_array[j][i]);
+      }
+    }
+  }
+
+  printk("\nSwitch Overhead:\n");
+
+  for (int i = 1; i < SAMPLE_NUM; i++) {
+    for (int j = 0; j < CPU_NUM; j++) {
+      if (j < CPU_NUM - 1) {
+        printk("%llu, ", global_switch_array[j][i]);
+      } else {
+        printk("%llu\n", global_switch_array[j][i]);
+      }
+    }
+  }
+
+  return 0;
+}
+
+void sample_time_stamp(void) {
+  uint64_t stamp = rdtsc();
+  uint64_t my_cpu_id = my_cpu_id();
+  if (collect_time_stamp) {
+    if (start_time_stamp_index[my_cpu_id] < SAMPLE_NUM) {
+      global_start_array[my_cpu_id][start_time_stamp_index[my_cpu_id]++] = stamp;
+    }
+  }
+
+  return;
+}
+
+static uint64_t ipi_count = 0;
+
+static int ipi_complete(void) {
+  IRQ_HANDLER_END();
+
+  atomic_inc(ipi_count);
+
+  return 0;
+}
+
+int ipi_complete_check() {
+  if (atomic_add(ipi_count, 0) == CPU_NUM - 1) {
+    return 1;
+  } else {
+    return 0;
+  }
+}
+
+int sample_time_stamp_ipi_handler(excp_entry_t * excp, excp_vec_t vec, void *state) {
+  uint64_t cycle = rdtsc();
+
+  global_ipi_array[my_cpu_id()] = cycle;
+
+  ipi_complete();
+
+  return 0;
+}
+
+int sample_time_stamp_ipi() {
+  global_ipi_array[my_cpu_id()] = rdtsc();
+
+  return 0;
+}
+
+void ipi_sample_dump(void) {
+  ipi_count = 0;
+
+  for (int i = 0; i < CPU_NUM; i++) {
+    if (i < CPU_NUM - 1) {
+      nk_vc_printf("%llu, ", global_ipi_array[i]);
+    } else {
+      nk_vc_printf("%llu\n", global_ipi_array[i]);
+    }
+  }
+}
+
+void interrupt_inc() {
+  if (my_cpu_id() == 1) {
+    struct nk_thread *c = get_cur_thread();
+    rt_thread *rt_c = c->sched_state;
+    if (rt_c->constraints.type == PERIODIC) {
+      interrupt_count += 1;
+    }
+  }
+}
+
+void interrupt_dump() {
+  printk("interrupt_count = %llu\n", interrupt_count);
+}
+
+void irp_enter() {
+  irq_stamp[my_cpu_id()] = rdtsc();
+}
+
+void irq_exit() {
+  uint64_t stamp = rdtsc();
+  uint64_t my_cpu_id = my_cpu_id();
+  if (observe_context_switch) {
+    if (irq_time_stamp_index[my_cpu_id] < SAMPLE_NUM) {
+      global_irp_array[my_cpu_id][irq_time_stamp_index[my_cpu_id]++] = stamp - irq_stamp[my_cpu_id];
+    }
+
+    resched_stamp[my_cpu_id()] = rdtsc();
+  }
+}
+
+void resched_exit() {
+  uint64_t stamp = rdtsc();
+  uint64_t my_cpu_id = my_cpu_id();
+  if (observe_context_switch) {
+    if (resched_time_stamp_index[my_cpu_id] < SAMPLE_NUM) {
+      global_resched_array[my_cpu_id][resched_time_stamp_index[my_cpu_id]++] = stamp - resched_stamp[my_cpu_id];
+    }
+  }
+}
+
+void switch_enter() {
+  switch_stamp[my_cpu_id()] = rdtsc();
+}
+
+void switch_exit() {
+  uint64_t stamp = rdtsc();
+  uint64_t my_cpu_id = my_cpu_id();
+  if (observe_context_switch) {
+    if (switch_time_stamp_index[my_cpu_id] < SAMPLE_NUM) {
+      global_switch_array[my_cpu_id][switch_time_stamp_index[my_cpu_id]++] = stamp - switch_stamp[my_cpu_id];
+    }
+  }
+}
+#endif
+// Parallel Thread Project
 
 static void print_thread(rt_thread *r, void *priv)
 {
@@ -1732,17 +1898,39 @@ static inline void set_interrupt_priority(rt_thread *t)
 //
 struct nk_thread *_sched_need_resched(int have_lock, int force_resched)
 {
+
     uint64_t my_cpu_id = my_cpu_id();
+
+#if TIME_STAMP
+    if (observe_scheduler == 1) {
+      if (my_cpu_id == OB_CPU_A) {
+        SET_OUT_A(0xff);
+      } else if (my_cpu_id == OB_CPU_B) {
+        SET_OUT_B(0xff);
+      }
+    }
+#endif
 
     LOCAL_LOCK_CONF;
 
-    if (preempt_is_disabled())  {
-	if (force_resched) {
-	    DEBUG("Forced reschedule with preemption off\n");
-	} else {
-	    DEBUG("Preemption disabled, avoiding rescheduling pass and staying with current thread\n");
-	    return 0;
-	}
+   if (preempt_is_disabled())  {
+	      if (force_resched) {
+	         DEBUG("Forced reschedule with preemption off\n");
+	      } else {
+          // if we are in a timer or interrupt, we will
+          // lose it here...  We need to regenerate it
+          // A kick interrupt is regenerated as a timer
+          // interrupt since we need to let the interrupted
+          // thread make some progress
+          struct apic_dev *a = per_cpu_get(system)->cpus[my_cpu_id()]->apic;
+          if (a->in_timer_interrupt || a->in_kick_interrupt) {
+            uint32_t t = apic_realtime_to_ticks(a, DELAY_FOR_PREEMPT_NS);
+            apic_update_oneshot_timer(a,t,IF_EARLIER);
+            DEBUG("Reinjecting timer or kick interrupt due to preemption being off\n");
+          }
+          DEBUG("Preemption disabled, avoiding rescheduling pass and staying with current thread\n");
+	        return 0;
+	      }
     }
 
     INST_SCHED_IN();
@@ -2216,12 +2404,12 @@ struct nk_thread *_sched_need_resched(int have_lock, int force_resched)
         global_end_array[my_cpu_id][end_time_stamp_index[my_cpu_id]++] = rdtsc();
       }
     }
-#endif
 
-#if TIME_STAMP
-    if (collect_time_stamp) {
-      if (end_time_stamp_index[my_cpu_id] < 256) {
-        global_end_array[my_cpu_id][end_time_stamp_index[my_cpu_id]++] = rdtsc();
+    if (observe_scheduler == 1) {
+      if (my_cpu_id == OB_CPU_A) {
+        SET_OUT_A(0xff);
+      } else if (my_cpu_id == OB_CPU_B) {
+        SET_OUT_B(0xff);
       }
     }
 #endif
@@ -2310,6 +2498,14 @@ struct nk_thread *_sched_need_resched(int have_lock, int force_resched)
         global_end_array[my_cpu_id][end_time_stamp_index[my_cpu_id]++] = rdtsc();
       }
     }
+
+    if (observe_scheduler == 1) {
+      if (my_cpu_id == OB_CPU_A) {
+        SET_OUT_A(0xff);
+      } else if (my_cpu_id == OB_CPU_B) {
+        SET_OUT_B(0xff);
+      }
+    }
 #endif
 
 	INST_SCHED_OUT(resched_slow);
@@ -2337,6 +2533,14 @@ struct nk_thread *_sched_need_resched(int have_lock, int force_resched)
     if (collect_time_stamp) {
       if (end_time_stamp_index[my_cpu_id] < 256) {
         global_end_array[my_cpu_id][end_time_stamp_index[my_cpu_id]++] = rdtsc();
+      }
+    }
+
+    if (observe_scheduler == 1) {
+      if (my_cpu_id == OB_CPU_A) {
+        SET_OUT_A(0xff);
+      } else if (my_cpu_id == OB_CPU_B) {
+        SET_OUT_B(0xff);
       }
     }
 #endif
@@ -3121,10 +3325,12 @@ static int rt_thread_admit(rt_scheduler *scheduler, rt_thread *thread, uint64_t 
 	    reset_stats(thread);
 	    // the next arrival of this thread will be at this time
       if (thread->constraints.periodic.start < now){
-        ERROR("first time %llu is earlier than now %llu!\n", thread->constraints.periodic.start, now);
-  	    thread->deadline = now + thread->constraints.periodic.phase;
+        if (my_cpu_id() == 1) {
+          ERROR("first time %llu is earlier than now %llu!\n", thread->constraints.periodic.start, now);
+        }
+        thread->deadline = now + thread->constraints.periodic.phase;
       } else {
-        thread->deadline = thread->constraints.periodic.start + thread->constraints.periodic.phase;        
+        thread->deadline = thread->constraints.periodic.start + thread->constraints.periodic.phase;
       }
 	    DEBUG("Admitting PERIODIC thread\n");
 	    return 0;
@@ -3409,7 +3615,7 @@ static int shared_init(struct cpu *my_cpu, struct nk_sched_config *cfg)
     msr_write(IA32_TIME_STAMP_COUNTER,0);
 
 #if TIME_STAMP
-    time_stamp_init();
+    // time_stamp_init();
 
     if (register_int_handler(APIC_COLLECT_TIME_STAMP_VEC, sample_time_stamp_ipi_handler, NULL) != 0) {
         ERROR_PRINT("Could not register int handler\n");
@@ -3719,139 +3925,4 @@ nk_sched_thread_get_constraints(struct nk_thread *t, struct nk_sched_constraints
 uint64_t nk_sched_get_cur_time(void){
   return cur_time();
 }
-/*
-int
-local_change_constraint(rt_scheduler *scheduler,
-                        struct nk_thread *t,
-                        struct nk_sched_constraints *constraints);
-int
-local_roll_back(struct nk_thread *t, struct nk_sched_constraints *roll_back_cons);
-
-void
-group_change_constraint_handler(void) {
-  struct sys_info *sys = per_cpu_get(system);
-  rt_scheduler *scheduler = sys->cpus[my_cpu_id()]->sched_state;
-  struct nk_thread *t;
-  struct nk_sched_constraints *constraints;
-  //Get group constraint
-  //for all member threads in this scheduler
-    REMOVE_RT_PENDING(scheduler, t->sched_state);
-    REMOVE_APERIODIC(scheduler, t->sched_state);
-    int ret;
-    int fail_flag = 0;
-    if (fail_flag != 0) {
-      //start to roll back
-    }
-    ret = local_change_constraint(scheduler, t, constraints);
-    if (ret != 0) {
-      //set fail_flag
-    }
-}
-
-int
-local_change_constraint(rt_scheduler *scheduler,
-                        struct nk_thread *t,
-                        struct nk_sched_constraints *constraints) {
-  LOCAL_LOCK_CONF;
-  rt_thread *r = t->sched_state;
-  struct nk_sched_constraints old;
-
-  DEBUG("Changing constraints of %llu \"%s\"\n", t->tid,t->name);
-
-  LOCAL_LOCK(scheduler);
-
-  if (r->constraints.type != APERIODIC && constraints->type != APERIODIC) {
-
-    DEBUG("Transitioning %llu \"%s\" temporarily to aperiodic\n" , t->tid,t->name);
-
-    struct nk_sched_constraints temp = { .type=APERIODIC,
-                 .aperiodic.priority=scheduler->cfg.aperiodic_default_priority };
-
-    old = r->constraints;
-    r->constraints = temp;
-
-    // although this is an admission, it's an admission for
-    // aperiodic, which is always yes, and fast
-    if (_sched_make_runnable(t,t->current_cpu,1,1)) {
-        ERROR("Failed to re-admit %llu \"%s\" as aperiodic\n" , t->tid,t->name);
-        panic("Unable to change thread's constraints to aperiodic!\n");
-        goto out_bad;
-    }
-    // we are now on the aperiodic run queue
-    // so we need to get running again with our new constraints
-    //handle_special_switch(CHANGING,1,_local_flags);
-    // we've now released the lock, so reacquire
-    LOCAL_LOCK(scheduler);
-  }
-
-
-  // now we are aperiodic and the scheduler is locked/interrupts off
-
-  old = r->constraints;
-  r->constraints = *constraints;
-
-  // we assume from here that we are aperiodic changing to other
-
-  if (_sched_make_runnable(t,t->current_cpu,1,1)) {
-    //set group admit fail flag
-  } else {
-    // we were admitted and are now on some queue
-    // we now need to kick ourselves off the CPU
-    DEBUG("Succeeded in admitting %llu \"%s\" with new constraints\n",t->tid,t->name);
-    DUMP_RT(scheduler,"runnable before handle special switch");
-    DUMP_RT_PENDING(scheduler,"pending before handle special switch");
-    DUMP_APERIODIC(scheduler,"aperiodic before handle special switch");
-
-    //handle_special_switch(CHANGING,1,_local_flags);
-
-    // we now have released lock and interrupts are back to prior
-
-    DEBUG("Thread is now state %d / %d\n",t->status, t->sched_state->status);
-    DUMP_RT(scheduler,"runnable after handle special switch");
-    DUMP_RT_PENDING(scheduler,"pending after handle special switch");
-    DUMP_APERIODIC(scheduler,"aperiodic after handle special switch");
-    // when we are back, we note success
-    goto out_good_no_unlock;
-  }
-
-out_bad:
-  LOCAL_UNLOCK(scheduler);
-
-out_good_no_unlock:
-  return 0;
-}
-
-void local_roll_back_handler() {
-  struct sys_info *sys = per_cpu_get(system);
-  rt_scheduler *scheduler = sys->cpus[my_cpu_id()]->sched_state;
-  struct nk_thread *t;
-  struct nk_sched_constraints *constraints;
-  rt_thread *r = t->sched_state;
-  struct nk_sched_constraints roll_back_cons = { .type=APERIODIC,
-                 .aperiodic.priority=scheduler->cfg.aperiodic_default_priority };
-  //for all member threads in this scheduler
-  local_roll_back(t, &roll_back_cons);
-}
-
-int
-local_roll_back(struct nk_thread *t, struct nk_sched_constraints *roll_back_cons) {
-  rt_thread *r = t->sched_state;
-  DEBUG("Failed to re-admit %llu \"%s\" with new constraints\n" , t->tid,t->name);
-  // failed to admit task, bring it back up as aperiodic
-  // again.   This should just work
-  r->constraints = *roll_back_cons;
-  if (_sched_make_runnable(t,t->current_cpu,1,1)) {
-    // very bad...
-    panic("Failed to recover to aperiodic when changing constraints\n");
-  }
-  DEBUG("Readmitted %llu \"%s\" with old constraints\n" , t->tid,t->name);
-  // we are now aperioidic
-  // since we are again on the run queue
-  // we need to kick ourselves off the cp
-  //handle_special_switch(CHANGING,1,_local_flags);
-  // when we come back, we note that we have failed
-  // we also have no lock
-  return 0;
-}
-*/
 //Parallel thread concept------------------------------------------------

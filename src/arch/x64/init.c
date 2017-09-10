@@ -423,6 +423,9 @@ init (unsigned long mbd,
     extern int time_stamp_init(void);
     time_stamp_init();
 
+    // nk_instrument_start();
+    // nk_instrument_calibrate(INSTR_CAL_LOOPS);
+
     printk("Nautilus boot thread yielding (indefinitely)\n");
 
 

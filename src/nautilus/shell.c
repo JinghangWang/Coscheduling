@@ -346,7 +346,12 @@ static int handle_test(char *buf)
     }
 
     if (!strncasecmp(what,"group",5)) {
-	return nk_thread_group_test();
+  nk_thread_group_sync_test();
+  // nk_instrument_start();
+  nk_thread_group_test();
+  // nk_instrument_end();
+  // nk_profile_dump();
+  return 0;
     }
 
     if (!strncasecmp(what,"gsync",5)) {
@@ -912,6 +917,11 @@ static int handle_cmd(char *buf, int n)
     printk("empty func call overhead: %llu\n", end - start);
 
     return 0;
+  }
+
+  if (!strncasecmp(buf,"int_dump",8)) {
+      interrupt_dump();
+      return 0;
   }
 
 //Parallel thread concept------------------------------------------------
